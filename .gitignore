@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.allure/
+allure-results/
+allure-report/
+.env
+monitor/.env
+monitor/.alert_state.json
+.idea/workspace.xml
+.idea/shelf/
+.DS_Store

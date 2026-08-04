@@ -1,0 +1,84 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {"options": {"0": {"color": "red", "index": 0, "text": "FAIL"}}, "type": "value"},
+            {"options": {"1": {"color": "green", "index": 1, "text": "OK"}}, "type": "value"}
+          ],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 6, "w": 8, "x": 0, "y": 0},
+      "id": 1,
+      "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [
+        {
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r._measurement == \"bid_probe\" and r._field == \"success\")\n  |> last()",
+          "refId": "A"
+        }
+      ],
+      "title": "Статус последнего прогона",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
+      "fieldConfig": {"defaults": {"unit": "percentunit"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 8, "x": 8, "y": 0},
+      "id": 2,
+      "targets": [
+        {
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_probe\" and r._field == \"success\")\n  |> aggregateWindow(every: 1h, fn: mean, createEmpty: false)",
+          "refId": "A"
+        }
+      ],
+      "title": "Probe uptime (7d)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 6},
+      "id": 3,
+      "targets": [
+        {
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_check\" and r._field == \"http_code\")\n  |> group(columns: [\"check\"])\n  |> last()",
+          "refId": "A"
+        }
+      ],
+      "title": "HTTP коды проверок (последние)",
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 14},
+      "id": 4,
+      "targets": [
+        {
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_check\" and r._field == \"success\" and r._value == 0)\n  |> keep(columns: [\"_time\", \"check\", \"error\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Ошибки проверок",
+      "type": "table"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": ["bid", "monitoring"],
+  "templating": {"list": []},
+  "time": {"from": "now-7d", "to": "now"},
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "BID Monitoring",
+  "uid": "bid-monitoring",
+  "version": 1
+}

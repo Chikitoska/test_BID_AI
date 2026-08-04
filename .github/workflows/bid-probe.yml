@@ -1,0 +1,31 @@
+name: BID Probe
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install -r requirements.txt
+
+      - name: HTTP probe
+        env:
+          INFLUXDB_URL: http://78.17.46.33:8086
+          INFLUXDB_TOKEN: ${{ secrets.INFLUXDB_TOKEN }}
+          INFLUXDB_ORG: bid
+          INFLUXDB_BUCKET: bid_monitor
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_ALERT_ON_SUCCESS: "false"
+          TELEGRAM_ALERT_REPEAT_HOURS: "4"
+        run: python monitor/run_light.py
