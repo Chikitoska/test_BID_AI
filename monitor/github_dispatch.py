@@ -2,21 +2,28 @@
 
 from __future__ import annotations
 
-import os
+import json
 
 import requests
 
+from monitor.alerts import failures_for_relay
+from monitor.checks import CheckResult
 from monitor.config import GITHUB_DISPATCH_ENABLED, GITHUB_PAT, GITHUB_REPO
 
 
 def notify_github_probe_status(
     *,
     status: str,
+    http_results: list[CheckResult],
     failed_count: int = 0,
     duration_sec: float = 0,
 ) -> bool:
     if not GITHUB_DISPATCH_ENABLED:
+        print("GitHub dispatch skipped (add GITHUB_PAT to monitor/.env)")
         return False
+
+    failed_checks = [item for item in http_results if not item.success]
+    failures_json = json.dumps(failures_for_relay(failed_checks), ensure_ascii=False)
 
     url = f"https://api.github.com/repos/{GITHUB_REPO}/dispatches"
     payload = {
@@ -25,6 +32,7 @@ def notify_github_probe_status(
             "status": status,
             "failed_count": failed_count,
             "duration_sec": round(duration_sec, 1),
+            "failures_json": failures_json,
         },
     }
 

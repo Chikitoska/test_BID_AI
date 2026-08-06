@@ -2,10 +2,17 @@
   "annotations": {"list": []},
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
+  "graphTooltip": 1,
   "id": null,
   "links": [],
   "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+      "id": 100,
+      "title": "Обзор",
+      "type": "row"
+    },
     {
       "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
       "fieldConfig": {
@@ -18,56 +25,260 @@
         },
         "overrides": []
       },
-      "gridPos": {"h": 6, "w": 8, "x": 0, "y": 0},
+      "gridPos": {"h": 5, "w": 6, "x": 0, "y": 1},
       "id": 1,
       "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
       "targets": [
         {
-          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r._measurement == \"bid_probe\" and r._field == \"success\")\n  |> last()",
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_probe\" and r._field == \"success\")\n  |> last()",
           "refId": "A"
         }
       ],
-      "title": "Статус последнего прогона",
+      "title": "Последний probe",
       "type": "stat"
     },
     {
       "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
-      "fieldConfig": {"defaults": {"unit": "percentunit"}, "overrides": []},
-      "gridPos": {"h": 6, "w": 8, "x": 8, "y": 0},
+      "fieldConfig": {
+        "defaults": {
+          "max": 100,
+          "min": 0,
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "orange", "value": 95}, {"color": "green", "value": 99}]},
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 6, "x": 6, "y": 1},
       "id": 2,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
       "targets": [
         {
-          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_probe\" and r._field == \"success\")\n  |> aggregateWindow(every: 1h, fn: mean, createEmpty: false)",
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r._measurement == \"bid_probe\" and r._field == \"success\")\n  |> mean()\n  |> map(fn: (r) => ({ r with _value: r._value * 100.0 }))",
           "refId": "A"
         }
       ],
-      "title": "Probe uptime (7d)",
+      "title": "Uptime probe (24ч)",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 2000}, {"color": "red", "value": 5000}]},
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 6, "x": 12, "y": 1},
+      "id": 3,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["mean"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [
+        {
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r._measurement == \"bid_check\" and r._field == \"duration_ms\")\n  |> mean()",
+          "refId": "A"
+        }
+      ],
+      "title": "Среднее время ответа (24ч)",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 6, "x": 18, "y": 1},
+      "id": 4,
+      "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [
+        {
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_probe\" and r._field == \"failed_checks\")\n  |> last()",
+          "refId": "A"
+        }
+      ],
+      "title": "Упало проверок (последний run)",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 6},
+      "id": 101,
+      "title": "История probe",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "custom": {"drawStyle": "bars", "fillOpacity": 80, "lineWidth": 1, "spanNulls": false, "stacking": {"mode": "none"}},
+          "mappings": [
+            {"options": {"0": {"color": "red", "index": 0, "text": "FAIL"}}, "type": "value"},
+            {"options": {"1": {"color": "green", "index": 1, "text": "OK"}}, "type": "value"}
+          ],
+          "max": 1,
+          "min": 0,
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 7},
+      "id": 5,
+      "options": {"legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "single"}},
+      "targets": [
+        {
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_probe\" and r._field == \"success\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)",
+          "refId": "A"
+        }
+      ],
+      "title": "Probe OK / FAIL",
       "type": "timeseries"
     },
     {
       "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
-      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 6},
-      "id": 3,
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"drawStyle": "line", "fillOpacity": 15, "lineWidth": 2, "spanNulls": true},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 7},
+      "id": 6,
+      "options": {"legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "single"}},
       "targets": [
         {
-          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_check\" and r._field == \"http_code\")\n  |> group(columns: [\"check\"])\n  |> last()",
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_probe\" and r._field == \"failed_checks\")\n  |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false)",
           "refId": "A"
         }
       ],
-      "title": "HTTP коды проверок (последние)",
+      "title": "Количество упавших проверок",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 15},
+      "id": 102,
+      "title": "Эндпоинты",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "spanNulls": true},
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 9, "w": 24, "x": 0, "y": 16},
+      "id": 7,
+      "options": {"legend": {"displayMode": "table", "placement": "right", "showLegend": true, "calcs": ["lastNotNull", "mean", "max"]}, "tooltip": {"mode": "multi"}},
+      "targets": [
+        {
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_check\" and r._field == \"duration_ms\")\n  |> group(columns: [\"check\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Время ответа по эндпоинтам",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"drawStyle": "line", "fillOpacity": 0, "lineWidth": 2, "spanNulls": true},
+          "mappings": [
+            {"options": {"0": {"color": "red", "index": 0, "text": "FAIL"}}, "type": "value"},
+            {"options": {"1": {"color": "green", "index": 1, "text": "OK"}}, "type": "value"}
+          ],
+          "max": 1,
+          "min": 0,
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 9, "w": 24, "x": 0, "y": 25},
+      "id": 8,
+      "options": {"legend": {"displayMode": "table", "placement": "right", "showLegend": true}, "tooltip": {"mode": "multi"}},
+      "targets": [
+        {
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_check\" and r._field == \"success\")\n  |> group(columns: [\"check\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Статус проверок OK / FAIL по времени",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 34},
+      "id": 103,
+      "title": "Таблицы",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
+      "fieldConfig": {
+        "defaults": {
+          "custom": {"align": "auto", "cellOptions": {"type": "auto"}, "inspect": false},
+          "mappings": [
+            {"options": {"0": {"color": "red", "index": 0, "text": "FAIL"}}, "type": "value"},
+            {"options": {"1": {"color": "green", "index": 1, "text": "OK"}}, "type": "value"}
+          ],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]}
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "success"},
+            "properties": [{"id": "custom.cellOptions", "value": {"mode": "basic", "type": "color-background"}}]
+          },
+          {
+            "matcher": {"id": "byName", "options": "http_code"},
+            "properties": [{"id": "custom.cellOptions", "value": {"mode": "gradient", "type": "color-background"}}]
+          }
+        ]
+      },
+      "gridPos": {"h": 9, "w": 24, "x": 0, "y": 35},
+      "id": 9,
+      "options": {"cellHeight": "sm", "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false}, "showHeader": true, "sortBy": [{"desc": false, "displayName": "check"}]},
+      "targets": [
+        {
+          "query": "success = from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_check\" and r._field == \"success\")\n  |> group(columns: [\"check\"])\n  |> last()\n  |> rename(columns: {_value: \"success\"})\n  |> keep(columns: [\"check\", \"success\", \"_time\"])\n\ncode = from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_check\" and r._field == \"http_code\")\n  |> group(columns: [\"check\"])\n  |> last()\n  |> rename(columns: {_value: \"http_code\"})\n  |> keep(columns: [\"check\", \"http_code\"])\n\nduration = from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_check\" and r._field == \"duration_ms\")\n  |> group(columns: [\"check\"])\n  |> last()\n  |> rename(columns: {_value: \"duration_ms\"})\n  |> keep(columns: [\"check\", \"duration_ms\"])\n\nerror = from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_check\" and r._field == \"error\")\n  |> group(columns: [\"check\"])\n  |> last()\n  |> rename(columns: {_value: \"error\"})\n  |> keep(columns: [\"check\", \"error\"])\n\njoin(tables: {s: success, c: code}, on: [\"check\"])\n  |> join(tables: {d: duration}, on: [\"check\"])\n  |> join(tables: {e: error}, on: [\"check\"])\n  |> keep(columns: [\"check\", \"success\", \"http_code\", \"duration_ms\", \"error\", \"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Все проверки — последний статус",
+      "transformations": [{"id": "organize", "options": {"excludeByName": {"_time": true}, "renameByName": {"check": "Проверка", "duration_ms": "мс", "error": "Ошибка", "http_code": "HTTP", "success": "Статус"}}}],
       "type": "table"
     },
     {
       "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
-      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 14},
-      "id": 4,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {"align": "auto", "cellOptions": {"type": "auto"}, "inspect": false},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}]}
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 44},
+      "id": 10,
+      "options": {"cellHeight": "sm", "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false}, "showHeader": true, "sortBy": [{"desc": true, "displayName": "Time"}]},
       "targets": [
         {
-          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_check\" and r._field == \"success\" and r._value == 0)\n  |> keep(columns: [\"_time\", \"check\", \"error\"])",
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_check\" and r._field == \"success\" and r._value == 0)\n  |> keep(columns: [\"_time\", \"check\"])\n  |> join(\n    tables: {\n      err: from(bucket: \"bid_monitor\")\n        |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n        |> filter(fn: (r) => r._measurement == \"bid_check\" and r._field == \"error\")\n    },\n    on: [\"_time\", \"check\"],\n  )\n  |> filter(fn: (r) => exists r._value_err and r._value_err != \"\")\n  |> rename(columns: {_value_err: \"error\"})\n  |> keep(columns: [\"_time\", \"check\", \"error\"])",
           "refId": "A"
         }
       ],
-      "title": "Ошибки проверок",
+      "title": "Журнал ошибок",
+      "transformations": [{"id": "organize", "options": {"renameByName": {"Time": "Время", "check": "Проверка", "error": "Описание"}}}],
       "type": "table"
     }
   ],
@@ -80,5 +291,5 @@
   "timezone": "browser",
   "title": "BID Monitoring",
   "uid": "bid-monitoring",
-  "version": 1
+  "version": 2
 }

@@ -2,7 +2,7 @@
 """
 Быстрый prod-probe BID (только HTTP):
 - каждые 5–10 минут через cron
-- алерт в Telegram только при падении / восстановлении
+- Telegram через GitHub relay (Все ок / детали ошибки)
 """
 
 from __future__ import annotations
@@ -52,6 +52,7 @@ def main() -> int:
     notify_probe_result(http_results, overall_ok=overall_ok)
     notify_github_probe_status(
         status="ok" if overall_ok else "fail",
+        http_results=http_results,
         failed_count=len(http_failed),
         duration_sec=duration_sec,
     )

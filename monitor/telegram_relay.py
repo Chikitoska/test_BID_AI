@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
 """
 Relay: получает статус probe (repository_dispatch) → шлёт Telegram из GitHub Actions.
-FirstVDS не достучится до api.telegram.org — relay запускается в облаке GitHub.
 """
 
 from __future__ import annotations
 
+import json
 import os
 import sys
-from datetime import datetime, timezone
 
 import requests
 
+from monitor.alerts import format_relay_failure_message, format_relay_ok_message
+
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
-
-STATE_FILE = os.getenv("RELAY_STATE_FILE", "relay-state.txt")
 
 
 def _probe_status() -> str | None:
@@ -25,23 +24,23 @@ def _probe_status() -> str | None:
     return None
 
 
-def _load_state() -> str | None:
+def _load_failures() -> list[dict]:
+    raw = os.getenv("PROBE_FAILURES_JSON", "[]").strip()
+    if not raw:
+        return []
     try:
-        return open(STATE_FILE, encoding="utf-8").read().strip() or None
-    except OSError:
-        return None
-
-
-def _save_state(state: str) -> None:
-    with open(STATE_FILE, "w", encoding="utf-8") as f:
-        f.write(state)
+        data = json.loads(raw)
+        return data if isinstance(data, list) else []
+    except json.JSONDecodeError:
+        print(f"WARN: invalid PROBE_FAILURES_JSON: {raw[:120]}")
+        return []
 
 
 def _send_telegram(text: str) -> bool:
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     response = requests.post(
         url,
-        json={"chat_id": TELEGRAM_CHAT_ID, "text": text, "parse_mode": "HTML"},
+        json={"chat_id": TELEGRAM_CHAT_ID, "text": text},
         timeout=20,
     )
     response.raise_for_status()
@@ -53,44 +52,18 @@ def main() -> int:
         print("ERROR: задайте TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID")
         return 1
 
-    current = _probe_status()
-    if current is None:
+    status = _probe_status()
+    if status is None:
         print("ERROR: PROBE_STATUS must be ok or fail")
         return 1
 
-    previous = _load_state()
-    failed_count = os.getenv("PROBE_FAILED_COUNT", "0")
-    duration_sec = os.getenv("PROBE_DURATION_SEC", "")
-
-    if previous is None:
-        _save_state(current)
-        print(f"Init state: {current}")
-        return 0
-
-    if current == previous:
-        print(f"No change: {current}")
-        return 0
-
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    extra = ""
-    if duration_sec:
-        extra = f"\nДлительность: {duration_sec}s"
-    if failed_count != "0":
-        extra += f"\nУпало проверок: {failed_count}"
-
-    if current == "fail":
-        msg = (
-            f"<b>🔴 BID Probe — FAIL</b>\n\n"
-            f"Сервер: FirstVDS\n"
-            f"Время: {now}{extra}\n\n"
-            f"Проверьте Grafana."
-        )
+    if status == "ok":
+        message = format_relay_ok_message()
     else:
-        msg = f"<b>🟢 BID Probe — восстановлено</b>\n\nВремя: {now}{extra}"
+        message = format_relay_failure_message(_load_failures())
 
-    _send_telegram(msg)
-    _save_state(current)
-    print(f"Alert sent: {previous} → {current}")
+    _send_telegram(message)
+    print(f"Sent Telegram: {status}")
     return 0
 
 

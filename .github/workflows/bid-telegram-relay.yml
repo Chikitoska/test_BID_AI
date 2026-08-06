@@ -1,7 +1,6 @@
 name: BID Telegram Relay
 
 # FirstVDS шлёт repository_dispatch после probe → GitHub шлёт Telegram.
-# GitHub не достучится до InfluxDB на VPS — только push-модель.
 on:
   repository_dispatch:
     types: [bid-probe]
@@ -21,16 +20,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
-
-      - uses: actions/cache@v4
-        with:
-          path: relay-state.txt
-          key: bid-relay-state-v1
 
       - run: pip install requests --timeout 120
 
@@ -38,17 +32,22 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "PROBE_STATUS=${{ inputs.status }}" >> "$GITHUB_ENV"
-            echo "PROBE_FAILED_COUNT=0" >> "$GITHUB_ENV"
-            echo "PROBE_DURATION_SEC=" >> "$GITHUB_ENV"
+            if [ "${{ inputs.status }}" = "fail" ]; then
+              echo 'PROBE_FAILURES_JSON=[{"name":"main_page","status":"502","detail":"502 Bad Gateway"}]' >> "$GITHUB_ENV"
+            else
+              echo "PROBE_FAILURES_JSON=[]" >> "$GITHUB_ENV"
+            fi
           else
             echo "PROBE_STATUS=${{ github.event.client_payload.status }}" >> "$GITHUB_ENV"
-            echo "PROBE_FAILED_COUNT=${{ github.event.client_payload.failed_count }}" >> "$GITHUB_ENV"
-            echo "PROBE_DURATION_SEC=${{ github.event.client_payload.duration_sec }}" >> "$GITHUB_ENV"
+            {
+              echo "PROBE_FAILURES_JSON<<EOF"
+              echo '${{ github.event.client_payload.failures_json }}'
+              echo "EOF"
+            } >> "$GITHUB_ENV"
           fi
 
       - name: Relay → Telegram
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          RELAY_STATE_FILE: relay-state.txt
         run: python monitor/telegram_relay.py

@@ -115,6 +115,47 @@ def format_recovery_message() -> str:
     return "<b>🟢 BID Probe — OK</b>\n\nHTTP-проверки снова проходят."
 
 
+def format_relay_ok_message() -> str:
+    return "Все ок"
+
+
+def format_relay_failure_message(failures: list[dict]) -> str:
+    """Краткий алерт для Telegram relay: где упало и описание ошибки."""
+    if not failures:
+        return "Ошибка BID\n\nДетали проверок недоступны."
+
+    lines = ["Ошибка BID", ""]
+    for item in failures:
+        name = item.get("name", "?")
+        status = item.get("status", "error")
+        detail = (item.get("detail") or "").strip()
+        lines.append(f"{name}: {status}")
+        if detail and status not in detail:
+            lines.append(detail)
+        lines.append("")
+
+    return "\n".join(lines).strip()
+
+
+def failure_detail(result: CheckResult) -> str:
+    if result.error:
+        return result.error[:200]
+    if result.http_code:
+        return f"HTTP {result.http_code}"
+    return "unknown error"
+
+
+def failures_for_relay(failed_checks: list[CheckResult]) -> list[dict]:
+    return [
+        {
+            "name": item.name,
+            "status": short_status(item),
+            "detail": failure_detail(item),
+        }
+        for item in failed_checks
+    ]
+
+
 def format_success_message(passed: int, total: int, *, run_type: str = "full") -> str:
     if run_type == "full":
         return f"<b>🟢 BID Full — OK</b>\n\nHTTP + pytest: {passed}/{total}"
