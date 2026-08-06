@@ -1,0 +1,36 @@
+name: BID Telegram Relay
+
+# FirstVDS не достучится до api.telegram.org — relay шлёт алерты из GitHub.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/cache@v4
+        with:
+          path: relay-state.txt
+          key: bid-relay-state-v1
+
+      - run: pip install influxdb-client requests --timeout 120
+
+      - name: Relay InfluxDB → Telegram
+        env:
+          INFLUXDB_URL: http://62.109.31.244:8086
+          INFLUXDB_TOKEN: ${{ secrets.INFLUXDB_TOKEN }}
+          INFLUXDB_ORG: bid
+          INFLUXDB_BUCKET: bid_monitor
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RELAY_STATE_FILE: relay-state.txt
+        run: python monitor/telegram_relay.py

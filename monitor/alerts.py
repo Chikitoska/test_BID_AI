@@ -30,7 +30,11 @@ def send_telegram(text: str) -> bool:
         response.raise_for_status()
         return True
     except requests.exceptions.ConnectTimeout:
-        print("[alert] api.telegram.org недоступен (таймаут). VPN или TELEGRAM_PROXY в monitor/.env")
+        print("[alert] api.telegram.org недоступен (таймаут). TELEGRAM_PROXY в monitor/.env")
+        return False
+    except requests.exceptions.ConnectionError as exc:
+        print(f"[alert] api.telegram.org недоступен: {exc}")
+        print("[alert] Попробуйте: sysctl IPv6 off, или TELEGRAM_PROXY=socks5://...")
         return False
 
 
