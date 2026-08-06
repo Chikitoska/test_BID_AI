@@ -119,20 +119,35 @@ def format_relay_ok_message() -> str:
     return "Все ок"
 
 
-def format_relay_failure_message(failures: list[dict]) -> str:
+def format_relay_failure_message(
+    failures: list[dict],
+    *,
+    run_type: str = "probe",
+    pytest_failed: int = 0,
+    pytest_total: int = 0,
+) -> str:
     """Краткий алерт для Telegram relay: где упало и описание ошибки."""
-    if not failures:
-        return "Ошибка BID\n\nДетали проверок недоступны."
+    title = "Ошибка BID" if run_type == "probe" else "Ошибка BID (autotests)"
+    lines = [title, ""]
 
-    lines = ["Ошибка BID", ""]
-    for item in failures:
-        name = item.get("name", "?")
-        status = item.get("status", "error")
-        detail = (item.get("detail") or "").strip()
-        lines.append(f"{name}: {status}")
-        if detail and status not in detail:
-            lines.append(detail)
+    if failures:
+        for item in failures:
+            name = item.get("name", "?")
+            status = item.get("status", "error")
+            detail = (item.get("detail") or "").strip()
+            lines.append(f"{name}: {status}")
+            if detail and status not in detail:
+                lines.append(detail)
+            lines.append("")
+    elif run_type == "full" and pytest_failed:
+        lines.append("HTTP-проверки прошли.")
         lines.append("")
+
+    if pytest_failed:
+        lines.append(f"Pytest: упало {pytest_failed} из {pytest_total}")
+
+    if len(lines) <= 2:
+        return f"{title}\n\nНе удалось получить детали проверок."
 
     return "\n".join(lines).strip()
 

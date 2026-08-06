@@ -11,13 +11,16 @@ from monitor.checks import CheckResult
 from monitor.config import GITHUB_DISPATCH_ENABLED, GITHUB_PAT, GITHUB_REPO
 
 
-def notify_github_probe_status(
+def notify_github_on_failure(
     *,
-    status: str,
+    run_type: str,
     http_results: list[CheckResult],
     failed_count: int = 0,
     duration_sec: float = 0,
+    pytest_failed: int = 0,
+    pytest_total: int = 0,
 ) -> bool:
+    """Шлёт dispatch в GitHub только при неуспехе → Telegram relay."""
     if not GITHUB_DISPATCH_ENABLED:
         print("GitHub dispatch skipped (add GITHUB_PAT to monitor/.env)")
         return False
@@ -29,10 +32,13 @@ def notify_github_probe_status(
     payload = {
         "event_type": "bid-probe",
         "client_payload": {
-            "status": status,
+            "status": "fail",
+            "run_type": run_type,
             "failed_count": failed_count,
             "duration_sec": round(duration_sec, 1),
             "failures_json": failures_json,
+            "pytest_failed": pytest_failed,
+            "pytest_total": pytest_total,
         },
     }
 

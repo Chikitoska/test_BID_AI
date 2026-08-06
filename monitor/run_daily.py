@@ -21,6 +21,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from monitor.alert_policy import notify_full_run_result
 from monitor.checks import run_http_checks
 from monitor.config import INFLUX_ENABLED, MONITOR_RUN_UI, PROJECT_ROOT
+from monitor.github_dispatch import notify_github_on_failure
 from monitor.http_session import create_monitor_session
 from monitor.metrics import write_check_results, write_pytest_run
 
@@ -103,6 +104,16 @@ def main() -> int:
         pytest_failed=failed,
         pytest_output=pytest_output,
     )
+
+    if not overall_ok:
+        notify_github_on_failure(
+            run_type="full",
+            http_results=http_results,
+            failed_count=len(http_failed),
+            duration_sec=pytest_duration,
+            pytest_failed=failed,
+            pytest_total=total,
+        )
 
     return 0 if overall_ok else 1
 

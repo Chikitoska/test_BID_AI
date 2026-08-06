@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Relay: получает статус probe (repository_dispatch) → шлёт Telegram из GitHub Actions.
+Relay: repository_dispatch при неуспехе probe/autotests → Telegram (GitHub Actions).
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ import requests
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from monitor.alerts import format_relay_failure_message, format_relay_ok_message
+from monitor.alerts import format_relay_failure_message
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
@@ -62,12 +62,21 @@ def main() -> int:
         return 1
 
     if status == "ok":
-        message = format_relay_ok_message()
-    else:
-        message = format_relay_failure_message(_load_failures())
+        print("Skipped Telegram: all checks ok")
+        return 0
 
+    run_type = os.getenv("RUN_TYPE", "probe")
+    pytest_failed = int(os.getenv("PYTEST_FAILED", "0") or "0")
+    pytest_total = int(os.getenv("PYTEST_TOTAL", "0") or "0")
+
+    message = format_relay_failure_message(
+        _load_failures(),
+        run_type=run_type,
+        pytest_failed=pytest_failed,
+        pytest_total=pytest_total,
+    )
     _send_telegram(message)
-    print(f"Sent Telegram: {status}")
+    print(f"Sent Telegram: fail ({run_type})")
     return 0
 
 

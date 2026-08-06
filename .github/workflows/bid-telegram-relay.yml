@@ -32,6 +32,9 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "PROBE_STATUS=${{ inputs.status }}" >> "$GITHUB_ENV"
+            echo "RUN_TYPE=probe" >> "$GITHUB_ENV"
+            echo "PYTEST_FAILED=0" >> "$GITHUB_ENV"
+            echo "PYTEST_TOTAL=0" >> "$GITHUB_ENV"
             if [ "${{ inputs.status }}" = "fail" ]; then
               echo 'PROBE_FAILURES_JSON=[{"name":"main_page","status":"502","detail":"502 Bad Gateway"}]' >> "$GITHUB_ENV"
             else
@@ -39,6 +42,9 @@ jobs:
             fi
           else
             echo "PROBE_STATUS=${{ github.event.client_payload.status }}" >> "$GITHUB_ENV"
+            echo "RUN_TYPE=${{ github.event.client_payload.run_type || 'probe' }}" >> "$GITHUB_ENV"
+            echo "PYTEST_FAILED=${{ github.event.client_payload.pytest_failed || 0 }}" >> "$GITHUB_ENV"
+            echo "PYTEST_TOTAL=${{ github.event.client_payload.pytest_total || 0 }}" >> "$GITHUB_ENV"
             {
               echo "PROBE_FAILURES_JSON<<EOF"
               echo '${{ github.event.client_payload.failures_json }}'
