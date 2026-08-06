@@ -1,10 +1,20 @@
 name: BID Telegram Relay
 
-# FirstVDS не достучится до api.telegram.org — relay шлёт алерты из GitHub.
+# FirstVDS шлёт repository_dispatch после probe → GitHub шлёт Telegram.
+# GitHub не достучится до InfluxDB на VPS — только push-модель.
 on:
-  schedule:
-    - cron: "*/10 * * * *"
+  repository_dispatch:
+    types: [bid-probe]
   workflow_dispatch:
+    inputs:
+      status:
+        description: "Probe status (для теста)"
+        required: true
+        default: ok
+        type: choice
+        options:
+          - ok
+          - fail
 
 jobs:
   relay:
@@ -22,14 +32,22 @@ jobs:
           path: relay-state.txt
           key: bid-relay-state-v1
 
-      - run: pip install influxdb-client requests --timeout 120
+      - run: pip install requests --timeout 120
 
-      - name: Relay InfluxDB → Telegram
+      - name: Set probe env
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "PROBE_STATUS=${{ inputs.status }}" >> "$GITHUB_ENV"
+            echo "PROBE_FAILED_COUNT=0" >> "$GITHUB_ENV"
+            echo "PROBE_DURATION_SEC=" >> "$GITHUB_ENV"
+          else
+            echo "PROBE_STATUS=${{ github.event.client_payload.status }}" >> "$GITHUB_ENV"
+            echo "PROBE_FAILED_COUNT=${{ github.event.client_payload.failed_count }}" >> "$GITHUB_ENV"
+            echo "PROBE_DURATION_SEC=${{ github.event.client_payload.duration_sec }}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Relay → Telegram
         env:
-          INFLUXDB_URL: http://62.109.31.244:8086
-          INFLUXDB_TOKEN: ${{ secrets.INFLUXDB_TOKEN }}
-          INFLUXDB_ORG: bid
-          INFLUXDB_BUCKET: bid_monitor
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           RELAY_STATE_FILE: relay-state.txt

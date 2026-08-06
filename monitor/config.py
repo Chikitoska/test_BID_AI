@@ -38,5 +38,9 @@ TELEGRAM_VERBOSE = os.getenv("TELEGRAM_VERBOSE", "false").lower() in ("1", "true
 
 ALERT_STATE_FILE = Path(os.getenv("ALERT_STATE_FILE", str(PROJECT_ROOT / "monitor" / ".alert_state.json")))
 
+GITHUB_PAT = os.getenv("GITHUB_PAT", "")
+GITHUB_REPO = os.getenv("GITHUB_REPO", "Chikitoska/test_BID_AI")
+
 ALERTS_ENABLED = bool(TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID)
 INFLUX_ENABLED = bool(INFLUXDB_TOKEN)
+GITHUB_DISPATCH_ENABLED = bool(GITHUB_PAT and GITHUB_REPO)
