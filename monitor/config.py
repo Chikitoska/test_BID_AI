@@ -40,8 +40,11 @@ TELEGRAM_FULL_RUN_SUMMARY = os.getenv("TELEGRAM_FULL_RUN_SUMMARY", "true").lower
 TELEGRAM_ALERT_REPEAT_HOURS = float(os.getenv("TELEGRAM_ALERT_REPEAT_HOURS", "4"))
 TELEGRAM_VERBOSE = os.getenv("TELEGRAM_VERBOSE", "false").lower() in ("1", "true", "yes")
 
-# ЛК (auth + 2FA) — см. config/lk_settings.py
-from config.lk_settings import LK_MONITOR_ENABLED  # noqa: E402
+# ЛК (auth + 2FA) — опционально, см. config/lk_settings.py
+try:
+    from config.lk_settings import LK_MONITOR_ENABLED
+except ModuleNotFoundError:
+    LK_MONITOR_ENABLED = False
 
 ALERT_STATE_FILE = Path(os.getenv("ALERT_STATE_FILE", str(PROJECT_ROOT / "monitor" / ".alert_state.json")))
 
