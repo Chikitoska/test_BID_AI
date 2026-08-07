@@ -22,12 +22,12 @@ def write_check_results(results: list[CheckResult]) -> None:
             point = (
                 Point("bid_check")
                 .tag("check", item.name)
-                .tag("label", get_check_label(item.name))
                 .tag("method", item.method)
                 .field("success", 1 if item.success else 0)
                 .field("http_code", int(item.http_code))
                 .field("duration_ms", float(item.duration_ms))
                 .field("error", item.error or "")
+                .field("label", get_check_label(item.name))
                 .time(now)
             )
             points.append(point)
