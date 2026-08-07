@@ -127,15 +127,24 @@ def format_relay_failure_message(
     pytest_total: int = 0,
 ) -> str:
     """Краткий алерт для Telegram relay: где упало и описание ошибки."""
-    title = "Ошибка BID" if run_type == "probe" else "Ошибка BID (autotests)"
+    titles = {
+        "probe": "Ошибка BID (лендинг)",
+        "full": "Ошибка BID (autotests)",
+        "lk": "Ошибка BID (ЛК)",
+    }
+    title = titles.get(run_type, "Ошибка BID")
     lines = [title, ""]
 
     if failures:
-        for item in failures:
-            name = item.get("name", "?")
-            status = item.get("status", "error")
-            detail = (item.get("detail") or "").strip()
-            lines.append(f"{name}: {status}")
+    for item in failures:
+        name = item.get("name", "?")
+        label = item.get("label", "")
+        status = item.get("status", "error")
+        detail = (item.get("detail") or "").strip()
+        title = f"{name}: {status}"
+        if label:
+            title = f"{name} ({label}): {status}"
+        lines.append(title)
             if detail and status not in detail:
                 lines.append(detail)
             lines.append("")
@@ -161,9 +170,12 @@ def failure_detail(result: CheckResult) -> str:
 
 
 def failures_for_relay(failed_checks: list[CheckResult]) -> list[dict]:
+    from monitor.check_catalog import get_check_label
+
     return [
         {
             "name": item.name,
+            "label": get_check_label(item.name),
             "status": short_status(item),
             "detail": failure_detail(item),
         }

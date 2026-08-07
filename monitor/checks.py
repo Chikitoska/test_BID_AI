@@ -7,6 +7,7 @@ import requests
 
 from config.api_catalog import EXTERNAL_LANDING_API_METHODS, LANDING_API_METHODS, LandingApiMethod
 from config.settings import AUTH_URL_PATTERNS, BASE_URL, PUBLIC_EXTERNAL_URLS
+from monitor.check_catalog import get_check_label
 from monitor.config import MONITOR_ACCEPT_CODES, MONITOR_HTTP_CONNECT_TIMEOUT, MONITOR_HTTP_TIMEOUT
 from utils.auth_filter import is_auth_url
 
@@ -23,7 +24,7 @@ class CheckResult:
 
 
 def _check_get(session: requests.Session, name: str, url: str) -> CheckResult:
-    print(f"  -> {name}", flush=True)
+    print(f"  -> {name}: {get_check_label(name)}", flush=True)
     start = time.perf_counter()
     timeout = (MONITOR_HTTP_CONNECT_TIMEOUT, MONITOR_HTTP_TIMEOUT)
     try:

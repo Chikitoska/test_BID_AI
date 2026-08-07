@@ -10,7 +10,7 @@
       "collapsed": false,
       "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
       "id": 100,
-      "title": "Обзор",
+      "title": "Лендинг — обзор",
       "type": "row"
     },
     {
@@ -251,12 +251,12 @@
       "options": {"cellHeight": "sm", "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false}, "showHeader": true, "sortBy": [{"desc": false, "displayName": "check"}]},
       "targets": [
         {
-          "query": "success = from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_check\" and r._field == \"success\")\n  |> group(columns: [\"check\"])\n  |> last()\n  |> rename(columns: {_value: \"success\"})\n  |> keep(columns: [\"check\", \"success\", \"_time\"])\n\ncode = from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_check\" and r._field == \"http_code\")\n  |> group(columns: [\"check\"])\n  |> last()\n  |> rename(columns: {_value: \"http_code\"})\n  |> keep(columns: [\"check\", \"http_code\"])\n\nduration = from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_check\" and r._field == \"duration_ms\")\n  |> group(columns: [\"check\"])\n  |> last()\n  |> rename(columns: {_value: \"duration_ms\"})\n  |> keep(columns: [\"check\", \"duration_ms\"])\n\nerror = from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_check\" and r._field == \"error\")\n  |> group(columns: [\"check\"])\n  |> last()\n  |> rename(columns: {_value: \"error\"})\n  |> keep(columns: [\"check\", \"error\"])\n\njoin(tables: {s: success, c: code}, on: [\"check\"])\n  |> join(tables: {d: duration}, on: [\"check\"])\n  |> join(tables: {e: error}, on: [\"check\"])\n  |> keep(columns: [\"check\", \"success\", \"http_code\", \"duration_ms\", \"error\", \"_time\"])",
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_check\")\n  |> group(columns: [\"check\", \"label\", \"_field\"])\n  |> last()\n  |> pivot(rowKey: [\"check\", \"label\"], columnKey: [\"_field\"], valueColumn: \"_value\")",
           "refId": "A"
         }
       ],
       "title": "Все проверки — последний статус",
-      "transformations": [{"id": "organize", "options": {"excludeByName": {"_time": true}, "renameByName": {"check": "Проверка", "duration_ms": "мс", "error": "Ошибка", "http_code": "HTTP", "success": "Статус"}}}],
+      "transformations": [{"id": "organize", "options": {"renameByName": {"check": "Код", "duration_ms": "мс", "error": "Ошибка", "http_code": "HTTP", "label": "Что проверяем", "success": "Статус"}}}],
       "type": "table"
     },
     {
@@ -273,12 +273,114 @@
       "options": {"cellHeight": "sm", "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false}, "showHeader": true, "sortBy": [{"desc": true, "displayName": "Time"}]},
       "targets": [
         {
-          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_check\" and r._field == \"success\" and r._value == 0)\n  |> keep(columns: [\"_time\", \"check\"])\n  |> join(\n    tables: {\n      err: from(bucket: \"bid_monitor\")\n        |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n        |> filter(fn: (r) => r._measurement == \"bid_check\" and r._field == \"error\")\n    },\n    on: [\"_time\", \"check\"],\n  )\n  |> filter(fn: (r) => exists r._value_err and r._value_err != \"\")\n  |> rename(columns: {_value_err: \"error\"})\n  |> keep(columns: [\"_time\", \"check\", \"error\"])",
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_check\")\n  |> group(columns: [\"_time\", \"check\", \"label\"])\n  |> pivot(rowKey: [\"_time\", \"check\", \"label\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> filter(fn: (r) => exists r.success and r.success == 0)\n  |> keep(columns: [\"_time\", \"check\", \"label\", \"http_code\", \"error\"])",
           "refId": "A"
         }
       ],
-      "title": "Журнал ошибок",
-      "transformations": [{"id": "organize", "options": {"renameByName": {"Time": "Время", "check": "Проверка", "error": "Описание"}}}],
+      "title": "Журнал ошибок (лендинг)",
+      "transformations": [{"id": "organize", "options": {"renameByName": {"Time": "Время", "_time": "Время", "check": "Код", "error": "Описание", "http_code": "HTTP", "label": "Что проверяем"}}}],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 52},
+      "id": 200,
+      "title": "ЛК (авторизация + 2FA)",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {"options": {"0": {"color": "red", "index": 0, "text": "FAIL"}}, "type": "value"},
+            {"options": {"1": {"color": "green", "index": 1, "text": "OK"}}, "type": "value"}
+          ],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 8, "x": 0, "y": 53},
+      "id": 201,
+      "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [
+        {
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_lk_run\" and r._field == \"success\")\n  |> last()",
+          "refId": "A"
+        }
+      ],
+      "title": "Последний прогон ЛК",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "custom": {"drawStyle": "bars", "fillOpacity": 80, "lineWidth": 1},
+          "max": 1,
+          "min": 0,
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 16, "x": 8, "y": 53},
+      "id": 202,
+      "options": {"legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "single"}},
+      "targets": [
+        {
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_lk_run\" and r._field == \"success\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)",
+          "refId": "A"
+        }
+      ],
+      "title": "История прогонов ЛК OK / FAIL",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "spanNulls": true},
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 61},
+      "id": 203,
+      "options": {"legend": {"displayMode": "table", "placement": "right", "showLegend": true}, "tooltip": {"mode": "multi"}},
+      "targets": [
+        {
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_lk_check\" and r._field == \"duration_ms\")\n  |> group(columns: [\"check\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "ЛК: время шагов",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
+      "fieldConfig": {
+        "defaults": {
+          "custom": {"align": "auto", "cellOptions": {"type": "auto"}, "inspect": false},
+          "mappings": [
+            {"options": {"0": {"color": "red", "index": 0, "text": "FAIL"}}, "type": "value"},
+            {"options": {"1": {"color": "green", "index": 1, "text": "OK"}}, "type": "value"}
+          ]
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 69},
+      "id": 204,
+      "options": {"cellHeight": "sm", "showHeader": true},
+      "targets": [
+        {
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_lk_check\" and r._field == \"success\")\n  |> group(columns: [\"check\"])\n  |> last()\n  |> keep(columns: [\"check\", \"_value\", \"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "ЛК: статус шагов (последний)",
+      "transformations": [{"id": "organize", "options": {"renameByName": {"_value": "Статус", "check": "Шаг"}}}],
       "type": "table"
     }
   ],
@@ -291,5 +393,5 @@
   "timezone": "browser",
   "title": "BID Monitoring",
   "uid": "bid-monitoring",
-  "version": 2
+  "version": 4
 }

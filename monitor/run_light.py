@@ -15,6 +15,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from monitor.check_catalog import get_check_label
 from monitor.checks import run_http_checks
 from monitor.config import INFLUX_ENABLED, MONITOR_PROBE_RETRIES, MONITOR_PROBE_RETRY_DELAY_SEC
 from monitor.github_dispatch import notify_github_on_failure
@@ -46,7 +47,8 @@ def main() -> int:
 
     for item in http_results:
         status = "OK" if item.success else "FAIL"
-        print(f"[{status}] {item.name} {item.http_code} {item.duration_ms:.0f}ms {item.error}")
+        label = get_check_label(item.name)
+        print(f"[{status}] {item.name} ({label}) {item.http_code} {item.duration_ms:.0f}ms {item.error}")
 
     duration_sec = time.perf_counter() - start
     overall_ok = not http_failed
