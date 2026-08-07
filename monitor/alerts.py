@@ -136,15 +136,15 @@ def format_relay_failure_message(
     lines = [title, ""]
 
     if failures:
-    for item in failures:
-        name = item.get("name", "?")
-        label = item.get("label", "")
-        status = item.get("status", "error")
-        detail = (item.get("detail") or "").strip()
-        title = f"{name}: {status}"
-        if label:
-            title = f"{name} ({label}): {status}"
-        lines.append(title)
+        for item in failures:
+            name = item.get("name", "?")
+            label = item.get("label", "")
+            status = item.get("status", "error")
+            detail = (item.get("detail") or "").strip()
+            line_title = f"{name}: {status}"
+            if label:
+                line_title = f"{name} ({label}): {status}"
+            lines.append(line_title)
             if detail and status not in detail:
                 lines.append(detail)
             lines.append("")
