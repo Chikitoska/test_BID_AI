@@ -251,7 +251,7 @@
       "options": {"cellHeight": "sm", "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false}, "showHeader": true, "sortBy": [{"desc": false, "displayName": "check"}]},
       "targets": [
         {
-          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_check\")\n  |> group(columns: [\"check\", \"_field\"])\n  |> last()\n  |> group()\n  |> pivot(rowKey: [\"check\"], columnKey: [\"_field\"], valueColumn: \"_value\")",
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"bid_check\")\n  |> group(columns: [\"check\", \"label\", \"_field\"])\n  |> last()\n  |> map(fn: (r) => ({ r with _value: string(v: r._value) }))\n  |> group()\n  |> pivot(rowKey: [\"check\", \"label\"], columnKey: [\"_field\"], valueColumn: \"_value\")",
           "refId": "A"
         }
       ],
@@ -273,12 +273,12 @@
       "options": {"cellHeight": "sm", "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false}, "showHeader": true, "sortBy": [{"desc": true, "displayName": "Time"}]},
       "targets": [
         {
-          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_check\")\n  |> pivot(rowKey: [\"_time\", \"check\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> filter(fn: (r) => exists r.success and r.success == 0)\n  |> keep(columns: [\"_time\", \"check\", \"label\", \"http_code\", \"error\"])",
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_check\" and r._field == \"success\" and r._value == 0)\n  |> keep(columns: [\"_time\", \"check\", \"label\"])",
           "refId": "A"
         }
       ],
       "title": "Журнал ошибок (лендинг)",
-      "transformations": [{"id": "organize", "options": {"indexByName": {"_time": 0, "check": 1, "label": 2, "http_code": 3, "error": 4}, "renameByName": {"Time": "Время", "_time": "Время", "check": "Код", "error": "Описание", "http_code": "HTTP", "label": "Что проверяем"}}}],
+      "transformations": [{"id": "organize", "options": {"renameByName": {"Time": "Время", "_time": "Время", "check": "Код", "label": "Что проверяем"}}}],
       "type": "table"
     },
     {
@@ -393,5 +393,5 @@
   "timezone": "browser",
   "title": "BID Monitoring",
   "uid": "bid-monitoring",
-  "version": 5
+  "version": 6
 }
