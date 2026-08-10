@@ -55,3 +55,8 @@ GITHUB_REPO = os.getenv("GITHUB_REPO", "Chikitoska/test_BID_AI")
 ALERTS_ENABLED = bool(TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID)
 INFLUX_ENABLED = bool(INFLUXDB_TOKEN)
 GITHUB_DISPATCH_ENABLED = bool(GITHUB_PAT and GITHUB_REPO)
+# На VPS: только GitHub relay. Прямой Telegram — Mac/локально без GITHUB_PAT.
+TELEGRAM_DIRECT_ALLOWED = (
+    os.getenv("TELEGRAM_DIRECT", "").lower() in ("1", "true", "yes")
+    or (ALERTS_ENABLED and not GITHUB_DISPATCH_ENABLED)
+)

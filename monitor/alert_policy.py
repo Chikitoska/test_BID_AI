@@ -10,8 +10,10 @@ from monitor.alerts import (
 from monitor.checks import CheckResult
 from monitor.config import (
     ALERTS_ENABLED,
+    GITHUB_DISPATCH_ENABLED,
     TELEGRAM_ALERT_ON_SUCCESS,
     TELEGRAM_ALERT_REPEAT_HOURS,
+    TELEGRAM_DIRECT_ALLOWED,
     TELEGRAM_FULL_RUN_SUMMARY,
 )
 from monitor.state import AlertState
@@ -22,7 +24,7 @@ def notify_probe_result(
     *,
     overall_ok: bool,
 ) -> None:
-    if not ALERTS_ENABLED:
+    if not ALERTS_ENABLED or (GITHUB_DISPATCH_ENABLED and not TELEGRAM_DIRECT_ALLOWED):
         return
 
     state = AlertState.load()
@@ -46,7 +48,7 @@ def notify_full_run_result(
     pytest_failed: int,
     pytest_output: str,
 ) -> None:
-    if not ALERTS_ENABLED:
+    if not ALERTS_ENABLED or (GITHUB_DISPATCH_ENABLED and not TELEGRAM_DIRECT_ALLOWED):
         return
 
     if overall_ok:
