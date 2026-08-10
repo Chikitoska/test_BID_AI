@@ -7,10 +7,51 @@ import re
 import requests
 
 from monitor.checks import CheckResult
-from monitor.config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_PROXY, TELEGRAM_VERBOSE, ALERTS_ENABLED
+from monitor.config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_PROXY, TELEGRAM_VERBOSE, ALERTS_ENABLED, TELEGRAM_DIRECT_ALLOWED, GITHUB_DISPATCH_ENABLED
+
+HTTP_STATUS_LABELS: dict[int, str] = {
+    400: "Bad Request",
+    401: "Unauthorized",
+    403: "Forbidden",
+    404: "Not Found",
+    408: "Request Timeout",
+    429: "Too Many Requests",
+    500: "Internal Server Error",
+    502: "Bad Gateway",
+    503: "Service Unavailable",
+    504: "Gateway Timeout",
+}
+
+NETWORK_STATUS_LABELS: dict[str, str] = {
+    "timeout": "timeout — сервер не ответил вовремя",
+    "refused": "connection refused — соединение отклонено",
+    "dns": "DNS error — домен не найден",
+    "error": "ошибка сети",
+}
+
+
+def describe_status(status: str, detail: str = "") -> str:
+    """Человекочитаемый статус: «502 Bad Gateway», «404 Not Found»."""
+    detail = (detail or "").strip()
+    if detail:
+        match = re.match(r"HTTP (\d+):\s*(.+)", detail, re.I)
+        if match:
+            code, reason = match.group(1), match.group(2).strip()
+            return f"{code} {reason}"
+        if re.match(r"HTTP \d+", detail, re.I):
+            return detail.replace("HTTP ", "", 1)
+
+    if status.isdigit():
+        code = int(status)
+        phrase = HTTP_STATUS_LABELS.get(code, "")
+        return f"{code} {phrase}".strip() if phrase else str(code)
+
+    return NETWORK_STATUS_LABELS.get(status, status)
 
 
 def send_telegram(text: str) -> bool:
+    if GITHUB_DISPATCH_ENABLED and not TELEGRAM_DIRECT_ALLOWED:
+        return False
     if not ALERTS_ENABLED:
         print("[alert] Telegram не настроен, пропуск алерта")
         return False
@@ -65,8 +106,9 @@ def _format_http_failures(failed_checks: list[CheckResult], *, limit: int = 8) -
     lines: list[str] = []
     for item in failed_checks[:limit]:
         status = short_status(item)
+        status_text = describe_status(status, failure_detail(item))
         ms = f"{item.duration_ms:.0f}ms"
-        lines.append(f"• <code>{item.name}</code>: <b>{status}</b> ({ms})")
+        lines.append(f"• <code>{item.name}</code>: <b>{status_text}</b> ({ms})")
 
     if len(failed_checks) > limit:
         lines.append(f"• … ещё {len(failed_checks) - limit} проверок")
@@ -90,7 +132,7 @@ def format_failure_alert(
             title += f", pytest −{pytest_failed}"
         title += ")"
     else:
-        title = f"🔴 BID Probe — FAIL ({ok}/{total} OK)"
+        title = f"🔴 BID — быстрая проверка FAIL ({ok}/{total} OK)"
 
     lines = [f"<b>{title}</b>", ""]
 
@@ -112,7 +154,7 @@ def format_probe_failure_alert(http_results: list[CheckResult]) -> str:
 
 
 def format_recovery_message() -> str:
-    return "<b>🟢 BID Probe — OK</b>\n\nHTTP-проверки снова проходят."
+    return "<b>🟢 BID — быстрая проверка OK</b>\n\nHTTP-проверки снова проходят."
 
 
 def format_relay_ok_message() -> str:
@@ -142,12 +184,17 @@ def format_relay_failure_message(
             label = item.get("label", "")
             status = item.get("status", "error")
             detail = (item.get("detail") or "").strip()
-            line_title = f"{name}: {status}"
+            status_text = describe_status(status, detail)
+
+            line = f"• {name}"
             if label:
-                line_title = f"{name} ({label}): {status}"
-            lines.append(line_title)
-            if detail and status not in detail:
-                lines.append(detail)
+                line += f" ({label})"
+            line += f": {status_text}"
+            lines.append(line)
+
+            if detail and detail.lower() not in status_text.lower():
+                if not re.match(r"HTTP \d+", detail, re.I):
+                    lines.append(f"  {detail}")
             lines.append("")
     elif run_type == "full" and pytest_failed:
         lines.append("HTTP-проверки прошли.")
@@ -193,4 +240,4 @@ def failures_for_relay(failed_checks: list[CheckResult]) -> list[dict]:
 def format_success_message(passed: int, total: int, *, run_type: str = "full") -> str:
     if run_type == "full":
         return f"<b>🟢 BID Full — OK</b>\n\nHTTP + pytest: {passed}/{total}"
-    return f"<b>🟢 BID Probe — OK</b>"
+    return f"<b>🟢 BID — быстрая проверка OK</b>"

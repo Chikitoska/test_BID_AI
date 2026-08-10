@@ -36,7 +36,7 @@ jobs:
             echo "PYTEST_FAILED=0" >> "$GITHUB_ENV"
             echo "PYTEST_TOTAL=0" >> "$GITHUB_ENV"
             if [ "${{ inputs.status }}" = "fail" ]; then
-              echo 'PROBE_FAILURES_JSON=[{"name":"main_page","status":"502","detail":"502 Bad Gateway"}]' >> "$GITHUB_ENV"
+              echo 'PROBE_FAILURES_JSON=[{"name":"main_page","label":"Главная страница лендинга","status":"502","detail":"HTTP 502: Bad Gateway"}]' >> "$GITHUB_ENV"
             else
               echo "PROBE_FAILURES_JSON=[]" >> "$GITHUB_ENV"
             fi
