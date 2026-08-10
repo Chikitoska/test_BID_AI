@@ -19,6 +19,7 @@ def notify_github_on_failure(
     duration_sec: float = 0,
     pytest_failed: int = 0,
     pytest_total: int = 0,
+    pytest_error: str = "",
 ) -> bool:
     """Шлёт dispatch в GitHub только при неуспехе → Telegram relay."""
     if not GITHUB_DISPATCH_ENABLED:
@@ -39,6 +40,7 @@ def notify_github_on_failure(
             "failures_json": failures_json,
             "pytest_failed": pytest_failed,
             "pytest_total": pytest_total,
+            "pytest_error": pytest_error[:500],
         },
     }
 

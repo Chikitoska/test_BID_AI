@@ -125,6 +125,7 @@ def format_relay_failure_message(
     run_type: str = "probe",
     pytest_failed: int = 0,
     pytest_total: int = 0,
+    pytest_error: str = "",
 ) -> str:
     """Краткий алерт для Telegram relay: где упало и описание ошибки."""
     titles = {
@@ -153,9 +154,15 @@ def format_relay_failure_message(
         lines.append("")
 
     if pytest_failed:
-        lines.append(f"Pytest: упало {pytest_failed} из {pytest_total}")
+        if pytest_total == 0:
+            lines.append("Pytest: не запустился (ошибка окружения)")
+        else:
+            lines.append(f"Pytest: упало {pytest_failed} из {pytest_total}")
+        if pytest_error:
+            lines.append("")
+            lines.append(pytest_error[:400])
 
-    if len(lines) <= 2:
+    if len(lines) <= 2 and not pytest_failed:
         return f"{title}\n\nНе удалось получить детали проверок."
 
     return "\n".join(lines).strip()

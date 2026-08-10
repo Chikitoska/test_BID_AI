@@ -74,6 +74,7 @@ def main() -> int:
         run_type=run_type,
         pytest_failed=pytest_failed,
         pytest_total=pytest_total,
+        pytest_error=os.getenv("PYTEST_ERROR", ""),
     )
     _send_telegram(message)
     print(f"Sent Telegram: fail ({run_type})")

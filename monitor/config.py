@@ -15,6 +15,7 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 TELEGRAM_PROXY = os.getenv("TELEGRAM_PROXY", "")
 
 MONITOR_RUN_UI = os.getenv("MONITOR_RUN_UI", "false").lower() in ("1", "true", "yes")
+MONITOR_RUN_PYTEST = os.getenv("MONITOR_RUN_PYTEST", "true").lower() in ("1", "true", "yes")
 MONITOR_TIMEZONE = os.getenv("MONITOR_TIMEZONE", "Europe/Moscow")
 MONITOR_HTTP_TIMEOUT = int(os.getenv("MONITOR_HTTP_TIMEOUT", "20"))
 MONITOR_HTTP_CONNECT_TIMEOUT = int(os.getenv("MONITOR_HTTP_CONNECT_TIMEOUT", "10"))

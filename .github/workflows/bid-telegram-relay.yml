@@ -46,6 +46,11 @@ jobs:
             echo "PYTEST_FAILED=${{ github.event.client_payload.pytest_failed || 0 }}" >> "$GITHUB_ENV"
             echo "PYTEST_TOTAL=${{ github.event.client_payload.pytest_total || 0 }}" >> "$GITHUB_ENV"
             {
+              echo "PYTEST_ERROR<<EOF"
+              echo '${{ github.event.client_payload.pytest_error }}'
+              echo "EOF"
+            } >> "$GITHUB_ENV"
+            {
               echo "PROBE_FAILURES_JSON<<EOF"
               echo '${{ github.event.client_payload.failures_json }}'
               echo "EOF"

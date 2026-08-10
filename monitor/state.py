@@ -16,6 +16,8 @@ class AlertState:
     consecutive_probe_failures: int = 0
     incident_active: bool = False
     last_probe_fail_alert_at: float | None = None
+    daily_incident_active: bool = False
+    last_daily_fail_alert_at: float | None = None
 
     @classmethod
     def load(cls) -> AlertState:
@@ -28,6 +30,8 @@ class AlertState:
                 consecutive_probe_failures=int(data.get("consecutive_probe_failures", 0)),
                 incident_active=bool(data.get("incident_active", False)),
                 last_probe_fail_alert_at=data.get("last_probe_fail_alert_at"),
+                daily_incident_active=bool(data.get("daily_incident_active", False)),
+                last_daily_fail_alert_at=data.get("last_daily_fail_alert_at"),
             )
         except (json.JSONDecodeError, OSError, TypeError, ValueError):
             return cls()
@@ -41,6 +45,8 @@ class AlertState:
                     "consecutive_probe_failures": self.consecutive_probe_failures,
                     "incident_active": self.incident_active,
                     "last_probe_fail_alert_at": self.last_probe_fail_alert_at,
+                    "daily_incident_active": self.daily_incident_active,
+                    "last_daily_fail_alert_at": self.last_daily_fail_alert_at,
                 },
                 ensure_ascii=False,
             ),
@@ -72,17 +78,42 @@ class AlertState:
                     send_fail = True
                     self.incident_active = True
                     self.last_probe_fail_alert_at = time.time()
-                elif self._should_repeat(repeat_hours):
+                elif self._should_repeat(repeat_hours, self.last_probe_fail_alert_at):
                     send_fail = True
                     self.last_probe_fail_alert_at = time.time()
 
         self.save()
         return send_fail, send_recovery
 
-    def _should_repeat(self, repeat_hours: float) -> bool:
-        if self.last_probe_fail_alert_at is None:
+    def should_repeat_failure_alert(self, repeat_hours: float) -> bool:
+        if not self.incident_active:
+            return False
+        return self._should_repeat(repeat_hours, self.last_probe_fail_alert_at)
+
+    def evaluate_daily_alert(self, ok: bool, *, repeat_hours: float) -> bool:
+        if ok:
+            self.daily_incident_active = False
+            self.save()
+            return False
+
+        if not self.daily_incident_active:
+            self.daily_incident_active = True
+            self.last_daily_fail_alert_at = time.time()
+            self.save()
             return True
-        elapsed_hours = (time.time() - self.last_probe_fail_alert_at) / 3600
+
+        if self._should_repeat(repeat_hours, self.last_daily_fail_alert_at):
+            self.last_daily_fail_alert_at = time.time()
+            self.save()
+            return True
+
+        self.save()
+        return False
+
+    def _should_repeat(self, repeat_hours: float, last_at: float | None) -> bool:
+        if last_at is None:
+            return True
+        elapsed_hours = (time.time() - last_at) / 3600
         return elapsed_hours >= repeat_hours
 
     # legacy API for alert_policy full runs
@@ -94,8 +125,3 @@ class AlertState:
             threshold=MONITOR_ALERT_AFTER_FAILURES,
             repeat_hours=TELEGRAM_ALERT_REPEAT_HOURS,
         )
-
-    def should_repeat_failure_alert(self, repeat_hours: float) -> bool:
-        if not self.incident_active:
-            return False
-        return self._should_repeat(repeat_hours)

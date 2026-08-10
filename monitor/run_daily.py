@@ -2,9 +2,9 @@
 """
 Ежедневный мониторинг BID:
 1. HTTP-проверки публичных API
-2. pytest tests/api/
+2. pytest tests/api/ (опционально)
 3. метрики → InfluxDB
-4. алерт в Telegram при ошибках
+4. алерт в Telegram при ошибках (anti-flap)
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ import re
 import subprocess
 import sys
 import time
+from dataclasses import dataclass
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -20,14 +21,29 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from monitor.alert_policy import notify_full_run_result
 from monitor.checks import run_http_checks
-from monitor.config import INFLUX_ENABLED, MONITOR_RUN_UI, PROJECT_ROOT
+from monitor.config import INFLUX_ENABLED, MONITOR_RUN_PYTEST, MONITOR_RUN_UI, PROJECT_ROOT
 from monitor.github_dispatch import notify_github_on_failure
 from monitor.http_session import create_monitor_session
 from monitor.metrics import write_check_results, write_pytest_run
+from monitor.probe_alert import should_send_daily_telegram
 
 
-def _run_pytest() -> tuple[int, int, int, float, str]:
-    """Запуск pytest, возвращает total, passed, failed, duration, output."""
+@dataclass
+class PytestResult:
+    total: int
+    passed: int
+    failed: int
+    errors: int
+    duration_sec: float
+    output: str
+    crashed: bool
+
+    @property
+    def pytest_failed(self) -> int:
+        return self.failed + self.errors
+
+
+def _run_pytest() -> PytestResult:
     test_paths = ["tests/api/"]
     if MONITOR_RUN_UI:
         test_paths.append(
@@ -42,27 +58,41 @@ def _run_pytest() -> tuple[int, int, int, float, str]:
         "--tb=line",
     ]
     start = time.perf_counter()
-    proc = subprocess.run(
-        cmd,
-        cwd=PROJECT_ROOT,
-        capture_output=True,
-        text=True,
-    )
+    proc = subprocess.run(cmd, cwd=PROJECT_ROOT, capture_output=True, text=True)
     duration = time.perf_counter() - start
     output = (proc.stdout or "") + (proc.stderr or "")
 
-    passed = failed = 0
-    match = re.search(r"(\d+) passed", output)
-    if match:
+    passed = failed = errors = 0
+    if match := re.search(r"(\d+) passed", output):
         passed = int(match.group(1))
-    match = re.search(r"(\d+) failed", output)
-    if match:
+    if match := re.search(r"(\d+) failed", output):
         failed = int(match.group(1))
-    total = passed + failed
-    if total == 0 and proc.returncode != 0:
-        failed = 1
+    if match := re.search(r"(\d+) error", output):
+        errors = int(match.group(1))
+    total = passed + failed + errors
+    crashed = proc.returncode != 0 and total == 0
+    if crashed:
+        errors = 1
 
-    return total, passed, failed, duration, output
+    return PytestResult(
+        total=total,
+        passed=passed,
+        failed=failed,
+        errors=errors,
+        duration_sec=duration,
+        output=output,
+        crashed=crashed,
+    )
+
+
+def _pytest_error_snippet(result: PytestResult) -> str:
+    lines = [line.strip() for line in result.output.splitlines() if line.strip()]
+    tail = "\n".join(lines[-8:])
+    if result.crashed:
+        return f"Pytest не запустился (ошибка окружения):\n{tail[:400]}"
+    if result.pytest_failed:
+        return tail[:400]
+    return ""
 
 
 def main() -> int:
@@ -76,43 +106,53 @@ def main() -> int:
         status = "OK" if item.success else "FAIL"
         print(f"[{status}] {item.name} {item.http_code} {item.duration_ms:.0f}ms {item.error}")
 
-    total, passed, failed, pytest_duration, pytest_output = _run_pytest()
-    print(f"Pytest: {passed}/{total} passed in {pytest_duration:.1f}s")
+    if MONITOR_RUN_PYTEST:
+        pytest_result = _run_pytest()
+        print(
+            f"Pytest: {pytest_result.passed}/{pytest_result.total} passed, "
+            f"failed={pytest_result.failed}, errors={pytest_result.errors} "
+            f"in {pytest_result.duration_sec:.1f}s"
+        )
+        if pytest_result.crashed:
+            print("Pytest crashed — см. cron.log")
+            print(pytest_result.output[-500:])
+    else:
+        pytest_result = PytestResult(0, 0, 0, 0, 0.0, "", False)
+        print("Pytest: skipped (MONITOR_RUN_PYTEST=false)")
 
     if INFLUX_ENABLED:
         try:
             write_check_results(http_results)
             write_pytest_run(
-                total=total,
-                passed=passed,
-                failed=failed,
-                duration_sec=pytest_duration,
+                total=pytest_result.total,
+                passed=pytest_result.passed,
+                failed=pytest_result.pytest_failed,
+                duration_sec=pytest_result.duration_sec,
             )
             print("Metrics sent to InfluxDB")
         except Exception as exc:
             print(f"WARN: InfluxDB write failed: {exc}")
-    else:
-        print("WARN: INFLUXDB_TOKEN не задан — метрики не записаны")
 
-    overall_ok = not http_failed and failed == 0
+    overall_ok = not http_failed and pytest_result.pytest_failed == 0
 
     notify_full_run_result(
         http_results,
         overall_ok=overall_ok,
-        passed=passed,
-        total=total,
-        pytest_failed=failed,
-        pytest_output=pytest_output,
+        passed=pytest_result.passed,
+        total=pytest_result.total,
+        pytest_failed=pytest_result.pytest_failed,
+        pytest_output=pytest_result.output,
     )
 
-    if not overall_ok:
+    if not overall_ok and should_send_daily_telegram(overall_ok=overall_ok):
         notify_github_on_failure(
             run_type="full",
             http_results=http_results,
             failed_count=len(http_failed),
-            duration_sec=pytest_duration,
-            pytest_failed=failed,
-            pytest_total=total,
+            duration_sec=pytest_result.duration_sec,
+            pytest_failed=pytest_result.pytest_failed,
+            pytest_total=pytest_result.total,
+            pytest_error=_pytest_error_snippet(pytest_result),
         )
 
     return 0 if overall_ok else 1
