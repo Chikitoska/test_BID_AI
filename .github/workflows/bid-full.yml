@@ -1,8 +1,9 @@
-name: BID Full Check
+name: BID Full Check (manual test only)
+
+# Мониторинг только на RU VPS. Облако GitHub не используется для prod.
+# НЕ добавлять schedule.
 
 on:
-  schedule:
-    - cron: "0 5,17 * * *"
   workflow_dispatch:
 
 jobs:
@@ -18,15 +19,10 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - name: HTTP + pytest
+      - name: HTTP + pytest (no alerts from cloud)
         env:
-          INFLUXDB_URL: http://78.17.46.33:8086
-          INFLUXDB_TOKEN: ${{ secrets.INFLUXDB_TOKEN }}
-          INFLUXDB_ORG: bid
-          INFLUXDB_BUCKET: bid_monitor
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ""
+          TELEGRAM_CHAT_ID: ""
           TELEGRAM_ALERT_ON_SUCCESS: "false"
-          TELEGRAM_FULL_RUN_SUMMARY: "true"
-          TELEGRAM_ALERT_REPEAT_HOURS: "4"
+          TELEGRAM_FULL_RUN_SUMMARY: "false"
         run: python monitor/run_daily.py

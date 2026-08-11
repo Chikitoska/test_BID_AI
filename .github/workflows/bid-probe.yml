@@ -1,8 +1,10 @@
-name: BID Probe
+name: BID Probe (manual test only)
+
+# Мониторинг только на RU VPS (157.22.191.247). Облако GitHub НЕ достучится до BID.
+# НЕ добавлять schedule — иначе ложные FAIL и спам в Telegram.
+# Тест алертов: workflow "BID Telegram Relay"
 
 on:
-  schedule:
-    - cron: "0 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -18,14 +20,10 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - name: HTTP probe
+      - name: HTTP probe (no alerts from cloud)
         env:
-          INFLUXDB_URL: http://78.17.46.33:8086
-          INFLUXDB_TOKEN: ${{ secrets.INFLUXDB_TOKEN }}
-          INFLUXDB_ORG: bid
-          INFLUXDB_BUCKET: bid_monitor
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ""
+          TELEGRAM_CHAT_ID: ""
           TELEGRAM_ALERT_ON_SUCCESS: "false"
-          TELEGRAM_ALERT_REPEAT_HOURS: "4"
+          MONITOR_ALERT_AFTER_FAILURES: "99"
         run: python monitor/run_light.py
