@@ -26,6 +26,23 @@ def parse_alert_emails(raw: str | None = None) -> list[str]:
     return recipients
 
 
+def email_config_status() -> str:
+    """Для лога GitHub Actions — без паролей."""
+    host = bool(os.getenv("SMTP_HOST", "").strip())
+    user = bool(os.getenv("SMTP_USER", "").strip())
+    password = bool(os.getenv("SMTP_PASSWORD", "").strip())
+    recipients = parse_alert_emails()
+    port_raw = os.getenv("SMTP_PORT", "").strip()
+    parts = [
+        f"SMTP_HOST={'yes' if host else 'NO'}",
+        f"SMTP_USER={'yes' if user else 'NO'}",
+        f"SMTP_PASSWORD={'yes' if password else 'NO'}",
+        f"ALERT_EMAIL_TO={len(recipients)} addr(s)",
+        f"SMTP_PORT={port_raw or '465 (default)'}",
+    ]
+    return ", ".join(parts)
+
+
 def email_configured() -> bool:
     return bool(
         os.getenv("SMTP_HOST")
@@ -40,7 +57,12 @@ def send_alert_email(subject: str, body: str) -> bool:
     user = os.getenv("SMTP_USER", "").strip()
     password = os.getenv("SMTP_PASSWORD", "").strip()
     recipients = parse_alert_emails()
-    port = int(os.getenv("SMTP_PORT", "465"))
+    port_raw = os.getenv("SMTP_PORT", "465").strip()
+    try:
+        port = int(port_raw or "465")
+    except ValueError:
+        print(f"ERROR: SMTP_PORT invalid: {port_raw!r}")
+        return False
     use_tls = os.getenv("SMTP_USE_TLS", "").lower() in ("1", "true", "yes")
     mail_from = os.getenv("SMTP_FROM", user).strip()
 
@@ -65,6 +87,9 @@ def send_alert_email(subject: str, body: str) -> bool:
                 server.send_message(msg, to_addrs=recipients)
         print(f"Email sent to: {', '.join(recipients)}")
         return True
-    except OSError as exc:
+    except smtplib.SMTPException as exc:
         print(f"ERROR: SMTP send failed: {exc}")
+        return False
+    except OSError as exc:
+        print(f"ERROR: SMTP connection failed: {exc}")
         return False

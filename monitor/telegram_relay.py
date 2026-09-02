@@ -17,7 +17,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from monitor.alerts import format_relay_failure_message
-from monitor.email_relay import email_configured, send_alert_email
+from monitor.email_relay import email_config_status, email_configured, send_alert_email
 from monitor.run_labels import get_run_label
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
@@ -77,7 +77,7 @@ def _deliver_alert(*, subject: str, message: str, run_type: str) -> int:
         else:
             print("ERROR: email send failed")
     else:
-        print("INFO: SMTP not configured — email skipped")
+        print(f"INFO: SMTP not configured — email skipped ({email_config_status()})")
 
     if telegram_ok or email_ok:
         return 0
