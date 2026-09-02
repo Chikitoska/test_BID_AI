@@ -43,8 +43,13 @@ VPS **не** обращается к Telegram. РКN блокировал ста
 | `SMTP_FROM` | опционально, по умолчанию = SMTP_USER |
 | `SMTP_USE_TLS` | `true` для порта 587, иначе можно не задавать |
 
-**Email:** при каждой ошибке (FAIL) письмо уходит **вместе** с Telegram, если SMTP настроен.  
-Чтобы добавить коллегу — допишите email в `ALERT_EMAIL_TO` через запятую.
+**Email:** при каждой ошибке письмо уходит **с VPS** (если SMTP в `monitor/.env`).  
+GitHub Actions + Yandex часто даёт `454 Try again later` — это блокировка IP датацентра, не ваш пароль.
+
+| Где | Telegram | Email |
+|-----|----------|-------|
+| GitHub Secrets | `TELEGRAM_*` | не нужно (можно удалить `SMTP_*`) |
+| VPS `monitor/.env` | пусто | `SMTP_*`, `ALERT_EMAIL_TO` |
 
 ### 2. GitHub PAT
 
@@ -124,32 +129,36 @@ GitHub → Actions — запуск **BID Telegram Relay**
 
 Для **Gmail**: App Password в Google Account → Security.
 
-### Шаг 2 — GitHub Secrets
+### Шаг 2 — SMTP в monitor/.env на VPS
 
-Репо → **Settings → Secrets and variables → Actions → New repository secret**:
+На VPS (не в GitHub Secrets):
 
-| Secret | Пример |
-|--------|--------|
-| `SMTP_HOST` | `smtp.yandex.ru` |
-| `SMTP_PORT` | `465` |
-| `SMTP_USER` | `monitor@yourcompany.ru` |
-| `SMTP_PASSWORD` | пароль приложения |
-| `ALERT_EMAIL_TO` | `you@company.ru, colleague@company.ru` |
+```env
+SMTP_HOST=smtp.yandex.ru
+SMTP_PORT=465
+SMTP_USER=ваш@yandex.ru
+SMTP_PASSWORD=пароль-приложения
+ALERT_EMAIL_TO=вы@mail.ru, коллега@mail.ru
+```
 
-Опционально: `SMTP_FROM` (если From должен отличаться), `SMTP_USE_TLS=true` для порта 587.
+**Добавить коллегу:** допишите email в `ALERT_EMAIL_TO` через запятую.
 
-**Добавить коллегу позже:** отредактировать `ALERT_EMAIL_TO`, дописать email через запятую. Код менять не нужно.
+### Шаг 3 — проверка с VPS
 
-### Шаг 3 — задеплоить код relay
+```bash
+cd /opt/test_BID_AI
+./monitor/verify_smtp.sh
+```
 
-После push в GitHub на VPS достаточно `git pull` в `/opt/test_BID_AI` (или `scp` файлов `email_relay.py`, `telegram_relay.py`).
+Должно быть: `Email sent to: ...` и письмо во входящих.
 
-### Шаг 4 — тест
+### Шаг 4 — git pull на VPS
 
-GitHub → **Actions** → **BID Telegram Relay** → **Run workflow** → status: **fail**
+```bash
+cd /opt/test_BID_AI && git pull
+```
 
-В логе job:
-- `Sent Telegram: fail (probe)` — если TG настроен
-- `Email sent to: you@..., colleague@...`
+### Шаг 5 — тест при ошибке
 
-Проверьте входящие (и спам).
+GitHub → **BID Telegram Relay → fail** — проверяет только Telegram.  
+Email при реальных падениях шлёт VPS вместе с `GitHub dispatch sent`.

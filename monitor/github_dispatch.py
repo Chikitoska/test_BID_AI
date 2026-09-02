@@ -6,9 +6,39 @@ import json
 
 import requests
 
-from monitor.alerts import failures_for_relay
+from monitor.alerts import failures_for_relay, format_relay_failure_message
 from monitor.checks import CheckResult
 from monitor.config import GITHUB_DISPATCH_ENABLED, GITHUB_PAT, GITHUB_REPO
+from monitor.email_relay import email_configured, send_alert_email
+from monitor.run_labels import get_run_label
+
+
+def send_vps_email_on_failure(
+    *,
+    run_type: str,
+    failed_checks: list[CheckResult],
+    pytest_failed: int = 0,
+    pytest_total: int = 0,
+    pytest_error: str = "",
+) -> bool:
+    """Email с VPS (Yandex часто блокирует IP GitHub Actions — 454)."""
+    if not email_configured():
+        return False
+
+    failures = failures_for_relay(failed_checks)
+    message = format_relay_failure_message(
+        failures,
+        run_type=run_type,
+        pytest_failed=pytest_failed,
+        pytest_total=pytest_total,
+        pytest_error=pytest_error,
+    )
+    subject = f"BID — {get_run_label(run_type)}"
+    if send_alert_email(subject, message):
+        print("VPS email alert sent")
+        return True
+    print("WARN: VPS email alert failed")
+    return False
 
 
 def notify_github_on_failure(
@@ -28,6 +58,14 @@ def notify_github_on_failure(
 
     failed_checks = [item for item in http_results if not item.success]
     failures_json = json.dumps(failures_for_relay(failed_checks), ensure_ascii=False)
+
+    send_vps_email_on_failure(
+        run_type=run_type,
+        failed_checks=failed_checks,
+        pytest_failed=pytest_failed,
+        pytest_total=pytest_total,
+        pytest_error=pytest_error,
+    )
 
     url = f"https://api.github.com/repos/{GITHUB_REPO}/dispatches"
     payload = {
