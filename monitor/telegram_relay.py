@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Relay: repository_dispatch при неуспехе probe/autotests → Telegram (GitHub Actions).
+Relay: repository_dispatch при неуспехе → Telegram + email (GitHub Actions).
+Письмо уходит при каждой ошибке, если настроен SMTP (не только fallback).
 """
 
 from __future__ import annotations
@@ -16,6 +17,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from monitor.alerts import format_relay_failure_message
+from monitor.email_relay import email_configured, send_alert_email
+from monitor.run_labels import get_run_label
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
@@ -40,7 +43,11 @@ def _load_failures() -> list[dict]:
         return []
 
 
-def _send_telegram(text: str) -> bool:
+def _alert_subject(run_type: str) -> str:
+    return f"BID — {get_run_label(run_type)}"
+
+
+def _send_telegram(text: str) -> None:
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     response = requests.post(
         url,
@@ -48,21 +55,45 @@ def _send_telegram(text: str) -> bool:
         timeout=20,
     )
     response.raise_for_status()
-    return True
+
+
+def _deliver_alert(*, subject: str, message: str, run_type: str) -> int:
+    telegram_ok = False
+    email_ok = False
+
+    if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
+        try:
+            _send_telegram(message)
+            print(f"Sent Telegram: fail ({run_type})")
+            telegram_ok = True
+        except requests.RequestException as exc:
+            print(f"WARN: Telegram failed: {exc}")
+    else:
+        print("WARN: TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID not set")
+
+    if email_configured():
+        if send_alert_email(subject, message):
+            email_ok = True
+        else:
+            print("ERROR: email send failed")
+    else:
+        print("INFO: SMTP not configured — email skipped")
+
+    if telegram_ok or email_ok:
+        return 0
+
+    print("ERROR: no alert channel succeeded (Telegram and email failed or not configured)")
+    return 1
 
 
 def main() -> int:
-    if not all([TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID]):
-        print("ERROR: задайте TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID")
-        return 1
-
     status = _probe_status()
     if status is None:
         print("ERROR: PROBE_STATUS must be ok or fail")
         return 1
 
     if status == "ok":
-        print("Skipped Telegram: all checks ok")
+        print("Skipped: all checks ok")
         return 0
 
     run_type = os.getenv("RUN_TYPE", "probe")
@@ -76,9 +107,7 @@ def main() -> int:
         pytest_total=pytest_total,
         pytest_error=os.getenv("PYTEST_ERROR", ""),
     )
-    _send_telegram(message)
-    print(f"Sent Telegram: fail ({run_type})")
-    return 0
+    return _deliver_alert(subject=_alert_subject(run_type), message=message, run_type=run_type)
 
 
 if __name__ == "__main__":
