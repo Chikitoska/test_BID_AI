@@ -7,37 +7,36 @@
   "links": [],
   "panels": [
     {
-      "gridPos": {"h": 2, "w": 24, "x": 0, "y": 0},
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 0},
       "id": 50,
       "options": {
         "code": {"language": "markdown", "showLineNumbers": false, "showMiniMap": false},
-        "content": "## BID — работоспособность прогонов\n\nОсь **X** — время выполнения прогона. Ось **Y** — результат: **1 = успех**, **0 = провал** (видно как падение линии)."
+        "content": "### Как читать графики\nЗелёный столбец **вверх** — проверка прошла. Красный **вниз** — была ошибка. Внизу страницы — **таблица ошибок** (когда, какой мониторинг, что не сработало).\n\n---\n\n### 1. Лендинг + минимальная проверка ЛК · **каждые 5 минут**\nОткрывается ли **главная страница** bid.gazprom-neft.ru и можно ли **войти в личный кабинет** — видны **имя пользователя** и **компания** в шапке. Быстрый «пульс» сайта.\n\n### 2. Лендинг + сервисы · **2 раза в день** (05:00 и 17:00, Москва)\nОтвечают ли **страницы и серверные сервисы лендинга**: настройки, список сервисов, документы, версия сайта. **Без входа** в личный кабинет.\n\n### 3. Боевой прогон личного кабинета · **каждые 2 часа**\nПодробный обход **интерфейса ЛК** после входа: меню, витрина сервисов, профиль компании, аккредитация, переход в Processor. ~5 минут, самая глубокая проверка."
       },
-      "title": "",
-      "transparent": true,
+      "title": "ℹ️ Справка: что проверяется",
+      "transparent": false,
       "type": "text"
     },
     {
       "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
-      "description": "run_light.sh — каждые 5 минут",
       "fieldConfig": {
         "defaults": {
-          "color": {"mode": "thresholds"},
+          "color": {"mode": "palette-classic"},
           "custom": {
             "axisBorderShow": false,
-            "axisCenteredZero": false,
+            "axisCenteredZero": true,
             "axisColorMode": "text",
-            "axisLabel": "",
+            "axisLabel": "Результат",
             "axisPlacement": "auto",
             "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 35,
-            "gradientMode": "scheme",
+            "barWidthFactor": 0.8,
+            "drawStyle": "bars",
+            "fillOpacity": 100,
+            "gradientMode": "none",
             "hideFrom": {"legend": false, "tooltip": false, "viz": false},
             "insertNulls": false,
-            "lineInterpolation": "stepAfter",
-            "lineWidth": 2,
-            "pointSize": 5,
+            "lineWidth": 0,
+            "pointSize": 1,
             "scaleDistribution": {"type": "linear"},
             "showPoints": "never",
             "spanNulls": false,
@@ -46,118 +45,80 @@
           },
           "decimals": 0,
           "mappings": [
-            {"options": {"0": {"color": "red", "index": 0, "text": "FAIL"}}, "type": "value"},
-            {"options": {"1": {"color": "green", "index": 1, "text": "OK"}}, "type": "value"}
+            {"options": {"-1": {"index": 0, "text": "Провал"}}, "type": "value"},
+            {"options": {"0": {"index": 1, "text": "0"}}, "type": "value"},
+            {"options": {"1": {"index": 2, "text": "Успех"}}, "type": "value"}
           ],
-          "max": 1,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {"color": "red", "value": null},
-              {"color": "green", "value": 1}
-            ]
-          },
+          "max": 1.2,
+          "min": -1.2,
+          "noValue": "нет данных",
           "unit": "short"
         },
-        "overrides": []
-      },
-      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 2},
-      "id": 1,
-      "options": {
-        "legend": {"calcs": ["lastNotNull"], "displayMode": "list", "placement": "bottom", "showLegend": true},
-        "tooltip": {"mode": "single", "sort": "none"}
-      },
-      "targets": [
-        {
-          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_probe\" and r._field == \"success\")\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) }))",
-          "refId": "A"
-        }
-      ],
-      "title": "Мониторинг каждые 5 мин",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
-      "description": "run_health_monitor.sh — лендинг + минимальный ЛК",
-      "fieldConfig": {
-        "defaults": {
-          "color": {"mode": "thresholds"},
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 35,
-            "gradientMode": "scheme",
-            "hideFrom": {"legend": false, "tooltip": false, "viz": false},
-            "insertNulls": false,
-            "lineInterpolation": "stepAfter",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {"type": "linear"},
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {"group": "A", "mode": "none"},
-            "thresholdsStyle": {"mode": "off"}
-          },
-          "decimals": 0,
-          "mappings": [
-            {"options": {"0": {"color": "red", "index": 0, "text": "FAIL"}}, "type": "value"},
-            {"options": {"1": {"color": "green", "index": 1, "text": "OK"}}, "type": "value"}
-          ],
-          "max": 1,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {"color": "red", "value": null},
-              {"color": "green", "value": 1}
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "Успех"},
+            "properties": [
+              {"id": "color", "value": {"fixedColor": "#73BF69", "mode": "fixed"}},
+              {"id": "displayName", "value": "Успех"}
             ]
           },
-          "unit": "short"
-        },
-        "overrides": []
+          {
+            "matcher": {"id": "byName", "options": "Провал"},
+            "properties": [
+              {"id": "color", "value": {"fixedColor": "#E02F44", "mode": "fixed"}},
+              {"id": "displayName", "value": "Провал"}
+            ]
+          }
+        ]
       },
       "gridPos": {"h": 8, "w": 24, "x": 0, "y": 10},
       "id": 2,
+      "description": "Каждые 5 мин: главная страница лендинга + вход в ЛК + имя и компания в шапке.",
       "options": {
-        "legend": {"calcs": ["lastNotNull"], "displayMode": "list", "placement": "bottom", "showLegend": true},
-        "tooltip": {"mode": "single", "sort": "none"}
+        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true},
+        "tooltip": {"mode": "multi", "sort": "none"}
       },
       "targets": [
         {
-          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_lk_run\" and r._field == \"success\")\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) }))",
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_lk_run\" and r._field == \"success\" and r._value == 1)\n  |> map(fn: (r) => ({ r with _field: \"Успех\", _value: 1.0 }))",
           "refId": "A"
+        },
+        {
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_lk_run\" and r._field == \"success\" and r._value == 0)\n  |> map(fn: (r) => ({ r with _field: \"Провал\", _value: -1.0 }))",
+          "refId": "B"
         }
       ],
-      "title": "Лендинг + мин ЛК",
+      "title": "① Лендинг + мин ЛК (каждые 5 мин)",
       "type": "timeseries"
     },
     {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 18},
+      "id": 61,
+      "panels": [],
+      "title": "② Лендинг + сервисы (2×/день) — см. справку выше",
+      "type": "row"
+    },
+    {
       "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
-      "description": "run_daily.sh — лендинг + API autotests (pytest)",
       "fieldConfig": {
         "defaults": {
-          "color": {"mode": "thresholds"},
+          "color": {"mode": "palette-classic"},
           "custom": {
             "axisBorderShow": false,
-            "axisCenteredZero": false,
+            "axisCenteredZero": true,
             "axisColorMode": "text",
-            "axisLabel": "",
+            "axisLabel": "Результат",
             "axisPlacement": "auto",
             "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 35,
-            "gradientMode": "scheme",
+            "barWidthFactor": 0.8,
+            "drawStyle": "bars",
+            "fillOpacity": 100,
+            "gradientMode": "none",
             "hideFrom": {"legend": false, "tooltip": false, "viz": false},
             "insertNulls": false,
-            "lineInterpolation": "stepAfter",
-            "lineWidth": 2,
-            "pointSize": 5,
+            "lineWidth": 0,
+            "pointSize": 1,
             "scaleDistribution": {"type": "linear"},
             "showPoints": "never",
             "spanNulls": false,
@@ -166,58 +127,80 @@
           },
           "decimals": 0,
           "mappings": [
-            {"options": {"0": {"color": "red", "index": 0, "text": "FAIL"}}, "type": "value"},
-            {"options": {"1": {"color": "green", "index": 1, "text": "OK"}}, "type": "value"}
+            {"options": {"-1": {"index": 0, "text": "Провал"}}, "type": "value"},
+            {"options": {"0": {"index": 1, "text": "0"}}, "type": "value"},
+            {"options": {"1": {"index": 2, "text": "Успех"}}, "type": "value"}
           ],
-          "max": 1,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {"color": "red", "value": null},
-              {"color": "green", "value": 1}
-            ]
-          },
+          "max": 1.2,
+          "min": -1.2,
+          "noValue": "нет данных",
           "unit": "short"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "Успех"},
+            "properties": [
+              {"id": "color", "value": {"fixedColor": "#73BF69", "mode": "fixed"}},
+              {"id": "displayName", "value": "Успех"}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Провал"},
+            "properties": [
+              {"id": "color", "value": {"fixedColor": "#E02F44", "mode": "fixed"}},
+              {"id": "displayName", "value": "Провал"}
+            ]
+          }
+        ]
       },
-      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 18},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 19},
       "id": 3,
+      "description": "2 раза в день (05:00 и 17:00 МСК): страницы лендинга и серверные API без входа в ЛК.",
       "options": {
-        "legend": {"calcs": ["lastNotNull"], "displayMode": "list", "placement": "bottom", "showLegend": true},
-        "tooltip": {"mode": "single", "sort": "none"}
+        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true},
+        "tooltip": {"mode": "multi", "sort": "none"}
       },
       "targets": [
         {
-          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_run\" and r._field == \"success\")\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) }))",
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_run\" and r._field == \"success\" and r._value == 1)\n  |> map(fn: (r) => ({ r with _field: \"Успех\", _value: 1.0 }))",
           "refId": "A"
+        },
+        {
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_run\" and r._field == \"success\" and r._value == 0)\n  |> map(fn: (r) => ({ r with _field: \"Провал\", _value: -1.0 }))",
+          "refId": "B"
         }
       ],
-      "title": "Лендинг + API autotests",
+      "title": "② Лендинг + сервисы (2×/день)",
       "type": "timeseries"
     },
     {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 27},
+      "id": 62,
+      "panels": [],
+      "title": "③ Боевой прогон ЛК (каждые 2 ч) — см. справку выше",
+      "type": "row"
+    },
+    {
       "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
-      "description": "run_lk_pytest.sh — полный pytest tests/lk/",
       "fieldConfig": {
         "defaults": {
           "color": {"mode": "thresholds"},
           "custom": {
             "axisBorderShow": false,
-            "axisCenteredZero": false,
+            "axisCenteredZero": true,
             "axisColorMode": "text",
-            "axisLabel": "",
+            "axisLabel": "Результат",
             "axisPlacement": "auto",
             "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 35,
+            "barWidthFactor": 0.35,
+            "drawStyle": "bars",
+            "fillOpacity": 100,
             "gradientMode": "scheme",
             "hideFrom": {"legend": false, "tooltip": false, "viz": false},
             "insertNulls": false,
-            "lineInterpolation": "stepAfter",
-            "lineWidth": 2,
-            "pointSize": 5,
+            "lineWidth": 0,
+            "pointSize": 1,
             "scaleDistribution": {"type": "linear"},
             "showPoints": "never",
             "spanNulls": false,
@@ -226,36 +209,136 @@
           },
           "decimals": 0,
           "mappings": [
-            {"options": {"0": {"color": "red", "index": 0, "text": "FAIL"}}, "type": "value"},
-            {"options": {"1": {"color": "green", "index": 1, "text": "OK"}}, "type": "value"}
+            {"options": {"-1": {"index": 0, "text": "Провал"}}, "type": "value"},
+            {"options": {"0": {"index": 1, "text": "0"}}, "type": "value"},
+            {"options": {"1": {"index": 2, "text": "Успех"}}, "type": "value"}
           ],
-          "max": 1,
-          "min": 0,
+          "max": 1.2,
+          "min": -1.2,
+          "noValue": "нет данных",
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"color": "red", "value": null},
-              {"color": "green", "value": 1}
+              {"color": "#E02F44", "value": null},
+              {"color": "#73BF69", "value": 0}
             ]
           },
           "unit": "short"
         },
         "overrides": []
       },
-      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 26},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 28},
       "id": 4,
+      "description": "Каждые 2 ч: полный обход ЛК — меню, витрина, профиль, аккредитация, Processor (~5 мин).",
       "options": {
-        "legend": {"calcs": ["lastNotNull"], "displayMode": "list", "placement": "bottom", "showLegend": true},
+        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": false},
         "tooltip": {"mode": "single", "sort": "none"}
       },
       "targets": [
         {
-          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_lk_pytest\" and r._field == \"success\")\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) }))",
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_lk_pytest\" and r._field == \"success\")\n  |> aggregateWindow(every: 2h, fn: last, createEmpty: false, timeSrc: \"_stop\")\n  |> map(fn: (r) => ({ r with _field: \"run\", _value: if r._value == 1 then 1.0 else -1.0 }))",
           "refId": "A"
         }
       ],
-      "title": "Боевой прогон ЛК",
+      "title": "③ Боевой прогон ЛК (каждые 2 ч)",
       "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "influxdb", "uid": "InfluxDB-BID"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "custom": {
+            "align": "auto",
+            "cellOptions": {"type": "auto", "wrapText": true},
+            "inspect": false,
+            "filterable": true
+          },
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}]}
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "_time"},
+            "properties": [
+              {"id": "displayName", "value": "Время прогона"},
+              {"id": "custom.width", "value": 175}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "run_name"},
+            "properties": [
+              {"id": "displayName", "value": "Прогон"},
+              {"id": "custom.width", "value": 280}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "check"},
+            "properties": [
+              {"id": "displayName", "value": "Проверка / тест"},
+              {"id": "custom.width", "value": 180}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "label"},
+            "properties": [
+              {"id": "displayName", "value": "Описание"},
+              {"id": "custom.width", "value": 220}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "error"},
+            "properties": [{"id": "displayName", "value": "Ошибка"}]
+          },
+          {
+            "matcher": {"id": "byName", "options": "run_type"},
+            "properties": [{"id": "custom.hidden", "value": true}]
+          },
+          {
+            "matcher": {"id": "byName", "options": "run_label"},
+            "properties": [{"id": "custom.hidden", "value": true}]
+          }
+        ]
+      },
+      "gridPos": {"h": 11, "w": 24, "x": 0, "y": 36},
+      "id": 5,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {"countRows": true, "enablePagination": true, "fields": "", "reducer": ["count"], "show": true},
+        "showHeader": true,
+        "sortBy": [{"desc": true, "displayName": "Время прогона"}]
+      },
+      "targets": [
+        {
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_failure\" and r._field == \"error\")\n  |> map(fn: (r) => ({\n      r with\n        run_name:\n          if r.run_type == \"health\" then \"Лендинг + мин ЛК (каждые 5 мин)\"\n          else if r.run_type == \"full\" then \"Лендинг + API autotests\"\n          else if r.run_type == \"lk_pytest\" then \"Боевой прогон ЛК (каждые 2 ч)\"\n          else if r.run_type == \"probe\" then \"HTTP probe (legacy)\"\n          else if exists r.run_label and r.run_label != \"\" then r.run_label\n          else \"Неизвестный прогон\"\n    }))\n  |> rename(columns: {_value: \"error\"})\n  |> keep(columns: [\"_time\", \"run_name\", \"run_type\", \"check\", \"label\", \"error\"])\n  |> sort(columns: [\"_time\"], desc: true)\n  |> limit(n: 500)",
+          "refId": "A"
+        }
+      ],
+      "title": "Ошибки прогонов",
+      "description": "Список последних ошибок: когда произошла, какой из трёх мониторингов, что именно не сработало.",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {"run_label": true, "run_type": true},
+            "indexByName": {
+              "_time": 0,
+              "run_name": 1,
+              "check": 2,
+              "label": 3,
+              "error": 4
+            },
+            "renameByName": {
+              "_time": "Время прогона",
+              "check": "Проверка / тест",
+              "error": "Ошибка",
+              "label": "Описание",
+              "run_name": "Прогон"
+            }
+          }
+        }
+      ],
+      "type": "table"
     }
   ],
   "refresh": "1m",
@@ -265,7 +348,7 @@
   "time": {"from": "now-7d", "to": "now"},
   "timepicker": {},
   "timezone": "browser",
-  "title": "BID Monitoring",
+  "title": "BID — Мониторинг лендинг + ЛК [PROD]",
   "uid": "bid-monitoring",
-  "version": 14
+  "version": 40
 }
