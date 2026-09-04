@@ -21,11 +21,17 @@ MONITOR_HTTP_TIMEOUT = int(os.getenv("MONITOR_HTTP_TIMEOUT", "20"))
 MONITOR_HTTP_CONNECT_TIMEOUT = int(os.getenv("MONITOR_HTTP_CONNECT_TIMEOUT", "10"))
 MONITOR_PROBE_RETRIES = int(os.getenv("MONITOR_PROBE_RETRIES", "1"))
 MONITOR_PROBE_RETRY_DELAY_SEC = int(os.getenv("MONITOR_PROBE_RETRY_DELAY_SEC", "30"))
-MONITOR_ALERT_AFTER_FAILURES = int(os.getenv("MONITOR_ALERT_AFTER_FAILURES", "2"))
+MONITOR_ALERT_AFTER_FAILURES = int(os.getenv("MONITOR_ALERT_AFTER_FAILURES", "1"))
 MONITOR_USER_AGENT = os.getenv(
     "MONITOR_USER_AGENT",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "Mozilla/5.0 (compatible; BID-QA-Monitor/1.0) "
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+)
+# Фиксированный uid для GPN SPA analytics (localStorage gpnSpaUid → POST /events).
+# Передайте коллегам для исключения из еженедельных отчётов.
+MONITOR_ANALYTICS_UID = os.getenv(
+    "MONITOR_ANALYTICS_UID",
+    "b1d00000-0000-4000-a000-000000000001",
 )
 # Доп. коды «доступен» через WAF, напр. 403 — только если API отдают 200
 MONITOR_ACCEPT_CODES = {
