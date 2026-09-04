@@ -1,5 +1,5 @@
 #!/bin/bash
-# Проверка таблицы bid_check в InfluxDB (на сервере)
+# Health-мониторинг: лендинг (HTTP) + ЛК (вход, ФИО, компания)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -14,4 +14,4 @@ if [ -f monitor/.env ]; then
   set +a
 fi
 
-exec "$PROJECT_DIR/.venv/bin/python" monitor/verify_influx_table.py
+exec "$PROJECT_DIR/.venv/bin/python" monitor/run_health_monitor.py

@@ -8,6 +8,7 @@ import requests
 
 from monitor.checks import CheckResult
 from monitor.config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_PROXY, TELEGRAM_VERBOSE, ALERTS_ENABLED, TELEGRAM_DIRECT_ALLOWED, GITHUB_DISPATCH_ENABLED
+from monitor.run_labels import get_run_label, get_run_zone
 
 HTTP_STATUS_LABELS: dict[int, str] = {
     400: "Bad Request",
@@ -27,6 +28,7 @@ NETWORK_STATUS_LABELS: dict[str, str] = {
     "refused": "connection refused — соединение отклонено",
     "dns": "DNS error — домен не найден",
     "error": "ошибка сети",
+    "auth": "ошибка входа в ЛК",
 }
 
 
@@ -99,6 +101,11 @@ def short_status(result: CheckResult) -> str:
     if match:
         return match.group(1)
 
+    if result.name == "lk_auth_login" and (
+        "лк не загрузился" in err or "keycloak" in err or "бейдж" in err or "логин" in err
+    ):
+        return "auth"
+
     return "error"
 
 
@@ -127,12 +134,16 @@ def format_failure_alert(
     ok = total - len(failed_checks)
 
     if run_type == "full":
-        title = f"🔴 BID Full — FAIL ({ok}/{total} HTTP"
+        title = f"🔴 {get_run_label('full')} — FAIL ({ok}/{total} HTTP"
         if pytest_failed:
             title += f", pytest −{pytest_failed}"
         title += ")"
+    elif run_type == "health":
+        title = f"🔴 {get_run_label('health')} — FAIL"
+    elif run_type == "lk_pytest":
+        title = f"🔴 {get_run_label('lk_pytest')} — FAIL"
     else:
-        title = f"🔴 BID — быстрая проверка FAIL ({ok}/{total} OK)"
+        title = f"🔴 {get_run_label('probe')} — FAIL ({ok}/{total} OK)"
 
     lines = [f"<b>{title}</b>", ""]
 
@@ -154,7 +165,10 @@ def format_probe_failure_alert(http_results: list[CheckResult]) -> str:
 
 
 def format_recovery_message() -> str:
-    return "<b>🟢 BID — быстрая проверка OK</b>\n\nHTTP-проверки снова проходят."
+    return (
+        f"<b>🟢 {get_run_label('probe')}</b>\n\n"
+        "HTTP-проверки лендинга снова проходят."
+    )
 
 
 def format_relay_ok_message() -> str:
@@ -169,14 +183,10 @@ def format_relay_failure_message(
     pytest_total: int = 0,
     pytest_error: str = "",
 ) -> str:
-    """Краткий алерт для Telegram relay: где упало и описание ошибки."""
-    titles = {
-        "probe": "Ошибка BID (лендинг)",
-        "full": "Ошибка BID (autotests)",
-        "lk": "Ошибка BID (ЛК)",
-    }
-    title = titles.get(run_type, "Ошибка BID")
-    lines = [title, ""]
+    """Краткий алерт для Telegram relay: заголовок, где упало, описание ошибки."""
+    title = get_run_label(run_type)
+    zone = get_run_zone(run_type)
+    lines = [f"🔴 {title}", f"Где: {zone}", ""]
 
     if failures:
         for item in failures:
@@ -196,8 +206,8 @@ def format_relay_failure_message(
                 if not re.match(r"HTTP \d+", detail, re.I):
                     lines.append(f"  {detail}")
             lines.append("")
-    elif run_type == "full" and pytest_failed:
-        lines.append("HTTP-проверки прошли.")
+    elif run_type in ("full", "lk_pytest") and pytest_failed:
+        lines.append("HTTP-проверки прошли или не выполнялись.")
         lines.append("")
 
     if pytest_failed:
@@ -216,8 +226,10 @@ def format_relay_failure_message(
 
 
 def failure_detail(result: CheckResult) -> str:
+    from monitor.secrets_redact import redact_secrets
+
     if result.error:
-        return result.error[:200]
+        return redact_secrets(result.error)
     if result.http_code:
         return f"HTTP {result.http_code}"
     return "unknown error"
@@ -239,5 +251,5 @@ def failures_for_relay(failed_checks: list[CheckResult]) -> list[dict]:
 
 def format_success_message(passed: int, total: int, *, run_type: str = "full") -> str:
     if run_type == "full":
-        return f"<b>🟢 BID Full — OK</b>\n\nHTTP + pytest: {passed}/{total}"
-    return f"<b>🟢 BID — быстрая проверка OK</b>"
+        return f"<b>🟢 {get_run_label('full')}</b>\n\nHTTP + pytest: {passed}/{total}"
+    return f"<b>🟢 {get_run_label('probe')}</b>"

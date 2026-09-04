@@ -18,6 +18,8 @@ class AlertState:
     last_probe_fail_alert_at: float | None = None
     daily_incident_active: bool = False
     last_daily_fail_alert_at: float | None = None
+    lk_incident_active: bool = False
+    last_lk_fail_alert_at: float | None = None
 
     @classmethod
     def load(cls) -> AlertState:
@@ -32,6 +34,8 @@ class AlertState:
                 last_probe_fail_alert_at=data.get("last_probe_fail_alert_at"),
                 daily_incident_active=bool(data.get("daily_incident_active", False)),
                 last_daily_fail_alert_at=data.get("last_daily_fail_alert_at"),
+                lk_incident_active=bool(data.get("lk_incident_active", False)),
+                last_lk_fail_alert_at=data.get("last_lk_fail_alert_at"),
             )
         except (json.JSONDecodeError, OSError, TypeError, ValueError):
             return cls()
@@ -47,6 +51,8 @@ class AlertState:
                     "last_probe_fail_alert_at": self.last_probe_fail_alert_at,
                     "daily_incident_active": self.daily_incident_active,
                     "last_daily_fail_alert_at": self.last_daily_fail_alert_at,
+                    "lk_incident_active": self.lk_incident_active,
+                    "last_lk_fail_alert_at": self.last_lk_fail_alert_at,
                 },
                 ensure_ascii=False,
             ),
@@ -104,6 +110,26 @@ class AlertState:
 
         if self._should_repeat(repeat_hours, self.last_daily_fail_alert_at):
             self.last_daily_fail_alert_at = time.time()
+            self.save()
+            return True
+
+        self.save()
+        return False
+
+    def evaluate_lk_alert(self, ok: bool, *, repeat_hours: float) -> bool:
+        if ok:
+            self.lk_incident_active = False
+            self.save()
+            return False
+
+        if not self.lk_incident_active:
+            self.lk_incident_active = True
+            self.last_lk_fail_alert_at = time.time()
+            self.save()
+            return True
+
+        if self._should_repeat(repeat_hours, self.last_lk_fail_alert_at):
+            self.last_lk_fail_alert_at = time.time()
             self.save()
             return True
 

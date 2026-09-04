@@ -44,6 +44,18 @@ def should_send_daily_telegram(*, overall_ok: bool) -> bool:
     return send_fail
 
 
+def should_send_lk_telegram(*, overall_ok: bool) -> bool:
+    from monitor.config import TELEGRAM_ALERT_REPEAT_HOURS
+
+    state = AlertState.load()
+    send_fail = state.evaluate_lk_alert(overall_ok, repeat_hours=TELEGRAM_ALERT_REPEAT_HOURS)
+
+    if not overall_ok and not send_fail:
+        print("Alert suppressed: LK fail already reported (anti-flap)")
+
+    return send_fail
+
+
 def notify_probe_failure_direct(http_results) -> None:
     from monitor.alerts import format_probe_failure_alert, send_telegram
     from monitor.config import ALERTS_ENABLED, GITHUB_DISPATCH_ENABLED

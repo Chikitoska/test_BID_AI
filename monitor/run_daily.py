@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Ежедневный мониторинг BID:
+Полный мониторинг BID (cron каждый час):
 1. HTTP-проверки публичных API
 2. pytest tests/api/ (опционально)
 3. метрики → InfluxDB
-4. алерт в Telegram при ошибках (anti-flap)
+4. алерт через GitHub → Telegram при ошибках
 """
 
 from __future__ import annotations
@@ -24,8 +24,14 @@ from monitor.checks import run_http_checks
 from monitor.config import INFLUX_ENABLED, MONITOR_RUN_PYTEST, MONITOR_RUN_UI, PROJECT_ROOT
 from monitor.github_dispatch import notify_github_on_failure
 from monitor.http_session import create_monitor_session
-from monitor.metrics import write_check_results, write_pytest_run
+from monitor.metrics import (
+    failures_from_checks,
+    write_check_results,
+    write_failure_events,
+    write_pytest_run,
+)
 from monitor.probe_alert import should_send_daily_telegram
+from monitor.pytest_failures import parse_pytest_failures, pytest_summary_failure
 
 
 @dataclass
@@ -132,6 +138,25 @@ def main() -> int:
             print("Metrics sent to InfluxDB")
         except Exception as exc:
             print(f"WARN: InfluxDB write failed: {exc}")
+
+    failure_events = failures_from_checks(http_failed)
+    if pytest_result.pytest_failed:
+        parsed = parse_pytest_failures(pytest_result.output)
+        failure_events.extend(parsed)
+        if not parsed:
+            failure_events.append(
+                pytest_summary_failure(
+                    failed=pytest_result.pytest_failed,
+                    total=pytest_result.total,
+                    output=pytest_result.output,
+                    crashed=pytest_result.crashed,
+                )
+            )
+    if INFLUX_ENABLED and failure_events:
+        try:
+            write_failure_events(run_type="full", failures=failure_events)
+        except Exception as exc:
+            print(f"WARN: InfluxDB failure events: {exc}")
 
     overall_ok = not http_failed and pytest_result.pytest_failed == 0
 
