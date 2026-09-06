@@ -45,13 +45,18 @@ def should_send_daily_telegram(*, overall_ok: bool) -> bool:
 
 
 def should_send_lk_telegram(*, overall_ok: bool) -> bool:
-    from monitor.config import TELEGRAM_ALERT_REPEAT_HOURS
-
     state = AlertState.load()
-    send_fail = state.evaluate_lk_alert(overall_ok, repeat_hours=TELEGRAM_ALERT_REPEAT_HOURS)
+    send_fail = state.evaluate_lk_alert(
+        overall_ok,
+        threshold=MONITOR_ALERT_AFTER_FAILURES,
+        repeat_hours=TELEGRAM_ALERT_REPEAT_HOURS,
+    )
 
     if not overall_ok and not send_fail:
-        print("Alert suppressed: LK fail already reported (anti-flap)")
+        print(
+            f"Alert suppressed: health fail streak {state.consecutive_lk_failures}/"
+            f"{MONITOR_ALERT_AFTER_FAILURES}"
+        )
 
     return send_fail
 

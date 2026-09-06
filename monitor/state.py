@@ -20,6 +20,7 @@ class AlertState:
     last_daily_fail_alert_at: float | None = None
     lk_incident_active: bool = False
     last_lk_fail_alert_at: float | None = None
+    consecutive_lk_failures: int = 0
 
     @classmethod
     def load(cls) -> AlertState:
@@ -36,6 +37,7 @@ class AlertState:
                 last_daily_fail_alert_at=data.get("last_daily_fail_alert_at"),
                 lk_incident_active=bool(data.get("lk_incident_active", False)),
                 last_lk_fail_alert_at=data.get("last_lk_fail_alert_at"),
+                consecutive_lk_failures=int(data.get("consecutive_lk_failures", 0)),
             )
         except (json.JSONDecodeError, OSError, TypeError, ValueError):
             return cls()
@@ -53,6 +55,7 @@ class AlertState:
                     "last_daily_fail_alert_at": self.last_daily_fail_alert_at,
                     "lk_incident_active": self.lk_incident_active,
                     "last_lk_fail_alert_at": self.last_lk_fail_alert_at,
+                    "consecutive_lk_failures": self.consecutive_lk_failures,
                 },
                 ensure_ascii=False,
             ),
@@ -116,25 +119,34 @@ class AlertState:
         self.save()
         return False
 
-    def evaluate_lk_alert(self, ok: bool, *, repeat_hours: float) -> bool:
+    def evaluate_lk_alert(
+        self,
+        ok: bool,
+        *,
+        repeat_hours: float,
+        threshold: int = 1,
+    ) -> bool:
+        """Алерт health/ЛК: после threshold подряд FAIL, повтор раз в repeat_hours."""
+        send_fail = False
+
         if ok:
+            self.consecutive_lk_failures = 0
             self.lk_incident_active = False
             self.save()
             return False
 
-        if not self.lk_incident_active:
-            self.lk_incident_active = True
-            self.last_lk_fail_alert_at = time.time()
-            self.save()
-            return True
-
-        if self._should_repeat(repeat_hours, self.last_lk_fail_alert_at):
-            self.last_lk_fail_alert_at = time.time()
-            self.save()
-            return True
+        self.consecutive_lk_failures += 1
+        if self.consecutive_lk_failures >= threshold:
+            if not self.lk_incident_active:
+                send_fail = True
+                self.lk_incident_active = True
+                self.last_lk_fail_alert_at = time.time()
+            elif self._should_repeat(repeat_hours, self.last_lk_fail_alert_at):
+                send_fail = True
+                self.last_lk_fail_alert_at = time.time()
 
         self.save()
-        return False
+        return send_fail
 
     def _should_repeat(self, repeat_hours: float, last_at: float | None) -> bool:
         if last_at is None:

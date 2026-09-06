@@ -21,7 +21,12 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from config.settings import BASE_URL
 from monitor.chrome_lock import ChromeBusyError, chrome_run_lock
 from monitor.checks import CheckResult, _check_get
-from monitor.config import INFLUX_ENABLED, LK_MONITOR_ENABLED
+from monitor.config import (
+    INFLUX_ENABLED,
+    LK_MONITOR_ENABLED,
+    MONITOR_HEALTH_RETRY_DELAY_SEC,
+    MONITOR_PROBE_RETRIES,
+)
 from monitor.github_dispatch import notify_github_on_failure
 from monitor.http_session import create_monitor_session
 from monitor.lk_checks import run_lk_monitor_checks
@@ -35,13 +40,29 @@ from monitor.metrics import (
 from monitor.probe_alert import should_send_lk_telegram
 
 
+def _check_main_page_with_retry(session) -> CheckResult:
+    """Один GET с повтором при timeout/5xx — снижает ложные алерты на флапах."""
+    landing = _check_get(session, "main_page", BASE_URL)
+    if landing.success or MONITOR_PROBE_RETRIES <= 0:
+        return landing
+
+    print(
+        f"main_page FAIL ({landing.error or landing.http_code}), "
+        f"повтор через {MONITOR_HEALTH_RETRY_DELAY_SEC} с "
+        f"(ещё {MONITOR_PROBE_RETRIES} раз)…",
+        flush=True,
+    )
+    time.sleep(MONITOR_HEALTH_RETRY_DELAY_SEC)
+    return _check_get(session, "main_page", BASE_URL)
+
+
 def main() -> int:
     print("=== BID Health Monitor (landing + LK) ===")
     start = time.perf_counter()
     all_results: list[CheckResult] = []
 
     session = create_monitor_session()
-    landing = _check_get(session, "main_page", BASE_URL)
+    landing = _check_main_page_with_retry(session)
     all_results.append(landing)
     status = "OK" if landing.success else "FAIL"
     print(f"[{status}] main_page {landing.http_code} {landing.duration_ms:.0f}ms {landing.error}")
@@ -84,11 +105,12 @@ def main() -> int:
                 lk_only = [r for r in all_results if r.name.startswith("lk_")]
                 if lk_only:
                     write_lk_check_results(lk_only)
-                    write_lk_run(
-                        success=lk_ok,
-                        failed_count=sum(1 for r in lk_only if not r.success),
-                        duration_sec=duration_sec,
-                    )
+            # Всегда пишем итог прогона — иначе при FAIL лендинга на графике «дыра», а не красный столбец.
+            write_lk_run(
+                success=overall_ok,
+                failed_count=sum(1 for r in all_results if not r.success),
+                duration_sec=duration_sec,
+            )
             print("Metrics sent to InfluxDB")
         except Exception as exc:
             print(f"WARN: InfluxDB write failed: {exc}")

@@ -17,11 +17,14 @@ TELEGRAM_PROXY = os.getenv("TELEGRAM_PROXY", "")
 MONITOR_RUN_UI = os.getenv("MONITOR_RUN_UI", "false").lower() in ("1", "true", "yes")
 MONITOR_RUN_PYTEST = os.getenv("MONITOR_RUN_PYTEST", "true").lower() in ("1", "true", "yes")
 MONITOR_TIMEZONE = os.getenv("MONITOR_TIMEZONE", "Europe/Moscow")
-MONITOR_HTTP_TIMEOUT = int(os.getenv("MONITOR_HTTP_TIMEOUT", "20"))
+MONITOR_HTTP_TIMEOUT = int(os.getenv("MONITOR_HTTP_TIMEOUT", "25"))
 MONITOR_HTTP_CONNECT_TIMEOUT = int(os.getenv("MONITOR_HTTP_CONNECT_TIMEOUT", "10"))
 MONITOR_PROBE_RETRIES = int(os.getenv("MONITOR_PROBE_RETRIES", "1"))
 MONITOR_PROBE_RETRY_DELAY_SEC = int(os.getenv("MONITOR_PROBE_RETRY_DELAY_SEC", "30"))
-MONITOR_ALERT_AFTER_FAILURES = int(os.getenv("MONITOR_ALERT_AFTER_FAILURES", "1"))
+# Health: пауза перед повтором main_page (короче, чем daily probe).
+MONITOR_HEALTH_RETRY_DELAY_SEC = int(os.getenv("MONITOR_HEALTH_RETRY_DELAY_SEC", "10"))
+# Алерт TG/email после N подряд FAIL (1 = сразу, 2 = после двух прогонов).
+MONITOR_ALERT_AFTER_FAILURES = int(os.getenv("MONITOR_ALERT_AFTER_FAILURES", "2"))
 MONITOR_USER_AGENT = os.getenv(
     "MONITOR_USER_AGENT",
     "Mozilla/5.0 (compatible; BID-QA-Monitor/1.0) "
