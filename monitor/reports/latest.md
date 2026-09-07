@@ -1,20 +1,21 @@
 # BID monitor digest
 
-- Generated: `2026-09-06T20:50:22.708569+03:00` (Europe/Moscow)
+- Generated: `2026-09-07T08:50:03.874187+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `d97bcc8 chore(monitor): digest report 2026-09-06 14:21 UTC+03:00`
 
 ## Influx volume
 
-- `bid_failure`: 1 точек (~1д)
+- `bid_failure`: 2 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
-- `bid_lk_run`: 837 точек (~1д)
+- `bid_lk_run`: 861 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-(ошибок bid_failure за период нет)
+- `2026-09-07 01:27:55.756848+00:00` | Боевой прогон ЛК (2 ч) | `test_company_in_service_provider` | tests/lk/test_lk_auth.py::test_company_in_service_provider | tests/lk/test_lk_auth.py::test_company_in_service_provider: selenium.common.exceptions.TimeoutException: Message
+- `2026-09-07 01:27:55.756848+00:00` | Боевой прогон ЛК (2 ч) | `test_fio_in_service_provider` | tests/lk/test_lk_auth.py::test_fio_in_service_provider | tests/lk/test_lk_auth.py::test_fio_in_service_provider: selenium.common.exceptions.TimeoutException: Message
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
@@ -54,16 +55,6 @@ Health monitor finished in 16.1s — FAIL
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 151.2s
-FAILED tests/lk/test_lk_auth.py::test_fio_in_service_provider - selenium.common.exceptions.TimeoutException: Message:
-FAILED tests/lk/test_lk_auth.py::test_company_in_service_provider - selenium.common.exceptions.TimeoutException: Message:
-=== 2 failed, 17 passed, 1 skipped, 3 warnings, 4 rerun in 454.77s (0:07:34) ===
-LK pytest: 17/20 passed, failed=2, errors=0, skipped=1 in 455.9s
-Failure events sent to InfluxDB (таблица Grafana)
-LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 147.7s
-LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 146.8s
-LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 195.9s
-LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 190.2s
 LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 146.0s
 LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 146.9s
 LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 145.3s
@@ -84,14 +75,21 @@ LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 149.5s
 LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 147.5s
 LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 181.6s
 LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 148.2s
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 152.3s
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 147.5s
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 182.3s
+FAILED tests/lk/test_lk_auth.py::test_fio_in_service_provider - selenium.common.exceptions.TimeoutException: Message:
+FAILED tests/lk/test_lk_auth.py::test_company_in_service_provider - selenium.common.exceptions.TimeoutException: Message:
+=== 2 failed, 17 passed, 1 skipped, 3 warnings, 4 rerun in 451.51s (0:07:31) ===
+LK pytest: 17/20 passed, failed=2, errors=0, skipped=1 in 452.6s
+Failure events sent to InfluxDB (таблица Grafana)
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 175.2s
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 148.8s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 7.4s
-Metrics sent to InfluxDB
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 6.9s
 Metrics sent to InfluxDB
@@ -118,6 +116,9 @@ Pytest: 39/39 passed, failed=0, errors=0 in 6.5s
 Metrics sent to InfluxDB
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 7.9s
+Metrics sent to InfluxDB
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 6.1s
 Metrics sent to InfluxDB
 ```
 
