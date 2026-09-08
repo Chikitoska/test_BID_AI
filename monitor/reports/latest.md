@@ -1,13 +1,12 @@
 # BID monitor digest
 
-- Generated: `2026-09-07T20:50:03.881895+03:00` (Europe/Moscow)
+- Generated: `2026-09-08T08:50:03.867654+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `d97bcc8 chore(monitor): digest report 2026-09-06 14:21 UTC+03:00`
 
 ## Influx volume
 
-- `bid_failure`: 2 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 864 точек (~1д)
 - `bid_run`: 10 точек (~1д)
@@ -43,23 +42,17 @@ ImportError: cannot import name 'failures_from_checks' from 'monitor.metrics' (/
 ImportError: cannot import name 'failures_from_checks' from 'monitor.metrics' (/opt/test_BID_AI/monitor/metrics.py)
 ImportError: cannot import name 'failures_from_checks' from 'monitor.metrics' (/opt/test_BID_AI/monitor/metrics.py)
 ImportError: cannot import name 'failures_from_checks' from 'monitor.metrics' (/opt/test_BID_AI/monitor/metrics.py)
-ImportError: cannot import name 'failures_from_checks' from 'monitor.metrics' (/opt/test_BID_AI/monitor/metrics.py)
-ImportError: cannot import name 'failures_from_checks' from 'monitor.metrics' (/opt/test_BID_AI/monitor/metrics.py)
 [FAIL] main_page 0 16140ms HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)
 Health monitor finished in 16.1s — FAIL
 [FAIL] main_page 0 16144ms HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)
 Health monitor finished in 16.1s — FAIL
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 149.7s
-LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 184.5s
-LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 152.2s
-LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 153.0s
-LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 149.1s
-LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 151.2s
 LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 145.7s
 LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 174.8s
 LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 151.8s
@@ -84,14 +77,17 @@ LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 247.5s
 LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 185.9s
 LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 150.6s
 LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 192.3s
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 156.1s
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 145.1s
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 184.8s
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 252.3s
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 181.9s
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 165.1s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 8.3s
-Metrics sent to InfluxDB
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 7.6s
 Metrics sent to InfluxDB
@@ -118,6 +114,9 @@ Pytest: 39/39 passed, failed=0, errors=0 in 6.1s
 Metrics sent to InfluxDB
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 8.1s
+Metrics sent to InfluxDB
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 6.7s
 Metrics sent to InfluxDB
 ```
 
