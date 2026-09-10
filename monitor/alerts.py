@@ -27,7 +27,8 @@ NETWORK_STATUS_LABELS: dict[str, str] = {
     "timeout": "timeout — сервер не ответил вовремя",
     "refused": "connection refused — соединение отклонено",
     "dns": "DNS error — домен не найден",
-    "error": "ошибка сети",
+    "chrome": "сбой Chrome/WebDriver",
+    "error": "ошибка проверки",
     "auth": "ошибка входа в ЛК",
 }
 
@@ -87,6 +88,22 @@ def short_status(result: CheckResult) -> str:
         return str(result.http_code)
 
     err = (result.error or "").lower()
+    # Selenium/Chrome stack — не путать с сетевым timeout к BID.
+    if any(
+        marker in err
+        for marker in (
+            "stacktrace",
+            "chromedriver",
+            "chrome not reachable",
+            "invalid session",
+            "session deleted",
+            "no such window",
+            "webdriver exception",
+            "selenium.common",
+            "devtoolsautomevent",
+        )
+    ):
+        return "chrome"
     if "connecttimeout" in err or "timed out" in err or "max retries exceeded" in err:
         return "timeout"
     if "connection refused" in err:
