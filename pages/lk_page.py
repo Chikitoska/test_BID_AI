@@ -158,12 +158,24 @@ class LkPage:
 
         return 0
 
+    def _level_token_to_num(self, token: str) -> int | None:
+        token = token.upper()
+        if token.isdigit():
+            return int(token)
+        return self.LEVEL_NAME_TO_NUM.get(token)
+
     def _parse_legacy_selectable_levels(self, content: str) -> list[int]:
+        """Карточки «ДОСТУПНО» — и «УРОВЕНЬ 2», и «УРОВЕНЬ СТАНДАРТНЫЙ»."""
         selectable: list[int] = []
-        for part in re.split(r"(?=УРОВЕНЬ\s+\d+)", content):
-            match = re.match(r"УРОВЕНЬ\s+(\d+)", part)
-            if match and "ДОСТУПНО" in part:
-                selectable.append(int(match.group(1)))
+        matches = list(self.ACCREDITED_NAMED_RE.finditer(content))
+        for i, match in enumerate(matches):
+            end = matches[i + 1].start() if i + 1 < len(matches) else len(content)
+            part = content[match.start() : end]
+            if "ДОСТУПНО" not in part:
+                continue
+            num = self._level_token_to_num(match.group(1))
+            if num:
+                selectable.append(num)
         return sorted(set(selectable))
 
     def _wizard_selection_available(self, content: str) -> bool:
@@ -203,13 +215,7 @@ class LkPage:
 
     def read_selectable_accreditation_levels(self) -> list[int]:
         """Уровни, помеченные как «ДОСТУПНО» для выбора (без клика и заполнения)."""
-        content = self.read_accreditation_content()
-        levels: list[int] = []
-        for part in re.split(r"(?=УРОВЕНЬ\s+\d+)", content):
-            match = re.match(r"УРОВЕНЬ\s+(\d+)", part)
-            if match and "ДОСТУПНО" in part:
-                levels.append(int(match.group(1)))
-        return sorted(set(levels))
+        return self._parse_legacy_selectable_levels(self.read_accreditation_content())
 
     def accreditation_level_selection_visible(self) -> bool:
         return self.accreditation_level_selection_available()
@@ -234,35 +240,14 @@ class LkPage:
 
     def accreditation_apply_button_visible(self) -> bool:
         """Признак начала выбора уровня: «Заполнить анкету», «Выбрать уровень» или «Далее»."""
-        wait_sec = max(self.wait_sec, 45)
         button_texts = ("Заполнить анкету", "Выбрать уровень", "Далее")
         try:
             content = self.read_accreditation_content()
-            if any(text in content for text in button_texts):
-                return True
-            if self._wizard_selection_available(content):
-                return True
         except (TimeoutException, LkPageError):
-            pass
-
-        self.open_accreditation()
-        for text in button_texts:
-            try:
-                WebDriverWait(self.driver, wait_sec).until(
-                    EC.visibility_of_element_located((
-                        By.XPATH,
-                        f"//button[contains(normalize-space(.), '{text}')]",
-                    ))
-                )
-                return True
-            except TimeoutException:
-                continue
-
-        elements = self.driver.find_elements(By.CSS_SELECTOR, self.CONTENT)
-        if elements:
-            content = elements[0].text
-            return any(text in content for text in button_texts)
-        return False
+            return False
+        if any(text in content for text in button_texts):
+            return True
+        return self._wizard_selection_available(content)
 
     def content_with_timeout(self, *, timeout: int | None = None) -> str:
         wait = WebDriverWait(self.driver, timeout or self.wait_sec)
