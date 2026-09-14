@@ -6,6 +6,7 @@ import pytest
 
 from config.lk_settings import LK_CREDENTIALS_SET, MONITOR_HEADLESS
 from pages.lk_flow import LkFlow
+from pages.lk_page import LkPage
 from utils.selenium_factory import create_chrome_driver
 
 pytestmark = pytest.mark.skipif(
@@ -28,3 +29,8 @@ def authenticated_driver():
 def processor_driver(authenticated_driver):
     LkFlow(authenticated_driver).open_service_provider()
     return authenticated_driver
+
+
+@pytest.fixture(scope="module")
+def lk_page(authenticated_driver) -> LkPage:
+    return LkPage(authenticated_driver)
