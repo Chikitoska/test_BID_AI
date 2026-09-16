@@ -1,27 +1,24 @@
 # BID monitor digest
 
-- Generated: `2026-09-16T08:50:02.215547+03:00` (Europe/Moscow)
+- Generated: `2026-09-16T20:50:03.882831+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `5de4b64 chore(monitor): digest report 2026-09-14 20:50 UTC+03:00`
 
 ## Influx volume
 
-- `bid_failure`: 8 точек (~1д)
+- `bid_failure`: 3 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 864 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-- `2026-09-16 05:00:45.713922+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)
-- `2026-09-16 02:00:12.595478+00:00` | Лендинг + API autotests | `test_service_provider_tags_match_landing_tabs` | tests/api/test_landing_devtools_api.py::test_service_provider_tags_match_landing_tabs | tests/api/test_landing_devtools_api.py::test_service_provider_tags_match_landing_tabs
+- `2026-09-16 14:00:14.288377+00:00` | Лендинг + API autotests | `test_service_provider_tags_match_landing_tabs` | tests/api/test_landing_devtools_api.py::test_service_provider_tags_match_landing_tabs | tests/api/test_landing_devtools_api.py::test_service_provider_tags_match_landing_tabs
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-[FAIL] lk_auth_login 59753ms ЛК не загрузился после входа (нет бейджа пользователя), URL: https://lk.bid.gazprom-neft.ru/error/500
-Alert suppressed: health fail streak 13/2
 Health monitor finished in 127.2s — FAIL
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
@@ -50,17 +47,13 @@ main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read 
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 [FAIL] main_page 0 15078ms HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)
 Health monitor finished in 41.2s — FAIL
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-E   AssertionError: Не отображается элемент начала выбора уровня («Заполнить анкету», «Выбрать уровень» или «Далее»)
-FAILED tests/lk/test_lk_accreditation.py::test_lk_accreditation_level_selection_visible - AssertionError: Не отображается UI выбора уровня аккредитации (карточки «ДОСТУПНО» или опросник «Выбрать уровень»)
-FAILED tests/lk/test_lk_accreditation.py::test_lk_accreditation_apply_button_without_submit - AssertionError: Не отображается элемент начала выбора уровня («Заполнить анкету», «Выбрать уровень» или «Далее»)
-=== 2 failed, 17 passed, 1 skipped, 3 warnings, 1 rerun in 357.47s (0:05:57) ===
-LK pytest: 17/20 passed, failed=2, errors=0, skipped=1 in 358.8s
-Failure events sent to InfluxDB (таблица Grafana)
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 152.5s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 159.8s
     raise LkAuthError(
@@ -85,14 +78,17 @@ LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 184.6s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 149.6s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 147.7s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 149.3s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 164.1s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 152.6s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 166.9s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 149.9s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 149.8s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 148.8s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-Pytest: 39/39 passed, failed=0, errors=0 in 6.1s
-Metrics sent to InfluxDB
-=== BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 6.1s
 Metrics sent to InfluxDB
 === BID Daily Monitor ===
@@ -119,6 +115,9 @@ Metrics sent to InfluxDB
 Alert suppressed: daily fail already reported (anti-flap)
 === BID Daily Monitor ===
 Pytest: 38/39 passed, failed=1, errors=0 in 6.6s
+Metrics sent to InfluxDB
+=== BID Daily Monitor ===
+Pytest: 38/39 passed, failed=1, errors=0 in 8.0s
 Metrics sent to InfluxDB
 ```
 
