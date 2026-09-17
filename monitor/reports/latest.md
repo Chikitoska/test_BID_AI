@@ -1,37 +1,27 @@
 # BID monitor digest
 
-- Generated: `2026-09-16T20:50:03.882831+03:00` (Europe/Moscow)
+- Generated: `2026-09-17T08:50:03.882777+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
-- Git HEAD: `5de4b64 chore(monitor): digest report 2026-09-14 20:50 UTC+03:00`
+- Git HEAD: `f678706 Align landing tab tag with PROD: Потребителям → Покупателям`
 
 ## Influx volume
 
-- `bid_failure`: 3 точек (~1д)
+- `bid_failure`: 5 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 864 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-- `2026-09-16 14:00:14.288377+00:00` | Лендинг + API autotests | `test_service_provider_tags_match_landing_tabs` | tests/api/test_landing_devtools_api.py::test_service_provider_tags_match_landing_tabs | tests/api/test_landing_devtools_api.py::test_service_provider_tags_match_landing_tabs
+- `2026-09-17 01:55:50.275118+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)
+- `2026-09-17 00:50:45.643632+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)
+- `2026-09-16 23:25:45.676790+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)
+- `2026-09-17 02:00:13.421212+00:00` | Лендинг + API autotests | `test_service_provider_tags_match_landing_tabs` | tests/api/test_landing_devtools_api.py::test_service_provider_tags_match_landing_tabs | tests/api/test_landing_devtools_api.py::test_service_provider_tags_match_landing_tabs
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-Health monitor finished in 127.2s — FAIL
-main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
-main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
-main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
-[FAIL] main_page 0 15083ms HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)
-Health monitor finished in 41.2s — FAIL
-main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
-[FAIL] main_page 0 15073ms HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)
-Health monitor finished in 41.2s — FAIL
-main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
-main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
-main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
-main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 [FAIL] main_page 0 15071ms HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)
 Health monitor finished in 41.2s — FAIL
@@ -49,17 +39,24 @@ main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read 
 Health monitor finished in 41.2s — FAIL
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
+[FAIL] main_page 0 15078ms HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)
+Health monitor finished in 41.2s — FAIL
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
+[FAIL] main_page 0 15076ms HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)
+Alert suppressed: health fail streak 19/2
+Health monitor finished in 41.2s — FAIL
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
+[FAIL] main_page 0 15075ms HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)
+Alert suppressed: health fail streak 20/2
+Health monitor finished in 41.2s — FAIL
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 152.5s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 159.8s
-    raise LkAuthError(
-E   pages.lk_flow.LkAuthError: ЛК не загрузился после входа (нет бейджа пользователя), URL: https://lk.bid.gazprom-neft.ru/error/500
-______________ ERROR at setup of test_company_in_service_provider ______________
-    raise LkAuthError(
 E   pages.lk_flow.LkAuthError: ЛК не загрузился после входа (нет бейджа пользователя), URL: https://lk.bid.gazprom-neft.ru/error/500
 ERROR tests/lk/test_lk_auth.py::test_auth_redirects_to_lk - pages.lk_flow.LkAuthError: ЛК не загрузился после входа (нет бейджа пользователя), URL: https://lk.bid.gazprom-neft.ru/error/500
 ERROR tests/lk/test_lk_auth.py::test_company_name_in_lk - pages.lk_flow.LkAuthError: ЛК не загрузился после входа (нет бейджа пользователя), URL: https://lk.bid.gazprom-neft.ru/error/500
@@ -84,14 +81,17 @@ LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 166.9s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 149.9s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 149.8s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 148.8s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 149.2s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 145.3s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 180.7s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 163.7s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 146.6s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 171.3s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-Pytest: 39/39 passed, failed=0, errors=0 in 6.1s
-Metrics sent to InfluxDB
-=== BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 17.1s
 Metrics sent to InfluxDB
 === BID Daily Monitor ===
@@ -118,6 +118,9 @@ Pytest: 38/39 passed, failed=1, errors=0 in 6.6s
 Metrics sent to InfluxDB
 === BID Daily Monitor ===
 Pytest: 38/39 passed, failed=1, errors=0 in 8.0s
+Metrics sent to InfluxDB
+=== BID Daily Monitor ===
+Pytest: 38/39 passed, failed=1, errors=0 in 6.1s
 Metrics sent to InfluxDB
 ```
 
