@@ -42,8 +42,8 @@ class TestLandingScenariosPlaywright:
         assert_inn_filled(landing_pw.inn_value())
 
     def test_scenario_05_navigation_tab(self, landing_pw: LandingPagePlaywright):
-        landing_pw.click_tab("Потребителям")
-        expect(landing_pw.page.get_by_role("button", name="Потребителям", exact=True)).to_be_visible()
+        landing_pw.click_tab("Покупателям")
+        expect(landing_pw.page.get_by_role("button", name="Покупателям", exact=True)).to_be_visible()
 
     @pytest.mark.parametrize("tab_name", L.NAV_TABS)
     def test_scenario_06_all_tabs_present(self, landing_pw: LandingPagePlaywright, tab_name: str):

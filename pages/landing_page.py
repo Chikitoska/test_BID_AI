@@ -22,7 +22,7 @@ class LandingPage:
     BRANCH_CHECKBOX = (By.XPATH, "//*[contains(text(), 'Представительство/Филиал')]")
 
     NAV_TABS = {
-        "Потребителям": (By.XPATH, "//*[contains(normalize-space(.), 'Потребителям')]"),
+        "Покупателям": (By.XPATH, "//*[contains(normalize-space(.), 'Покупателям')]"),
         "Поддержка бизнеса": (By.XPATH, "//*[contains(normalize-space(.), 'Поддержка бизнеса')]"),
         "Другие сервисы": (By.XPATH, "//*[contains(normalize-space(.), 'Другие сервисы')]"),
         "Отраслевые сервисы": (By.XPATH, "//*[contains(normalize-space(.), 'Отраслевые сервисы')]"),
@@ -48,7 +48,7 @@ class LandingPage:
         # SPA подгружает блок сервисов асинхронно
         self.wait.until(
             EC.presence_of_element_located(
-                (By.XPATH, "//*[contains(., 'Потребителям')]")
+                (By.XPATH, "//*[contains(., 'Покупателям')]")
             )
         )
         return self

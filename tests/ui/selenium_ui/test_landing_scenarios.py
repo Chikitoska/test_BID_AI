@@ -42,8 +42,8 @@ class TestLandingScenariosSelenium:
         assert_inn_filled(inn.get_attribute("value"))
 
     def test_scenario_05_navigation_tab(self, landing_page: LandingPage):
-        landing_page.click_tab("Потребителям")
-        tab = landing_page.wait_present(landing_page.NAV_TABS["Потребителям"])
+        landing_page.click_tab("Покупателям")
+        tab = landing_page.wait_present(landing_page.NAV_TABS["Покупателям"])
         assert tab is not None
 
     @pytest.mark.parametrize("tab_name", L.NAV_TABS)
