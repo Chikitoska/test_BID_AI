@@ -169,7 +169,8 @@ def main() -> int:
         pytest_output=pytest_result.output,
     )
 
-    if not overall_ok and should_send_daily_telegram(overall_ok=overall_ok):
+    send_alert = should_send_daily_telegram(overall_ok=overall_ok)
+    if not overall_ok and send_alert:
         notify_github_on_failure(
             run_type="full",
             http_results=http_results,

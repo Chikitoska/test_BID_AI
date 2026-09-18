@@ -61,6 +61,24 @@ def should_send_lk_telegram(*, overall_ok: bool) -> bool:
     return send_fail
 
 
+def should_send_lk_pytest_telegram(*, overall_ok: bool) -> bool:
+    """Боевой прогон ЛК: не шуметь на один ночной флап — ждать N подряд FAIL."""
+    state = AlertState.load()
+    send_fail = state.evaluate_lk_pytest_alert(
+        overall_ok,
+        threshold=MONITOR_ALERT_AFTER_FAILURES,
+        repeat_hours=TELEGRAM_ALERT_REPEAT_HOURS,
+    )
+
+    if not overall_ok and not send_fail:
+        print(
+            f"Alert suppressed: lk_pytest fail streak "
+            f"{state.consecutive_lk_pytest_failures}/{MONITOR_ALERT_AFTER_FAILURES}"
+        )
+
+    return send_fail
+
+
 def notify_probe_failure_direct(http_results) -> None:
     from monitor.alerts import format_probe_failure_alert, send_telegram
     from monitor.config import ALERTS_ENABLED, GITHUB_DISPATCH_ENABLED

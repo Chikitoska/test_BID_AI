@@ -122,7 +122,8 @@ def main() -> int:
         except Exception as exc:
             print(f"WARN: InfluxDB failure events: {exc}")
 
-    if not overall_ok and should_send_lk_telegram(overall_ok=overall_ok):
+    send_alert = should_send_lk_telegram(overall_ok=overall_ok)
+    if not overall_ok and send_alert:
         notify_github_on_failure(
             run_type="health",
             http_results=all_results,
