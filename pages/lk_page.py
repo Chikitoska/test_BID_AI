@@ -223,10 +223,13 @@ class LkPage:
         return any(level > current for level in selectable)
 
     def accreditation_upgrade_path_state(self) -> tuple[str, int]:
-        """Состояние апгрейда: available | max_level | page_error. Второе значение — текущий уровень (0 при ошибке)."""
+        """Состояние апгрейда: available | max_level | page_error. Второе значение — текущий уровень (0 при ошибке).
+
+        TimeoutException пробрасываем: боевой pytest ЛК уже делает rerun по нему, pytest.fail — нет.
+        """
         try:
             current, selectable = self.read_accreditation_levels()
-        except (TimeoutException, LkPageError):
+        except LkPageError:
             return "page_error", 0
         if any(level > current for level in selectable):
             return "available", current
