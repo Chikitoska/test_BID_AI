@@ -10,6 +10,8 @@ from monitor.metrics import FailureEvent
 FailureKind = Literal["prod", "autotest"]
 
 # Сеть / PROD / инфраструктура — алертим сразу (даже из боевого UI-прогона).
+# Не ставить короткие/шумные подстроки вроде "dns" или просто "chromedriver":
+# путь к chromedriver есть почти в любом Selenium-логе → ложный prod-алерт.
 _PROD_MARKERS = (
     "Read timed out",
     "ConnectTimeout",
@@ -32,15 +34,13 @@ _PROD_MARKERS = (
     "ERR_CONNECTION",
     "ERR_NAME_NOT_RESOLVED",
     "ERR_TIMED_OUT",
-    "dns",
     "Temporary failure in name resolution",
     "SessionNotCreatedException",
     "chrome not reachable",
-    "chromedriver",
+    "chromedriver unexpectedly exited",
+    "Chrome failed to start",
+    "session not created",
     "WebDriverException: Message: unknown error: net::",
-    "login.microsoftonline",
-    "openid-connect",
-    "Keycloak",
 )
 
 # Типичный хрупкий UI-автотест — в Grafana пишем, в TG/email не спамим.
@@ -53,6 +53,10 @@ _AUTOTEST_MARKERS = (
     "ElementNotVisibleException",
     "AssertionError",
     "InvalidSelectorException",
+    "Failed: Раздел",
+    "не загрузился или нет текущего уровня",
+    "Аккредитация",
+    "page_error",
 )
 
 
@@ -65,18 +69,22 @@ def classify_lk_pytest_failure(output: str, *, failed: int = 0, total: int = 0) 
         return "prod"
 
     prod_hit = any(marker.lower() in lower for marker in _PROD_MARKERS)
+    autotest_hit = any(marker.lower() in lower for marker in _AUTOTEST_MARKERS)
+    mass_fail = total > 0 and failed >= max(3, (total + 1) // 2)
+
+    # Явная сеть/5xx/падение Chrome — всегда prod (даже если в логе есть UI-слова).
     if prod_hit:
         return "prod"
 
-    # Массовый провал (логин/стенд) чаще PROD, чем один флаковый селектор.
-    if total > 0 and failed >= max(3, (total + 1) // 2):
+    # Массовый провал без сетевых маркеров — тоже prod (стенд/логин).
+    if mass_fail:
         return "prod"
 
-    autotest_hit = any(marker.lower() in lower for marker in _AUTOTEST_MARKERS)
+    # Одиночный UI/assert/pytest.fail — только Grafana.
     if autotest_hit:
         return "autotest"
 
-    # Непонятный FAIL без сетевых маркеров — не пейджим (есть health каждые 5 мин).
+    # Непонятный одиночный FAIL — не пейджим (пульс PROD = health каждые 5 мин).
     return "autotest"
 
 
