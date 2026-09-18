@@ -3,8 +3,81 @@
 from __future__ import annotations
 
 import re
+from typing import Literal
 
 from monitor.metrics import FailureEvent
+
+FailureKind = Literal["prod", "autotest"]
+
+# Сеть / PROD / инфраструктура — алертим сразу (даже из боевого UI-прогона).
+_PROD_MARKERS = (
+    "Read timed out",
+    "ConnectTimeout",
+    "ConnectionError",
+    "Connection refused",
+    "ConnectionReset",
+    "NameResolutionError",
+    "Failed to establish a new connection",
+    "Max retries exceeded",
+    "HTTPConnectionPool",
+    "HTTPSConnectionPool",
+    "urllib3.exceptions",
+    "SSLError",
+    "SSLCertVerificationError",
+    "502 Bad Gateway",
+    "503 Service",
+    "504 Gateway",
+    "Gateway Time-out",
+    "net::ERR_",
+    "ERR_CONNECTION",
+    "ERR_NAME_NOT_RESOLVED",
+    "ERR_TIMED_OUT",
+    "dns",
+    "Temporary failure in name resolution",
+    "SessionNotCreatedException",
+    "chrome not reachable",
+    "chromedriver",
+    "WebDriverException: Message: unknown error: net::",
+    "login.microsoftonline",
+    "openid-connect",
+    "Keycloak",
+)
+
+# Типичный хрупкий UI-автотест — в Grafana пишем, в TG/email не спамим.
+_AUTOTEST_MARKERS = (
+    "TimeoutException",
+    "NoSuchElementException",
+    "StaleElementReferenceException",
+    "ElementClickInterceptedException",
+    "ElementNotInteractableException",
+    "ElementNotVisibleException",
+    "AssertionError",
+    "InvalidSelectorException",
+)
+
+
+def classify_lk_pytest_failure(output: str, *, failed: int = 0, total: int = 0) -> FailureKind:
+    """prod = сеть/лежит сайт/инфра; autotest = селекторы/ожидания/assert UI."""
+    text = output or ""
+    lower = text.lower()
+
+    if total == 0 and failed > 0:
+        return "prod"
+
+    prod_hit = any(marker.lower() in lower for marker in _PROD_MARKERS)
+    if prod_hit:
+        return "prod"
+
+    # Массовый провал (логин/стенд) чаще PROD, чем один флаковый селектор.
+    if total > 0 and failed >= max(3, (total + 1) // 2):
+        return "prod"
+
+    autotest_hit = any(marker.lower() in lower for marker in _AUTOTEST_MARKERS)
+    if autotest_hit:
+        return "autotest"
+
+    # Непонятный FAIL без сетевых маркеров — не пейджим (есть health каждые 5 мин).
+    return "autotest"
 
 
 def parse_pytest_failures(output: str) -> list[FailureEvent]:

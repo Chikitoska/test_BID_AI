@@ -61,21 +61,58 @@ def should_send_lk_telegram(*, overall_ok: bool) -> bool:
     return send_fail
 
 
-def should_send_lk_pytest_telegram(*, overall_ok: bool) -> bool:
-    """Боевой прогон ЛК: не шуметь на один ночной флап — ждать N подряд FAIL."""
+def should_send_lk_pytest_telegram(
+    *,
+    overall_ok: bool,
+    pytest_output: str = "",
+    failed: int = 0,
+    total: int = 0,
+) -> bool:
+    """Боевой pytest ЛК: TG/email только при prod/сети, не при UI-флаках автотеста.
+
+    Быстрый пульс «PROD лежит» — это health каждые 5 мин.
+    Боевой прогон — глубокий UI; спамить селекторами нельзя, но сеть/5xx — сразу.
+    """
+    from monitor.pytest_failures import classify_lk_pytest_failure
+
     state = AlertState.load()
+
+    if overall_ok:
+        state.evaluate_lk_pytest_alert(
+            True,
+            threshold=1,
+            repeat_hours=TELEGRAM_ALERT_REPEAT_HOURS,
+        )
+        return False
+
+    kind = classify_lk_pytest_failure(pytest_output, failed=failed, total=total)
+    if kind == "autotest":
+        # Не копить «streak» ради UI-флака — иначе через 2 ч прилетит ложный prod-пейдж.
+        state.evaluate_lk_pytest_alert(
+            True,
+            threshold=1,
+            repeat_hours=TELEGRAM_ALERT_REPEAT_HOURS,
+        )
+        print(
+            "Alert suppressed: lk_pytest failures look like autotest/UI flake "
+            "(TimeoutException/assert/selector) — Grafana only; "
+            "prod pulse is health every 5 min"
+        )
+        return False
+
+    # prod/сеть/массовый провал — алерт с первого такого прогона (не ждать 2 часа).
     send_fail = state.evaluate_lk_pytest_alert(
-        overall_ok,
-        threshold=MONITOR_ALERT_AFTER_FAILURES,
+        False,
+        threshold=1,
         repeat_hours=TELEGRAM_ALERT_REPEAT_HOURS,
     )
-
-    if not overall_ok and not send_fail:
+    if not send_fail:
         print(
-            f"Alert suppressed: lk_pytest fail streak "
-            f"{state.consecutive_lk_pytest_failures}/{MONITOR_ALERT_AFTER_FAILURES}"
+            f"Alert suppressed: lk_pytest prod fail already reported "
+            f"(anti-flap {TELEGRAM_ALERT_REPEAT_HOURS}h)"
         )
-
+    else:
+        print("Alert: lk_pytest classified as prod/network — notifying")
     return send_fail
 
 

@@ -169,7 +169,12 @@ def main() -> int:
         except Exception as exc:
             print(f"WARN: InfluxDB failure events: {exc}")
 
-    send_alert = should_send_lk_pytest_telegram(overall_ok=overall_ok)
+    send_alert = should_send_lk_pytest_telegram(
+        overall_ok=overall_ok,
+        pytest_output=result.output,
+        failed=result.pytest_failed,
+        total=result.total,
+    )
     if not overall_ok and send_alert:
         notify_github_on_failure(
             run_type="lk_pytest",
