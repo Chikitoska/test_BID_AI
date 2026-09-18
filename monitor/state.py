@@ -21,6 +21,9 @@ class AlertState:
     lk_incident_active: bool = False
     last_lk_fail_alert_at: float | None = None
     consecutive_lk_failures: int = 0
+    lk_pytest_incident_active: bool = False
+    last_lk_pytest_fail_alert_at: float | None = None
+    consecutive_lk_pytest_failures: int = 0
 
     @classmethod
     def load(cls) -> AlertState:
@@ -38,6 +41,11 @@ class AlertState:
                 lk_incident_active=bool(data.get("lk_incident_active", False)),
                 last_lk_fail_alert_at=data.get("last_lk_fail_alert_at"),
                 consecutive_lk_failures=int(data.get("consecutive_lk_failures", 0)),
+                lk_pytest_incident_active=bool(data.get("lk_pytest_incident_active", False)),
+                last_lk_pytest_fail_alert_at=data.get("last_lk_pytest_fail_alert_at"),
+                consecutive_lk_pytest_failures=int(
+                    data.get("consecutive_lk_pytest_failures", 0)
+                ),
             )
         except (json.JSONDecodeError, OSError, TypeError, ValueError):
             return cls()
@@ -56,6 +64,9 @@ class AlertState:
                     "lk_incident_active": self.lk_incident_active,
                     "last_lk_fail_alert_at": self.last_lk_fail_alert_at,
                     "consecutive_lk_failures": self.consecutive_lk_failures,
+                    "lk_pytest_incident_active": self.lk_pytest_incident_active,
+                    "last_lk_pytest_fail_alert_at": self.last_lk_pytest_fail_alert_at,
+                    "consecutive_lk_pytest_failures": self.consecutive_lk_pytest_failures,
                 },
                 ensure_ascii=False,
             ),
@@ -144,6 +155,35 @@ class AlertState:
             elif self._should_repeat(repeat_hours, self.last_lk_fail_alert_at):
                 send_fail = True
                 self.last_lk_fail_alert_at = time.time()
+
+        self.save()
+        return send_fail
+
+    def evaluate_lk_pytest_alert(
+        self,
+        ok: bool,
+        *,
+        repeat_hours: float,
+        threshold: int = 2,
+    ) -> bool:
+        """Боевой pytest ЛК: алерт после threshold подряд FAIL (антифлап)."""
+        send_fail = False
+
+        if ok:
+            self.consecutive_lk_pytest_failures = 0
+            self.lk_pytest_incident_active = False
+            self.save()
+            return False
+
+        self.consecutive_lk_pytest_failures += 1
+        if self.consecutive_lk_pytest_failures >= threshold:
+            if not self.lk_pytest_incident_active:
+                send_fail = True
+                self.lk_pytest_incident_active = True
+                self.last_lk_pytest_fail_alert_at = time.time()
+            elif self._should_repeat(repeat_hours, self.last_lk_pytest_fail_alert_at):
+                send_fail = True
+                self.last_lk_pytest_fail_alert_at = time.time()
 
         self.save()
         return send_fail

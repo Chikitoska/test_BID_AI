@@ -24,7 +24,7 @@ from monitor.config import INFLUX_ENABLED, PROJECT_ROOT as CFG_ROOT
 from monitor.chrome_lock import ChromeBusyError, chrome_run_lock
 from monitor.github_dispatch import notify_github_on_failure
 from monitor.metrics import FailureEvent, write_failure_events, write_lk_pytest_run
-from monitor.probe_alert import should_send_daily_telegram
+from monitor.probe_alert import should_send_lk_pytest_telegram
 from monitor.pytest_failures import parse_pytest_failures, pytest_failure_snippet, pytest_summary_failure
 
 
@@ -169,7 +169,13 @@ def main() -> int:
         except Exception as exc:
             print(f"WARN: InfluxDB failure events: {exc}")
 
-    if not overall_ok and should_send_daily_telegram(overall_ok=overall_ok):
+    send_alert = should_send_lk_pytest_telegram(
+        overall_ok=overall_ok,
+        pytest_output=result.output,
+        failed=result.pytest_failed,
+        total=result.total,
+    )
+    if not overall_ok and send_alert:
         notify_github_on_failure(
             run_type="lk_pytest",
             http_results=[],
