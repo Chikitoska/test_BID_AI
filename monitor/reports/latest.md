@@ -1,25 +1,25 @@
 # BID monitor digest
 
-- Generated: `2026-09-17T20:50:03.875900+03:00` (Europe/Moscow)
+- Generated: `2026-09-18T08:50:03.865466+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
-- Git HEAD: `f678706 Align landing tab tag with PROD: Потребителям → Покупателям`
+- Git HEAD: `b125238 Merge pull request #11 from Chikitoska/harden-lk-processor-antiflap`
 
 ## Influx volume
 
-- `bid_failure`: 4 точек (~1д)
+- `bid_failure`: 2 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 864 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-(ошибок bid_failure за период нет)
+- `2026-09-18 01:27:51.282530+00:00` | Боевой прогон ЛК (2 ч) | `test_company_in_service_provider` | tests/lk/test_lk_auth.py::test_company_in_service_provider | tests/lk/test_lk_auth.py::test_company_in_service_provider: selenium.common.exceptions.TimeoutException: Message
+- `2026-09-18 01:27:51.282530+00:00` | Боевой прогон ЛК (2 ч) | `test_fio_in_service_provider` | tests/lk/test_lk_auth.py::test_fio_in_service_provider | tests/lk/test_lk_auth.py::test_fio_in_service_provider: selenium.common.exceptions.TimeoutException: Message
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-Health monitor finished in 41.2s — FAIL
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
@@ -49,21 +49,12 @@ Health monitor finished in 41.2s — FAIL
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-======= 12 passed, 3 skipped, 3 warnings, 5 errors in 193.47s (0:03:13) ========
-LK pytest: 12/20 passed, failed=0, errors=5, skipped=3 in 194.9s
-Failure events sent to InfluxDB (таблица Grafana)
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 181.9s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 148.4s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 150.2s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 183.7s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 146.1s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 184.6s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 149.6s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 147.7s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 149.3s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 164.1s
@@ -84,14 +75,21 @@ LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 191.9s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 154.7s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 149.6s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 185.1s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 189.1s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 147.2s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 180.3s
+FAILED tests/lk/test_lk_auth.py::test_fio_in_service_provider - selenium.common.exceptions.TimeoutException: Message:
+FAILED tests/lk/test_lk_auth.py::test_company_in_service_provider - selenium.common.exceptions.TimeoutException: Message:
+=== 2 failed, 15 passed, 3 skipped, 3 warnings, 4 rerun in 465.85s (0:07:45) ===
+LK pytest: 15/20 passed, failed=2, errors=0, skipped=3 in 467.0s
+Failure events sent to InfluxDB (таблица Grafana)
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 147.5s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 189.0s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-Pytest: 39/39 passed, failed=0, errors=0 in 6.1s
-Metrics sent to InfluxDB
-=== BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 10.1s
 Metrics sent to InfluxDB
 === BID Daily Monitor ===
@@ -118,6 +116,9 @@ Pytest: 38/39 passed, failed=1, errors=0 in 6.1s
 Metrics sent to InfluxDB
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 8.5s
+Metrics sent to InfluxDB
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 6.2s
 Metrics sent to InfluxDB
 ```
 
