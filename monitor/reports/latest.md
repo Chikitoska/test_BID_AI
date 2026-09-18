@@ -1,33 +1,24 @@
 # BID monitor digest
 
-- Generated: `2026-09-18T08:50:03.865466+03:00` (Europe/Moscow)
+- Generated: `2026-09-18T20:50:03.879533+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
-- Git HEAD: `b125238 Merge pull request #11 from Chikitoska/harden-lk-processor-antiflap`
+- Git HEAD: `62cc5ed Merge pull request #12 from Chikitoska/fix/lk-pytest-alert-classifier`
 
 ## Influx volume
 
-- `bid_failure`: 2 точек (~1д)
+- `bid_failure`: 3 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 864 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-- `2026-09-18 01:27:51.282530+00:00` | Боевой прогон ЛК (2 ч) | `test_company_in_service_provider` | tests/lk/test_lk_auth.py::test_company_in_service_provider | tests/lk/test_lk_auth.py::test_company_in_service_provider: selenium.common.exceptions.TimeoutException: Message
-- `2026-09-18 01:27:51.282530+00:00` | Боевой прогон ЛК (2 ч) | `test_fio_in_service_provider` | tests/lk/test_lk_auth.py::test_fio_in_service_provider | tests/lk/test_lk_auth.py::test_fio_in_service_provider: selenium.common.exceptions.TimeoutException: Message
+- `2026-09-18 07:25:25.563398+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_accreditation_level_selection_visible` | tests/lk/test_lk_accreditation.py::test_lk_accreditation_level_selection_visible | tests/lk/test_lk_accreditation.py::test_lk_accreditation_level_selection_visible: Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
-main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
-main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
-main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
-main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
-main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
-main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
-main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 [FAIL] main_page 0 15078ms HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)
@@ -50,24 +41,19 @@ main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read 
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 147.7s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 149.3s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 164.1s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 152.6s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 166.9s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 149.9s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 149.8s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 148.8s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 149.2s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 145.3s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 180.7s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 163.7s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 146.6s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 171.3s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 190.1s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 186.7s
@@ -85,14 +71,24 @@ LK pytest: 15/20 passed, failed=2, errors=0, skipped=3 in 467.0s
 Failure events sent to InfluxDB (таблица Grafana)
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 147.5s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 189.0s
+y::test_lk_accreditation_level_selection_visible FAILED
+=================================== FAILURES ===================================
+    pytest.fail("Раздел «Аккредитация» не загрузился или нет текущего уровня")
+E   Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
+FAILED tests/lk/test_lk_accreditation.py::test_lk_accreditation_level_selection_visible - Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
+======= 1 failed, 17 passed, 2 skipped, 3 warnings in 320.12s (0:05:20) ========
+LK pytest: 17/20 passed, failed=1, errors=0, skipped=2 in 321.3s
+Failure events sent to InfluxDB (таблица Grafana)
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 265.0s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 256.9s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 257.7s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 358.0s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 255.5s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-Pytest: 39/39 passed, failed=0, errors=0 in 10.1s
-Metrics sent to InfluxDB
-=== BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 6.3s
 Metrics sent to InfluxDB
 === BID Daily Monitor ===
@@ -119,6 +115,9 @@ Pytest: 39/39 passed, failed=0, errors=0 in 8.5s
 Metrics sent to InfluxDB
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 6.2s
+Metrics sent to InfluxDB
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 7.3s
 Metrics sent to InfluxDB
 ```
 
