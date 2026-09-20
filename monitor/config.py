@@ -23,7 +23,11 @@ MONITOR_PROBE_RETRIES = int(os.getenv("MONITOR_PROBE_RETRIES", "1"))
 MONITOR_PROBE_RETRY_DELAY_SEC = int(os.getenv("MONITOR_PROBE_RETRY_DELAY_SEC", "30"))
 # Health: пауза перед повтором main_page (короче, чем daily probe).
 MONITOR_HEALTH_RETRY_DELAY_SEC = int(os.getenv("MONITOR_HEALTH_RETRY_DELAY_SEC", "10"))
+# При 4xx/5xx в ЛК: сколько доп. попыток в том же прогоне и пауза между ними.
+MONITOR_HTTP_ERROR_RETRIES = int(os.getenv("MONITOR_HTTP_ERROR_RETRIES", "1"))
+MONITOR_HTTP_ERROR_RETRY_DELAY_SEC = int(os.getenv("MONITOR_HTTP_ERROR_RETRY_DELAY_SEC", "90"))
 # Алерт TG/email после N подряд FAIL (1 = сразу, 2 = после двух прогонов).
+# Для подтверждённого 4xx/5xx после in-run retry health шлёт сразу (threshold=1).
 MONITOR_ALERT_AFTER_FAILURES = int(os.getenv("MONITOR_ALERT_AFTER_FAILURES", "2"))
 MONITOR_USER_AGENT = os.getenv(
     "MONITOR_USER_AGENT",

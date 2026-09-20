@@ -44,19 +44,23 @@ def should_send_daily_telegram(*, overall_ok: bool) -> bool:
     return send_fail
 
 
-def should_send_lk_telegram(*, overall_ok: bool) -> bool:
+def should_send_lk_telegram(*, overall_ok: bool, confirmed_http_error: bool = False) -> bool:
+    """Health-алерт. При подтверждённом 4xx/5xx после in-run retry — сразу (threshold=1)."""
     state = AlertState.load()
+    threshold = 1 if confirmed_http_error else MONITOR_ALERT_AFTER_FAILURES
     send_fail = state.evaluate_lk_alert(
         overall_ok,
-        threshold=MONITOR_ALERT_AFTER_FAILURES,
+        threshold=threshold,
         repeat_hours=TELEGRAM_ALERT_REPEAT_HOURS,
     )
 
     if not overall_ok and not send_fail:
         print(
             f"Alert suppressed: health fail streak {state.consecutive_lk_failures}/"
-            f"{MONITOR_ALERT_AFTER_FAILURES}"
+            f"{threshold}"
         )
+    elif not overall_ok and send_fail and confirmed_http_error:
+        print("Alert: confirmed HTTP 4xx/5xx after in-run retry — notifying")
 
     return send_fail
 
