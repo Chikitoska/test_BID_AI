@@ -29,6 +29,7 @@ from monitor.config import (
 )
 from monitor.github_dispatch import notify_github_on_failure
 from monitor.http_session import create_monitor_session
+from monitor.http_status import is_http_4xx_or_5xx, results_have_http_4xx_or_5xx
 from monitor.lk_checks import run_lk_monitor_checks
 from monitor.metrics import (
     failures_from_checks,
@@ -41,13 +42,14 @@ from monitor.probe_alert import should_send_lk_telegram
 
 
 def _check_main_page_with_retry(session) -> CheckResult:
-    """Один GET с повтором при timeout/5xx — снижает ложные алерты на флапах."""
+    """GET с повтором при timeout/4xx/5xx — снижает ложные алерты на флапах."""
     landing = _check_get(session, "main_page", BASE_URL)
     if landing.success or MONITOR_PROBE_RETRIES <= 0:
         return landing
 
+    reason = landing.error or f"HTTP {landing.http_code}"
     print(
-        f"main_page FAIL ({landing.error or landing.http_code}), "
+        f"main_page FAIL ({reason}), "
         f"повтор через {MONITOR_HEALTH_RETRY_DELAY_SEC} с "
         f"(ещё {MONITOR_PROBE_RETRIES} раз)…",
         flush=True,
@@ -122,7 +124,15 @@ def main() -> int:
         except Exception as exc:
             print(f"WARN: InfluxDB failure events: {exc}")
 
-    send_alert = should_send_lk_telegram(overall_ok=overall_ok)
+    # 4xx/5xx уже перепроверены в этом же прогоне → алертим сразу, не ждём следующий cron.
+    confirmed_http_error = (not overall_ok) and (
+        results_have_http_4xx_or_5xx(all_results)
+        or is_http_4xx_or_5xx(http_code=landing.http_code, error=landing.error)
+    )
+    send_alert = should_send_lk_telegram(
+        overall_ok=overall_ok,
+        confirmed_http_error=confirmed_http_error,
+    )
     if not overall_ok and send_alert:
         notify_github_on_failure(
             run_type="health",

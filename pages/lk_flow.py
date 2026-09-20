@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import time
 
 from selenium.common.exceptions import TimeoutException
@@ -31,6 +32,10 @@ from utils.totp import generate_totp_sha256
 
 class LkAuthError(Exception):
     """Ошибка шага авторизации или проверки ЛК."""
+
+
+class HttpStatusError(LkAuthError):
+    """Страница ЛК с /error/4xx|/error/5xx — повторяемый prod-сигнал."""
 
 
 class LkFlow:
@@ -297,11 +302,20 @@ class LkFlow:
         deadline = time.time() + ready_sec
         while time.time() < deadline:
             accept_lk_consent_modals(self.driver, timeout=3)
+            url = self.driver.current_url or ""
+            if re.search(r"/error/(4\d{2}|5\d{2})\b", url, flags=re.I):
+                raise HttpStatusError(
+                    f"ЛК вернул HTTP error page после входа, URL: {url[:160]}"
+                )
             if self._has_lk_session():
                 return
             time.sleep(0.3)
 
         url = self.driver.current_url
+        if re.search(r"/error/(4\d{2}|5\d{2})\b", url or "", flags=re.I):
+            raise HttpStatusError(
+                f"ЛК вернул HTTP error page после входа, URL: {url[:160]}"
+            )
         raise LkAuthError(
             f"ЛК не загрузился после входа (нет бейджа пользователя), URL: {url[:120]}"
         )

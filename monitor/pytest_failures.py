@@ -41,6 +41,9 @@ _PROD_MARKERS = (
     "Chrome failed to start",
     "session not created",
     "WebDriverException: Message: unknown error: net::",
+    "/error/4",
+    "/error/5",
+    "HttpStatusError",
 )
 
 # Типичный хрупкий UI-автотест — в Grafana пишем, в TG/email не спамим.

@@ -6,6 +6,8 @@ import time
 
 from config.lk_settings import BID_EXPECTED_COMPANY, BID_EXPECTED_FIO, BID_LK_EXPECTED_URL
 from monitor.checks import CheckResult
+from monitor.config import MONITOR_HTTP_ERROR_RETRIES, MONITOR_HTTP_ERROR_RETRY_DELAY_SEC
+from monitor.http_status import results_have_http_4xx_or_5xx
 from monitor.secrets_redact import redact_secrets
 from pages.lk_flow import LkAuthError, LkFlow
 from pages.lk_page import LkPage
@@ -39,20 +41,43 @@ def _run_step(name: str, action) -> CheckResult:
         )
 
 
-def run_lk_monitor_checks() -> list[CheckResult]:
-    """Лёгкий мониторинг ЛК: вход + ФИО и компания в шапке (~15–30 с).
+def _should_retry_lk(results: list[CheckResult], *, attempt: int, max_attempts: int) -> bool:
+    if attempt >= max_attempts or not results:
+        return False
+    if all(item.success for item in results):
+        return False
+    if results_have_http_4xx_or_5xx(results):
+        return True
+    auth = results[0]
+    return auth.name == "lk_auth_login" and not auth.success and attempt == 1
 
-    Тяжёлые проверки (витрина, аккредитация, Processor) — только в pytest tests/lk/.
+
+def run_lk_monitor_checks() -> list[CheckResult]:
+    """Лёгкий мониторинг ЛК: вход + ФИО и компания в шапке.
+
+    При 4xx/5xx (например /error/500) повторяет сценарий в том же прогоне
+    с паузой ~90 с — алерт только если ошибка подтвердилась.
     """
+    max_attempts = 1 + max(1, MONITOR_HTTP_ERROR_RETRIES)
     last_results: list[CheckResult] = []
-    for attempt in range(1, 3):
+
+    for attempt in range(1, max_attempts + 1):
         last_results = _run_lk_monitor_checks_once()
-        auth = last_results[0] if last_results else None
-        if auth and auth.name == "lk_auth_login" and not auth.success and attempt < 2:
-            print("[lk] повтор входа после ошибки авторизации…", flush=True)
-            time.sleep(3)
-            continue
-        return last_results
+        if not _should_retry_lk(last_results, attempt=attempt, max_attempts=max_attempts):
+            return last_results
+
+        http_err = results_have_http_4xx_or_5xx(last_results)
+        delay = MONITOR_HTTP_ERROR_RETRY_DELAY_SEC if http_err else 3
+        kind = "4xx/5xx" if http_err else "auth"
+        failed = next((r for r in last_results if not r.success), None)
+        detail = (failed.error if failed else "")[:160]
+        print(
+            f"[lk] {kind} на попытке {attempt}/{max_attempts}: {detail}. "
+            f"Повтор через {delay} с…",
+            flush=True,
+        )
+        time.sleep(delay)
+
     return last_results
 
 
@@ -84,7 +109,6 @@ def _run_lk_monitor_checks_once() -> list[CheckResult]:
             driver.quit()
 
 
-# Обратная совместимость (старое имя)
 run_lk_checks = run_lk_monitor_checks
 
 

@@ -57,13 +57,15 @@ def _run_lk_pytest() -> PytestResult:
         "--reruns",
         "2",
         "--reruns-delay",
-        "10",
+        "30",
         "--only-rerun",
         "WebDriverException",
         "--only-rerun",
         "InvalidSessionIdException",
         "--only-rerun",
         "TimeoutException",
+        "--only-rerun",
+        "HttpStatusError",
         f"--alluredir={allure_dir}",
     ]
     start = time.perf_counter()
