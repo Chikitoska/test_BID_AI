@@ -1,26 +1,24 @@
 # BID monitor digest
 
-- Generated: `2026-09-19T20:50:03.906707+03:00` (Europe/Moscow)
+- Generated: `2026-09-20T08:50:03.185582+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `62cc5ed Merge pull request #12 from Chikitoska/fix/lk-pytest-alert-classifier`
 
 ## Influx volume
 
+- `bid_failure`: 1 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 864 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-(ошибок bid_failure за период нет)
+- `2026-09-20 00:07:17.656268+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | ЛК не загрузился после входа (нет бейджа пользователя), URL: https://lk.bid.gazprom-neft.ru/error/500
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-[FAIL] main_page 0 15078ms HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)
-Health monitor finished in 41.2s — FAIL
-main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
@@ -48,17 +46,14 @@ main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read 
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
+[FAIL] lk_auth_login 58081ms ЛК не загрузился после входа (нет бейджа пользователя), URL: https://lk.bid.gazprom-neft.ru/error/500
+Alert suppressed: health fail streak 1/2
+Health monitor finished in 123.1s — FAIL
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-=== 2 failed, 15 passed, 3 skipped, 3 warnings, 4 rerun in 465.85s (0:07:45) ===
-LK pytest: 15/20 passed, failed=2, errors=0, skipped=3 in 467.0s
-Failure events sent to InfluxDB (таблица Grafana)
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 147.5s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 189.0s
-y::test_lk_accreditation_level_selection_visible FAILED
 =================================== FAILURES ===================================
     pytest.fail("Раздел «Аккредитация» не загрузился или нет текущего уровня")
 E   Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
@@ -83,14 +78,17 @@ LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 257.6s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 259.5s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 257.3s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 256.1s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 281.4s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 290.6s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 255.5s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 273.0s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 303.4s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 256.2s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-Pytest: 39/39 passed, failed=0, errors=0 in 7.2s
-Metrics sent to InfluxDB
-=== BID Daily Monitor ===
 Pytest: 38/39 passed, failed=1, errors=0 in 7.8s
 Metrics sent to InfluxDB
 Alert suppressed: daily fail already reported (anti-flap)
@@ -117,6 +115,9 @@ Pytest: 39/39 passed, failed=0, errors=0 in 6.4s
 Metrics sent to InfluxDB
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 6.8s
+Metrics sent to InfluxDB
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 7.2s
 Metrics sent to InfluxDB
 ```
 
