@@ -1,6 +1,6 @@
 # BID monitor digest
 
-- Generated: `2026-09-22T20:50:03.877745+03:00` (Europe/Moscow)
+- Generated: `2026-09-23T08:50:03.883962+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `06f4535 Merge pull request #14 from Chikitoska/feature/http-error-confirm-retry`
@@ -14,30 +14,11 @@
 
 ## Failures (bid_failure)
 
-- `2026-09-22 13:17:21.070871+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-- `2026-09-22 13:12:20.423145+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-- `2026-09-22 13:06:16.528614+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-- `2026-09-22 13:01:55.622849+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | Message:  Stacktrace: #0 0x653e67982d4a <unknown> #1 0x653e679f0ff9 <unknown> #2 0x653e67a44b5b <unknown> #3 0x653e67a44e01 <unknown> #4 0x653e67a8f174 <unknown> #5 0x653e67a8c356 <unknown> #6 0x653e6
-- `2026-09-22 07:10:54.014986+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='bid.gazprom-neft.ru', port=443): Failed to resolve 'bi
-- `2026-09-22 07:05:53.204436+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='bid.gazprom-neft.ru', port=443): Failed to resolve 'bi
-- `2026-09-22 07:00:54.010825+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='bid.gazprom-neft.ru', port=443): Failed to resolve 'bi
-- `2026-09-22 06:55:52.533114+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='bid.gazprom-neft.ru', port=443): Failed to resolve 'bi
-- `2026-09-22 06:50:54.604837+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='bid.gazprom-neft.ru', port=443): Failed to resolve 'bi
-- `2026-09-22 06:45:52.343240+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='bid.gazprom-neft.ru', port=443): Failed to resolve 'bi
-- `2026-09-22 06:40:53.006456+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='bid.gazprom-neft.ru', port=443): Failed to resolve 'bi
-- `2026-09-22 06:35:53.656352+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='bid.gazprom-neft.ru', port=443): Failed to resolve 'bi
-- `2026-09-22 06:30:50.791331+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='bid.gazprom-neft.ru', port=443): Failed to resolve 'bi
-- `2026-09-22 06:25:54.563366+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='bid.gazprom-neft.ru', port=443): Failed to resolve 'bi
-- `2026-09-22 06:20:54.523556+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='bid.gazprom-neft.ru', port=443): Failed to resolve 'bi
-- `2026-09-22 13:40:48.551746+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_accreditation_apply_button_without_submit` | tests/lk/test_lk_accreditation.py::test_lk_accreditation_apply_button_without_submit | tests/lk/test_lk_accreditation.py::test_lk_accreditation_apply_button_without_submit: pages.lk_flow.HttpStatusError: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-- `2026-09-22 13:40:48.551746+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_accreditation_current_level_displayed` | tests/lk/test_lk_accreditation.py::test_lk_accreditation_current_level_displayed | tests/lk/test_lk_accreditation.py::test_lk_accreditation_current_level_displayed: pages.lk_flow.HttpStatusError: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-- `2026-09-22 13:40:48.551746+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_accreditation_level_selection_visible` | tests/lk/test_lk_accreditation.py::test_lk_accreditation_level_selection_visible | tests/lk/test_lk_accreditation.py::test_lk_accreditation_level_selection_visible: pages.lk_flow.HttpStatusError: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-- `2026-09-22 13:40:48.551746+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_accreditation_navigation` | tests/lk/test_lk_accreditation.py::test_lk_accreditation_navigation | tests/lk/test_lk_accreditation.py::test_lk_accreditation_navigation: pages.lk_flow.HttpStatusError: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+(ошибок bid_failure за период нет)
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='bid.gazprom-neft.ru', port=443): Failed to resolve 'bid.gazprom-neft.ru' ([Errno -3] Temporary failure in name resolution)"))), повтор через 10 с (ещё 1 раз)…
 [FAIL] main_page 0 20020ms HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='bid.gazprom-neft.ru', port=443): Failed to resolve 'bid.gazprom-neft.ru' ([Errno -3] Temporary failure in name resolution)"))
 Alert suppressed: health fail streak 8/2
 Health monitor finished in 50.0s — FAIL
@@ -67,17 +48,12 @@ Health monitor finished in 135.9s — FAIL
 [FAIL] lk_auth_login 19920ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
 Alert suppressed: health fail streak 4/1
 Health monitor finished in 136.5s — FAIL
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 381.3s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 265.1s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 269.0s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 262.2s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 255.3s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 263.7s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 270.8s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 261.2s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 262.8s
@@ -102,14 +78,17 @@ LK pytest: 15/20 passed, failed=0, errors=4, skipped=1 in 1244.2s
 Failure events sent to InfluxDB (таблица Grafana)
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 256.3s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.2s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 252.5s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 255.7s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.5s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 337.3s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 256.5s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 258.3s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 6.2s
-Metrics sent to InfluxDB
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 7.3s
 Metrics sent to InfluxDB
@@ -136,6 +115,9 @@ Pytest: 39/39 passed, failed=0, errors=0 in 6.2s
 Metrics sent to InfluxDB
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 11.2s
+Metrics sent to InfluxDB
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 6.5s
 Metrics sent to InfluxDB
 ```
 
