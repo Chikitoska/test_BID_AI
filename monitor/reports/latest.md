@@ -1,20 +1,25 @@
 # BID monitor digest
 
-- Generated: `2026-09-23T08:50:03.883962+03:00` (Europe/Moscow)
+- Generated: `2026-09-23T20:50:03.911570+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `06f4535 Merge pull request #14 from Chikitoska/feature/http-error-confirm-retry`
 
 ## Influx volume
 
-- `bid_failure`: 19 точек (~1д)
+- `bid_failure`: 6 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 864 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-(ошибок bid_failure за период нет)
+- `2026-09-23 07:34:59.706693+00:00` | Боевой прогон ЛК (2 ч) | `test_company_in_service_provider` | tests/lk/test_lk_auth.py::test_company_in_service_provider | tests/lk/test_lk_auth.py::test_company_in_service_provider: selenium.common.exceptions.TimeoutException: Message
+- `2026-09-23 07:34:59.706693+00:00` | Боевой прогон ЛК (2 ч) | `test_fio_in_service_provider` | tests/lk/test_lk_auth.py::test_fio_in_service_provider | tests/lk/test_lk_auth.py::test_fio_in_service_provider: selenium.common.exceptions.TimeoutException: Message
+- `2026-09-23 07:34:59.706693+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_accreditation_apply_button_without_submit` | tests/lk/test_lk_accreditation.py::test_lk_accreditation_apply_button_without_submit | tests/lk/test_lk_accreditation.py::test_lk_accreditation_apply_button_without_submit: Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
+- `2026-09-23 07:34:59.706693+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_accreditation_current_level_displayed` | tests/lk/test_lk_accreditation.py::test_lk_accreditation_current_level_displayed | tests/lk/test_lk_accreditation.py::test_lk_accreditation_current_level_displayed: pages.lk_page.LkPageError: Не отображается текущий уровень аккредитации
+- `2026-09-23 07:34:59.706693+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_accreditation_level_selection_visible` | tests/lk/test_lk_accreditation.py::test_lk_accreditation_level_selection_visible | tests/lk/test_lk_accreditation.py::test_lk_accreditation_level_selection_visible: Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
+- `2026-09-23 07:34:59.706693+00:00` | Боевой прогон ЛК (2 ч) | `test_service_provider_opens` | tests/lk/test_lk_auth.py::test_service_provider_opens | tests/lk/test_lk_auth.py::test_service_provider_opens: selenium.common.exceptions.TimeoutException: Message
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
@@ -54,27 +59,6 @@ main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 270.8s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 261.2s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 262.8s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 525.2s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.4s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 257.6s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 267.8s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 261.9s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 264.0s
-    raise HttpStatusError(
-E   pages.lk_flow.HttpStatusError: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-_____ ERROR at setup of test_lk_accreditation_apply_button_without_submit ______
-    raise last_error
-    raise HttpStatusError(
-E   pages.lk_flow.HttpStatusError: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-ERROR tests/lk/test_lk_accreditation.py::test_lk_accreditation_navigation - pages.lk_flow.HttpStatusError: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-ERROR tests/lk/test_lk_accreditation.py::test_lk_accreditation_current_level_displayed - pages.lk_flow.HttpStatusError: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-ERROR tests/lk/test_lk_accreditation.py::test_lk_accreditation_level_selection_visible - pages.lk_flow.HttpStatusError: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-ERROR tests/lk/test_lk_accreditation.py::test_lk_accreditation_apply_button_without_submit - pages.lk_flow.HttpStatusError: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-== 15 passed, 1 skipped, 3 warnings, 4 errors, 9 rerun in 1242.30s (0:20:42) ===
-LK pytest: 15/20 passed, failed=0, errors=4, skipped=1 in 1244.2s
 Failure events sent to InfluxDB (таблица Grafana)
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 256.3s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.2s
@@ -84,14 +68,32 @@ LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.5s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 337.3s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 256.5s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 258.3s
+    raise LkPageError("Не отображается текущий уровень аккредитации")
+E   pages.lk_page.LkPageError: Не отображается текущий уровень аккредитации
+    pytest.fail("Раздел «Аккредитация» не загрузился или нет текущего уровня")
+E   Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
+    pytest.fail("Раздел «Аккредитация» не загрузился или нет текущего уровня")
+E   Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
+FAILED tests/lk/test_lk_accreditation.py::test_lk_accreditation_current_level_displayed - pages.lk_page.LkPageError: Не отображается текущий уровень аккредитации
+FAILED tests/lk/test_lk_accreditation.py::test_lk_accreditation_level_selection_visible - Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
+FAILED tests/lk/test_lk_accreditation.py::test_lk_accreditation_apply_button_without_submit - Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
+ERROR tests/lk/test_lk_auth.py::test_service_provider_opens - selenium.common.exceptions.TimeoutException: Message:
+ERROR tests/lk/test_lk_auth.py::test_fio_in_service_provider - selenium.common.exceptions.TimeoutException: Message:
+ERROR tests/lk/test_lk_auth.py::test_company_in_service_provider - selenium.common.exceptions.TimeoutException: Message:
+= 3 failed, 13 passed, 1 skipped, 3 warnings, 3 errors, 6 rerun in 897.13s (0:14:57) =
+LK pytest: 13/20 passed, failed=3, errors=3, skipped=1 in 898.4s
+Failure events sent to InfluxDB (таблица Grafana)
+Alert suppressed: lk_pytest failures look like autotest/UI flake (TimeoutException/assert/selector) — Grafana only; prod pulse is health every 5 min
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 265.5s
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 261.9s
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 256.3s
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 255.3s
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 261.2s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 7.3s
-Metrics sent to InfluxDB
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 6.4s
 Metrics sent to InfluxDB
@@ -118,6 +120,9 @@ Pytest: 39/39 passed, failed=0, errors=0 in 11.2s
 Metrics sent to InfluxDB
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 6.5s
+Metrics sent to InfluxDB
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 10.6s
 Metrics sent to InfluxDB
 ```
 
