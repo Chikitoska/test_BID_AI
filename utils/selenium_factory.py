@@ -88,16 +88,91 @@ MONITOR_ANALYTICS_UID = os.getenv(
     "b1d00000-0000-4000-a000-000000000001",
 )
 
+# localStorage-ключ counter.js (spa-back) — оставляем для совместимости.
+GPN_SPA_LOCALSTORAGE_KEY = "gpnSpaUid"
+
+# Имя cookie фронта (константа SPA_USER_ID_KEY). В репо значения нет —
+# уточнить у фронта фактическую строку; пока placeholder + override через env.
+SPA_USER_ID_COOKIE_KEY = os.getenv("SPA_USER_ID_COOKIE_KEY", "spa_user_id")
+
+# root_domain из конфига лендинга: общий для bid / id.bid / lk.bid.
+# Cookie Domain=bid.gazprom-neft.ru покрывает все три неймспейса.
+MONITOR_SPA_ROOT_DOMAIN = os.getenv(
+    "MONITOR_SPA_ROOT_DOMAIN",
+    "bid.gazprom-neft.ru",
+)
+
+# Аналог DEFAULT_COOKIE_AGE_SECONDS на фронте («бесконечная жизнь» через max-age).
+SPA_USER_ID_COOKIE_MAX_AGE_SEC = int(
+    os.getenv("SPA_USER_ID_COOKIE_MAX_AGE_SEC", str(365 * 24 * 60 * 60))
+)
+
+
+def _shared_cookie_js(uid: str, cookie_key: str, root_domain: str, max_age: int) -> str:
+    """JS как setSharedCookie + localStorage gpnSpaUid (без randomUUID)."""
+    return (
+        "(function () {\n"
+        f"  var uid = {uid!r};\n"
+        f"  var cookieKey = {cookie_key!r};\n"
+        f"  var rootDomain = {root_domain!r};\n"
+        f"  var maxAge = {int(max_age)};\n"
+        f"  try {{ localStorage.setItem({GPN_SPA_LOCALSTORAGE_KEY!r}, uid); }} catch (e) {{}}\n"
+        "  try {\n"
+        "    var s = cookieKey + '=' + uid\n"
+        "      + '; max-age=' + maxAge\n"
+        "      + '; path=/; SameSite=Lax'\n"
+        "      + (rootDomain ? ('; domain=' + rootDomain) : '');\n"
+        "    if (location.protocol === 'https:') s += '; Secure';\n"
+        "    document.cookie = s;\n"
+        "  } catch (e) {}\n"
+        "})();"
+    )
+
+
+def _set_spa_uid_cookies_cdp(driver: webdriver.Chrome, uid: str) -> None:
+    """CDP Network.setCookie на root_domain до навигации (как setSharedCookie)."""
+    cookie_key = SPA_USER_ID_COOKIE_KEY.strip() or "spa_user_id"
+    root = MONITOR_SPA_ROOT_DOMAIN.strip().lstrip(".")
+    expires = time.time() + SPA_USER_ID_COOKIE_MAX_AGE_SEC
+    try:
+        driver.execute_cdp_cmd("Network.enable", {})
+        # Domain cookie: bid.gazprom-neft.ru + id.bid.* + lk.bid.*
+        driver.execute_cdp_cmd(
+            "Network.setCookie",
+            {
+                "name": cookie_key,
+                "value": uid,
+                "domain": root,
+                "path": "/",
+                "secure": True,
+                "httpOnly": False,
+                "sameSite": "Lax",
+                "expires": expires,
+            },
+        )
+    except Exception as exc:
+        print(f"[chrome] WARN: CDP setCookie SPA uid: {exc}", flush=True)
+
 
 def _inject_gpn_spa_analytics_uid(driver: webdriver.Chrome) -> None:
-    """Фиксированный uid в localStorage до загрузки counter.js (лендинг + ЛК)."""
+    """Фиксированный MONITOR_ANALYTICS_UID на все SPA-неймспейсы.
+
+    Фронт: getOrCreateCustomUserId читает cookie SPA_USER_ID_KEY и пишет
+    shared cookie на root_domain. Мониторинг НЕ генерирует randomUUID —
+    всегда хардкодный uid + cookie (CDP до навигации) + localStorage
+    (Page.addScriptToEvaluateOnNewDocument) для совместимости с counter.js.
+    """
     uid = MONITOR_ANALYTICS_UID.strip()
     if not uid:
         return
-    script = (
-        "try { localStorage.setItem('gpnSpaUid', "
-        + repr(uid)
-        + "); } catch (e) {}"
+
+    _set_spa_uid_cookies_cdp(driver, uid)
+
+    script = _shared_cookie_js(
+        uid,
+        SPA_USER_ID_COOKIE_KEY.strip() or "spa_user_id",
+        MONITOR_SPA_ROOT_DOMAIN.strip().lstrip("."),
+        SPA_USER_ID_COOKIE_MAX_AGE_SEC,
     )
     try:
         driver.execute_cdp_cmd(
@@ -105,7 +180,7 @@ def _inject_gpn_spa_analytics_uid(driver: webdriver.Chrome) -> None:
             {"source": script},
         )
     except Exception as exc:
-        print(f"[chrome] WARN: не удалось задать gpnSpaUid: {exc}", flush=True)
+        print(f"[chrome] WARN: не удалось задать SPA uid script: {exc}", flush=True)
 
 
 def create_chrome_driver(*, headless: bool | None = None) -> webdriver.Chrome:
