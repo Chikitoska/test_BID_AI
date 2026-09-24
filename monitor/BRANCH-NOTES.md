@@ -8,12 +8,12 @@
 
 ### Сделано
 
-- Inject в `utils/selenium_factory.py`: CDP `Network.setCookie` на `MONITOR_SPA_ROOT_DOMAIN` (`bid.gazprom-neft.ru`) + `Page.addScriptToEvaluateOnNewDocument` (cookie как `setSharedCookie` + `localStorage.gpnSpaUid` для `counter.js`).
+- Inject в `utils/selenium_factory.py`: CDP `Network.setCookie` на `MONITOR_SPA_ROOT_DOMAIN` (`bid.gazprom-neft.ru`) + `Page.addScriptToEvaluateOnNewDocument` (cookie как `setSharedCookie`; опционально `localStorage.gpnSpaUid` для `counter.js`, не SoT).
 - Значение всегда `MONITOR_ANALYTICS_UID` (`b1d00000-0000-4000-a000-000000000001`).
-- Cookie key: `SPA_USER_ID_COOKIE_KEY` (placeholder `spa_user_id` — **уточнить у фронта** имя `SPA_USER_ID_KEY`).
-- `monitor/verify_analytics_uid.py` проверяет cookie + localStorage + POST `/events` (лендинг, cookie на Keycloak, ЛК).
+- Cookie key: `SPA_USER_ID_COOKIE_KEY` = `gpn_spa_custom_user_id_cookie` (фронтовая `SPA_USER_ID_KEY`). **Источник истины — только cookie**, не localStorage.
+- Domain cookie: `bid.gazprom-neft.ru` (видны на bid / id.bid / lk.bid).
+- `monitor/verify_analytics_uid.py`: основной check = cookie + POST `/events`; localStorage — информативно/warn.
 
 ### Ждёт отмашки
 
-- Подтверждение имени cookie (`SPA_USER_ID_KEY`) и `root_domain` из конфига фронта.
 - Merge в `main` и деплой на VPS — только по явной команде.

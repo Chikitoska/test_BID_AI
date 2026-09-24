@@ -35,14 +35,18 @@ MONITOR_USER_AGENT = os.getenv(
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
 )
 # Фиксированный uid для GPN SPA analytics (исключение из еженедельных отчётов).
-# Сквозной ID: shared cookie на root_domain (лендинг / Keycloak / ЛК) + localStorage
-# gpnSpaUid для counter.js. Инжект — utils/selenium_factory._inject_gpn_spa_analytics_uid.
+# Источник истины: shared cookie на root_domain (лендинг / Keycloak / ЛК).
+# localStorage gpnSpaUid — опционально (совместимость с counter.js), не SoT.
+# Инжект — utils/selenium_factory._inject_gpn_spa_analytics_uid.
 MONITOR_ANALYTICS_UID = os.getenv(
     "MONITOR_ANALYTICS_UID",
     "b1d00000-0000-4000-a000-000000000001",
 )
-# Имя cookie = фронтовая SPA_USER_ID_KEY (уточнить у фронта; placeholder spa_user_id).
-SPA_USER_ID_COOKIE_KEY = os.getenv("SPA_USER_ID_COOKIE_KEY", "spa_user_id")
+# Имя cookie = фронтовая SPA_USER_ID_KEY.
+SPA_USER_ID_COOKIE_KEY = os.getenv(
+    "SPA_USER_ID_COOKIE_KEY",
+    "gpn_spa_custom_user_id_cookie",
+)
 # root_domain: bid.gazprom-neft.ru → cookie видна на bid / id.bid / lk.bid.
 MONITOR_SPA_ROOT_DOMAIN = os.getenv(
     "MONITOR_SPA_ROOT_DOMAIN",

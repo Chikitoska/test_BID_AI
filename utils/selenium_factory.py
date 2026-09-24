@@ -88,12 +88,14 @@ MONITOR_ANALYTICS_UID = os.getenv(
     "b1d00000-0000-4000-a000-000000000001",
 )
 
-# localStorage-ключ counter.js (spa-back) — оставляем для совместимости.
+# localStorage-ключ counter.js (spa-back) — опционально, не источник истины.
 GPN_SPA_LOCALSTORAGE_KEY = "gpnSpaUid"
 
-# Имя cookie фронта (константа SPA_USER_ID_KEY). В репо значения нет —
-# уточнить у фронта фактическую строку; пока placeholder + override через env.
-SPA_USER_ID_COOKIE_KEY = os.getenv("SPA_USER_ID_COOKIE_KEY", "spa_user_id")
+# Имя cookie фронта (SPA_USER_ID_KEY) — источник истины для сквозного UUID.
+SPA_USER_ID_COOKIE_KEY = os.getenv(
+    "SPA_USER_ID_COOKIE_KEY",
+    "gpn_spa_custom_user_id_cookie",
+)
 
 # root_domain из конфига лендинга: общий для bid / id.bid / lk.bid.
 # Cookie Domain=bid.gazprom-neft.ru покрывает все три неймспейса.
@@ -109,7 +111,7 @@ SPA_USER_ID_COOKIE_MAX_AGE_SEC = int(
 
 
 def _shared_cookie_js(uid: str, cookie_key: str, root_domain: str, max_age: int) -> str:
-    """JS как setSharedCookie + localStorage gpnSpaUid (без randomUUID)."""
+    """JS как setSharedCookie; localStorage gpnSpaUid — опционально (не SoT)."""
     return (
         "(function () {\n"
         f"  var uid = {uid!r};\n"
@@ -131,7 +133,7 @@ def _shared_cookie_js(uid: str, cookie_key: str, root_domain: str, max_age: int)
 
 def _set_spa_uid_cookies_cdp(driver: webdriver.Chrome, uid: str) -> None:
     """CDP Network.setCookie на root_domain до навигации (как setSharedCookie)."""
-    cookie_key = SPA_USER_ID_COOKIE_KEY.strip() or "spa_user_id"
+    cookie_key = SPA_USER_ID_COOKIE_KEY.strip() or "gpn_spa_custom_user_id_cookie"
     root = MONITOR_SPA_ROOT_DOMAIN.strip().lstrip(".")
     expires = time.time() + SPA_USER_ID_COOKIE_MAX_AGE_SEC
     try:
@@ -157,10 +159,11 @@ def _set_spa_uid_cookies_cdp(driver: webdriver.Chrome, uid: str) -> None:
 def _inject_gpn_spa_analytics_uid(driver: webdriver.Chrome) -> None:
     """Фиксированный MONITOR_ANALYTICS_UID на все SPA-неймспейсы.
 
-    Фронт: getOrCreateCustomUserId читает cookie SPA_USER_ID_KEY и пишет
-    shared cookie на root_domain. Мониторинг НЕ генерирует randomUUID —
-    всегда хардкодный uid + cookie (CDP до навигации) + localStorage
-    (Page.addScriptToEvaluateOnNewDocument) для совместимости с counter.js.
+    Фронт: getOrCreateCustomUserId читает cookie SPA_USER_ID_KEY
+    (gpn_spa_custom_user_id_cookie) и пишет shared cookie на root_domain.
+    Мониторинг НЕ генерирует randomUUID — всегда хардкодный uid + cookie
+    (CDP до навигации). localStorage gpnSpaUid пишется опционально
+    (совместимость с counter.js), источником истины не является.
     """
     uid = MONITOR_ANALYTICS_UID.strip()
     if not uid:
@@ -170,7 +173,7 @@ def _inject_gpn_spa_analytics_uid(driver: webdriver.Chrome) -> None:
 
     script = _shared_cookie_js(
         uid,
-        SPA_USER_ID_COOKIE_KEY.strip() or "spa_user_id",
+        SPA_USER_ID_COOKIE_KEY.strip() or "gpn_spa_custom_user_id_cookie",
         MONITOR_SPA_ROOT_DOMAIN.strip().lstrip("."),
         SPA_USER_ID_COOKIE_MAX_AGE_SEC,
     )

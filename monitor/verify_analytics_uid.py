@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Проверка: MONITOR_ANALYTICS_UID в cookie + localStorage и POST /events (лендинг + ЛК)."""
+"""Проверка: MONITOR_ANALYTICS_UID в cookie (SoT) и POST /events (лендинг + ЛК)."""
 
 from __future__ import annotations
 
@@ -80,6 +80,7 @@ def _uid_from_post(post_data: str) -> str | None:
 
 
 def _read_gpn_spa_uid(driver) -> str | None:
+    """Опционально: localStorage не SoT, только для info/warn."""
     key = GPN_SPA_LOCALSTORAGE_KEY
     return driver.execute_script(
         "try { return localStorage.getItem(arguments[0]); } catch (e) { return null; }",
@@ -88,8 +89,8 @@ def _read_gpn_spa_uid(driver) -> str | None:
 
 
 def _read_spa_user_cookie(driver) -> str | None:
-    """Аналог фронтового getCookie(SPA_USER_ID_KEY)."""
-    name = SPA_USER_ID_COOKIE_KEY.strip() or "spa_user_id"
+    """Аналог фронтового getCookie(SPA_USER_ID_KEY) — источник истины."""
+    name = SPA_USER_ID_COOKIE_KEY.strip() or "gpn_spa_custom_user_id_cookie"
     return driver.execute_script(
         """
         const name = arguments[0];
@@ -119,23 +120,25 @@ def _verify_events_context(
     posts = _collect_events_post_data(driver)
     uids = [u for u in (_uid_from_post(p) for p in posts) if u]
 
-    print(f"localStorage.{GPN_SPA_LOCALSTORAGE_KEY} = {storage_uid!r}")
     print(f"cookie[{SPA_USER_ID_COOKIE_KEY!r}] = {cookie_uid!r}")
+    print(f"localStorage.{GPN_SPA_LOCALSTORAGE_KEY} = {storage_uid!r} (optional)")
     print(f"POST /events (всего в сессии): {len(posts)}")
     if uids:
         print(f"uid в POST /events: {uids}")
 
     ok = True
-    if storage_uid != expected:
-        print(f"FAIL: localStorage uid {storage_uid!r} != {expected!r}")
-        ok = False
-
     if require_cookie and cookie_uid != expected:
         print(
             f"FAIL: cookie uid {cookie_uid!r} != {expected!r} "
-            f"(ключ {SPA_USER_ID_COOKIE_KEY!r}; уточните SPA_USER_ID_KEY у фронта)"
+            f"(ключ {SPA_USER_ID_COOKIE_KEY!r})"
         )
         ok = False
+
+    if storage_uid is not None and storage_uid != expected:
+        print(
+            f"WARN: localStorage uid {storage_uid!r} != {expected!r} "
+            f"(не SoT, не влияет на результат)"
+        )
 
     if require_posts and not posts:
         print("FAIL: POST /events не обнаружен (аналитика не сработала?)")
@@ -151,7 +154,7 @@ def _verify_events_context(
         ok = False
 
     if ok:
-        print(f"OK: {context_label} — фиксированный uid (cookie + localStorage), без post-генерации")
+        print(f"OK: {context_label} — фиксированный uid в cookie, без post-генерации")
     return ok
 
 
@@ -212,7 +215,7 @@ def main() -> int:
 
     print("=== Verify GPN SPA analytics uid (лендинг + Keycloak cookie + ЛК) ===")
     print(f"Ожидаемый uid: {expected}")
-    print(f"cookie key: {SPA_USER_ID_COOKIE_KEY!r} (SPA_USER_ID_KEY — уточнить у фронта)")
+    print(f"cookie key (SoT): {SPA_USER_ID_COOKIE_KEY!r}")
     print(f"root_domain: {MONITOR_SPA_ROOT_DOMAIN!r}")
 
     landing_ok = False
@@ -235,7 +238,7 @@ def main() -> int:
 
     if landing_ok and keycloak_ok and lk_ok:
         print(
-            "\nOK: MONITOR_ANALYTICS_UID в cookie/localStorage и POST /events "
+            "\nOK: MONITOR_ANALYTICS_UID в cookie и POST /events "
             "(лендинг; Keycloak cookie; ЛК при наличии credentials)"
         )
         return 0
