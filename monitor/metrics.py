@@ -149,16 +149,30 @@ def write_lk_check_results(results: list[CheckResult]) -> None:
         write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
 
 
-def write_lk_run(*, success: bool, failed_count: int, duration_sec: float) -> None:
-    """run_health_monitor → bid_lk_run (Лендинг + мин ЛК)."""
+def write_lk_run(
+    *,
+    success: bool,
+    failed_count: int,
+    duration_sec: float,
+    skipped: bool = False,
+    run_status: str = "",
+) -> None:
+    """run_health_monitor → bid_lk_run (Лендинг + мин ЛК).
+
+    run_status: ok | fail | skipped_busy | infra
+    skipped=1 — ЛК не проверяли (Chrome занят); success при этом 0 (не зелёный).
+    """
     if not INFLUXDB_TOKEN:
         return
 
+    status = (run_status or ("ok" if success else "fail")).strip() or "fail"
     with InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
         write_api = client.write_api(write_options=SYNCHRONOUS)
         point = (
             Point("bid_lk_run")
+            .tag("run_status", status[:32])
             .field("success", 1 if success else 0)
+            .field("skipped", 1 if skipped else 0)
             .field("failed_checks", failed_count)
             .field("duration_sec", duration_sec)
             .time(datetime.now(timezone.utc))

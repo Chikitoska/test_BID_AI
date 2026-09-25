@@ -89,20 +89,9 @@ def short_status(result: CheckResult) -> str:
 
     err = (result.error or "").lower()
     # Selenium/Chrome stack — не путать с сетевым timeout к BID.
-    if any(
-        marker in err
-        for marker in (
-            "stacktrace",
-            "chromedriver",
-            "chrome not reachable",
-            "invalid session",
-            "session deleted",
-            "no such window",
-            "webdriver exception",
-            "selenium.common",
-            "devtoolsautomevent",
-        )
-    ):
+    from monitor.health_classify import is_chrome_infra_error
+
+    if is_chrome_infra_error(result.error or ""):
         return "chrome"
     if "connecttimeout" in err or "timed out" in err or "max retries exceeded" in err:
         return "timeout"

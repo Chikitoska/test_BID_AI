@@ -11,7 +11,7 @@
       "id": 50,
       "options": {
         "code": {"language": "markdown", "showLineNumbers": false, "showMiniMap": false},
-        "content": "### Как читать графики\nЗелёный столбец **вверх** — проверка прошла. Красный **вниз** — была ошибка. Внизу страницы — **таблица ошибок** (когда, какой мониторинг, что не сработало).\n\n---\n\n### 1. Лендинг + минимальная проверка ЛК · **каждые 5 минут**\nОткрывается ли **главная страница** bid.gazprom-neft.ru и можно ли **войти в личный кабинет** — видны **имя пользователя** и **компания** в шапке. Быстрый «пульс» сайта.\n\n### 2. Лендинг + сервисы · **2 раза в день** (05:00 и 17:00, Москва)\nОтвечают ли **страницы и серверные сервисы лендинга**: настройки, список сервисов, документы, версия сайта. **Без входа** в личный кабинет.\n\n### 3. Боевой прогон личного кабинета · **каждые 2 часа**\nПодробный обход **интерфейса ЛК** после входа: меню, витрина сервисов, профиль компании, аккредитация, переход в Processor. ~5 минут, самая глубокая проверка."
+        "content": "### Как читать графики\n🟢 **зелёный (Успех)** — проверка прошла\n🔴 **красный (Провал)** — проблема на стороне BID/прода/сети\n🟠 оранжевый (Infra) — проблема автотеста/Chrome\n\nВнизу страницы — **таблица ошибок** (когда, какой мониторинг, что не сработало).\n\n---\n\n### 1. Лендинг + минимальная проверка ЛК · **каждые 5 минут**\nОткрывается ли **главная страница** bid.gazprom-neft.ru и можно ли **войти в личный кабинет** — видны **имя пользователя** и **компания** в шапке. Быстрый «пульс» сайта.\n\n### 2. Лендинг + сервисы · **2 раза в день** (05:00 и 17:00, Москва)\nОтвечают ли **страницы и серверные сервисы лендинга**: настройки, список сервисов, документы, версия сайта. **Без входа** в личный кабинет.\n\n### 3. Боевой прогон личного кабинета · **каждые 2 часа**\nПодробный обход **интерфейса ЛК** после входа: меню, витрина сервисов, профиль компании, аккредитация, переход в Processor. ~5 минут, самая глубокая проверка."
       },
       "title": "ℹ️ Справка: что проверяется",
       "transparent": false,
@@ -68,12 +68,19 @@
               {"id": "color", "value": {"fixedColor": "#E02F44", "mode": "fixed"}},
               {"id": "displayName", "value": "Провал"}
             ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Infra"},
+            "properties": [
+              {"id": "color", "value": {"fixedColor": "#FF9830", "mode": "fixed"}},
+              {"id": "displayName", "value": "Infra"}
+            ]
           }
         ]
       },
       "gridPos": {"h": 8, "w": 24, "x": 0, "y": 10},
       "id": 2,
-      "description": "Каждые 5 мин: главная страница лендинга + вход в ЛК + имя и компания в шапке.",
+      "description": "Каждые 5 мин: лендинг + вход в ЛК (имя и компания в шапке).\n\n🟢 зелёный (Успех) — проверка прошла\n🔴 красный (Провал) — проблема на стороне BID/прода/сети\n🟠 оранжевый (Infra) — проблема автотеста/Chrome",
       "options": {
         "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true},
         "tooltip": {"mode": "multi", "sort": "none"}
@@ -84,8 +91,12 @@
           "refId": "A"
         },
         {
-          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_lk_run\" and r._field == \"success\" and r._value == 0)\n  |> map(fn: (r) => ({ r with _field: \"Провал\", _value: -1.0 }))",
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_lk_run\" and r._field == \"success\" and r._value == 0)\n  |> filter(fn: (r) => not exists r.run_status or r.run_status == \"fail\")\n  |> map(fn: (r) => ({ r with _field: \"Провал\", _value: -1.0 }))",
           "refId": "B"
+        },
+        {
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_lk_run\" and r._field == \"success\" and r._value == 0)\n  |> filter(fn: (r) => exists r.run_status and r.run_status == \"infra\")\n  |> map(fn: (r) => ({ r with _field: \"Infra\", _value: -1.0 }))",
+          "refId": "C"
         }
       ],
       "title": "① Лендинг + мин ЛК (каждые 5 мин)",

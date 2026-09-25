@@ -28,6 +28,7 @@ from monitor.config import (
     MONITOR_PROBE_RETRIES,
 )
 from monitor.github_dispatch import notify_github_on_failure
+from monitor.health_classify import classify_health_failure, health_run_status
 from monitor.http_session import create_monitor_session
 from monitor.http_status import is_http_4xx_or_5xx, results_have_http_4xx_or_5xx
 from monitor.lk_checks import run_lk_monitor_checks
@@ -83,7 +84,12 @@ def main() -> int:
             except ChromeBusyError as exc:
                 lk_skipped_busy = True
                 lk_results = []
-                print(f"SKIP LK: {exc}")
+                print(f"SKIP LK (chrome busy): {exc}")
+                print(
+                    "STATUS=skipped_busy — ЛК не проверяли; "
+                    "overall не OK (метрика skipped=1), TG не пейджим",
+                    flush=True,
+                )
             for item in lk_results:
                 st = "OK" if item.success else "FAIL"
                 print(f"[{st}] {item.name} {item.duration_ms:.0f}ms {item.error}")
@@ -98,7 +104,29 @@ def main() -> int:
 
     duration_sec = time.perf_counter() - start
     http_ok = landing.success
-    overall_ok = http_ok and (lk_ok or not LK_MONITOR_ENABLED or lk_skipped_busy)
+    # Busy ≠ полный успех: ЛК не проверяли → overall_ok=False (не маскируем зелёным).
+    if not LK_MONITOR_ENABLED:
+        overall_ok = http_ok
+    elif lk_skipped_busy:
+        overall_ok = False
+    else:
+        overall_ok = http_ok and lk_ok
+
+    failure_kind = None
+    if not overall_ok and not lk_skipped_busy:
+        failure_kind = classify_health_failure(all_results)
+        if failure_kind == "infra":
+            print(
+                "CLASSIFIED=infra — Chrome/WebDriver flake; "
+                "не считаем подтверждённым падением ЛК/PROD",
+                flush=True,
+            )
+
+    run_status = health_run_status(
+        overall_ok=overall_ok,
+        lk_skipped_busy=lk_skipped_busy,
+        failure_kind=failure_kind,
+    )
 
     if INFLUX_ENABLED:
         try:
@@ -112,8 +140,13 @@ def main() -> int:
                 success=overall_ok,
                 failed_count=sum(1 for r in all_results if not r.success),
                 duration_sec=duration_sec,
+                skipped=lk_skipped_busy,
+                run_status=run_status,
             )
-            print("Metrics sent to InfluxDB")
+            if lk_skipped_busy:
+                print("Metrics sent to InfluxDB (run_status=skipped_busy, skipped=1, success=0)")
+            else:
+                print(f"Metrics sent to InfluxDB (run_status={run_status})")
         except Exception as exc:
             print(f"WARN: InfluxDB write failed: {exc}")
 
@@ -125,15 +158,24 @@ def main() -> int:
             print(f"WARN: InfluxDB failure events: {exc}")
 
     # 4xx/5xx уже перепроверены в этом же прогоне → алертим сразу, не ждём следующий cron.
-    confirmed_http_error = (not overall_ok) and (
-        results_have_http_4xx_or_5xx(all_results)
-        or is_http_4xx_or_5xx(http_code=landing.http_code, error=landing.error)
+    # Infra/busy — не confirmed prod.
+    confirmed_http_error = (
+        (not overall_ok)
+        and (not lk_skipped_busy)
+        and failure_kind != "infra"
+        and (
+            results_have_http_4xx_or_5xx(all_results)
+            or is_http_4xx_or_5xx(http_code=landing.http_code, error=landing.error)
+        )
     )
     send_alert = should_send_lk_telegram(
         overall_ok=overall_ok,
         confirmed_http_error=confirmed_http_error,
+        failure_kind=failure_kind,
+        lk_skipped_busy=lk_skipped_busy,
     )
-    if not overall_ok and send_alert:
+    # TG/email только при prod (не infra, не busy).
+    if not overall_ok and send_alert and failure_kind != "infra" and not lk_skipped_busy:
         notify_github_on_failure(
             run_type="health",
             http_results=all_results,
@@ -141,8 +183,22 @@ def main() -> int:
             duration_sec=duration_sec,
         )
 
-    print(f"Health monitor finished in {duration_sec:.1f}s — {'OK' if overall_ok else 'FAIL'}")
-    return 0 if overall_ok else 1
+    if lk_skipped_busy:
+        outcome = "SKIPPED_BUSY"
+        # Exit 0: cron не шумит; «дыра» видна в Influx (success=0, skipped=1).
+        exit_code = 0
+    elif overall_ok:
+        outcome = "OK"
+        exit_code = 0
+    elif failure_kind == "infra":
+        outcome = "FAIL_INFRA"
+        exit_code = 1
+    else:
+        outcome = "FAIL"
+        exit_code = 1
+
+    print(f"Health monitor finished in {duration_sec:.1f}s — {outcome} (run_status={run_status})")
+    return exit_code
 
 
 if __name__ == "__main__":
