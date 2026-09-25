@@ -1,23 +1,20 @@
 # BID monitor digest
 
-- Generated: `2026-09-24T20:50:03.894688+03:00` (Europe/Moscow)
+- Generated: `2026-09-25T08:50:03.863752+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `06f4535 Merge pull request #14 from Chikitoska/feature/http-error-confirm-retry`
 
 ## Influx volume
 
-- `bid_failure`: 8 точек (~1д)
+- `bid_failure`: 4 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 864 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-- `2026-09-24 10:22:20.119410+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-- `2026-09-24 10:17:18.210226+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-- `2026-09-24 09:32:45.268679+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-- `2026-09-24 09:36:07.324389+00:00` | Лендинг + мин ЛК (5 мин) | `lk_company_badge` | ЛК: компания в шапке | Message:  Stacktrace: #0 0x5ab910d8a86a <unknown> #1 0x5ab911083459 <unknown> #2 0x5ab9110d6efa <unknown> #3 0x5ab9110d71a1 <unknown> #4 0x5ab9111216a4 <unknown> #5 0x5ab91111e886 <unknown> #6 0x5ab91
+(ошибок bid_failure за период нет)
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
@@ -57,12 +54,6 @@ Health monitor finished in 135.6s — FAIL
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-E   Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
-    pytest.fail("Раздел «Аккредитация» не загрузился или нет текущего уровня")
-E   Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
-FAILED tests/lk/test_lk_accreditation.py::test_lk_accreditation_current_level_displayed - pages.lk_page.LkPageError: Не отображается текущий уровень аккредитации
-FAILED tests/lk/test_lk_accreditation.py::test_lk_accreditation_level_selection_visible - Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
-FAILED tests/lk/test_lk_accreditation.py::test_lk_accreditation_apply_button_without_submit - Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
 ERROR tests/lk/test_lk_auth.py::test_service_provider_opens - selenium.common.exceptions.TimeoutException: Message:
 ERROR tests/lk/test_lk_auth.py::test_fio_in_service_provider - selenium.common.exceptions.TimeoutException: Message:
 ERROR tests/lk/test_lk_auth.py::test_company_in_service_provider - selenium.common.exceptions.TimeoutException: Message:
@@ -87,14 +78,17 @@ LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 265.3s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 256.7s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 256.7s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 257.1s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 253.6s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 249.2s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 264.3s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.1s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.7s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 267.3s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 7.2s
-Metrics sent to InfluxDB
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 8.1s
 Metrics sent to InfluxDB
@@ -121,6 +115,9 @@ Pytest: 39/39 passed, failed=0, errors=0 in 7.4s
 Metrics sent to InfluxDB
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 10.6s
+Metrics sent to InfluxDB
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 6.9s
 Metrics sent to InfluxDB
 ```
 
