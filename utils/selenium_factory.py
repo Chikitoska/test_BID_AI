@@ -105,6 +105,7 @@ MONITOR_SPA_ROOT_DOMAIN = os.getenv(
 )
 
 # Аналог DEFAULT_COOKIE_AGE_SECONDS на фронте («бесконечная жизнь» через max-age).
+# Число DEFAULT_COOKIE_AGE_SECONDS фронт не назвал — держим 365d; сверить, когда дадут.
 SPA_USER_ID_COOKIE_MAX_AGE_SEC = int(
     os.getenv("SPA_USER_ID_COOKIE_MAX_AGE_SEC", str(365 * 24 * 60 * 60))
 )
