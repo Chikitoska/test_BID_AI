@@ -14,6 +14,7 @@
 
 - **Не мержить в `main` и не выкатывать на VPS без явной отмашки.**
 - Ветка **`feature/unified-spa-uuid`** — отдельно (см. § «Не трогаем пока»). Этот бэклог живёт на ветке **`docs/monitor-backlog`**, чтобы не смешивать docs с UUID-работой.
+- Ветка **`feature/grafana-errors-xlsx-export`** — HTTP Basic Auth выгрузка ошибок → XLSX + ссылка Grafana `${__from}`/`${__to}` (см. `BRANCH-NOTES.md`, `EXPORT-ERRORS-XLSX.md`).
 
 ---
 
@@ -158,6 +159,8 @@
 - [ ] ~~Выкат~~ **`feature/unified-spa-uuid`** — **не в этом бэклоге как «сделать сейчас»**.  
   Merge в `main` и деплой на VPS — **только после релиза фронта и явной отмашки** (ориентир ~2–3 недели).  
   Детали ветки — в `monitor/BRANCH-NOTES.md` на той ветке.
+
+- [ ] ~~Выкат~~ **`feature/grafana-errors-xlsx-export`** — endpoint + Grafana link готовы в ветке; **на VPS не включать** без отмашки.
 
 ---
 
