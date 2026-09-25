@@ -34,8 +34,9 @@ class ErrorRow:
     run: str
 
     def date_display(self, *, tz: timezone = MSK) -> str:
+        """МСК до секунд, без суффикса зоны (без UTC / UTC+03:00)."""
         local = self.date.astimezone(tz) if self.date.tzinfo else self.date.replace(tzinfo=timezone.utc).astimezone(tz)
-        return local.strftime("%Y-%m-%d %H:%M:%S %Z")
+        return local.strftime("%Y-%m-%d %H:%M:%S")
 
 
 def normalize_run_type(run_type: str | None) -> str:
@@ -177,7 +178,7 @@ def build_xlsx_bytes(rows: Sequence[ErrorRow], *, sheet_title: str = "errors") -
     for row in rows:
         ws.append([row.date_display(), row.error, row.run])
 
-    ws.column_dimensions["A"].width = 24
+    ws.column_dimensions["A"].width = 20
     ws.column_dimensions["B"].width = 80
     ws.column_dimensions["C"].width = 14
 

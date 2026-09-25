@@ -81,6 +81,17 @@ def test_rows_from_records_mock_influx() -> None:
     assert any(r.error == "HTTP 502" and r.run == "daily" for r in rows)
 
 
+def test_date_display_msk_without_zone_suffix() -> None:
+    row = ErrorRow(
+        date=datetime(2026, 9, 25, 5, 12, 0, tzinfo=timezone.utc),
+        error="x",
+        run="health",
+    )
+    # UTC 05:12 → MSK 08:12; без «UTC» / «UTC+03:00»
+    assert row.date_display() == "2026-09-25 08:12:00"
+    assert "UTC" not in row.date_display()
+
+
 def test_build_xlsx_columns() -> None:
     rows = [
         ErrorRow(
@@ -100,6 +111,9 @@ def test_build_xlsx_columns() -> None:
     ws = wb.active
     headers = [c.value for c in ws[1]]
     assert headers == ["дата", "ошибка", "прогон"]
+    # 12:00 UTC → 15:00 MSK, без суффикса зоны
+    assert ws[2][0].value == "2024-06-15 15:00:00"
+    assert "UTC" not in str(ws[2][0].value)
     assert ws[2][1].value == "HTTP 500"
     assert ws[2][2].value == "health"
     assert ws[3][2].value == "daily"
