@@ -84,8 +84,12 @@
           "refId": "A"
         },
         {
-          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_lk_run\" and r._field == \"success\" and r._value == 0)\n  |> map(fn: (r) => ({ r with _field: \"Провал\", _value: -1.0 }))",
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_lk_run\" and r._field == \"success\" and r._value == 0)\n  |> filter(fn: (r) => not exists r.run_status or r.run_status != \"skipped_busy\")\n  |> map(fn: (r) => ({ r with _field: \"Провал\", _value: -1.0 }))",
           "refId": "B"
+        },
+        {
+          "query": "from(bucket: \"bid_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"bid_lk_run\" and r._field == \"skipped\" and r._value == 1)\n  |> map(fn: (r) => ({ r with _field: \"ЛК не проверяли (Chrome busy)\", _value: -0.35 }))",
+          "refId": "C"
         }
       ],
       "title": "① Лендинг + мин ЛК (каждые 5 мин)",

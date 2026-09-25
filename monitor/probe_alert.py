@@ -44,8 +44,32 @@ def should_send_daily_telegram(*, overall_ok: bool) -> bool:
     return send_fail
 
 
-def should_send_lk_telegram(*, overall_ok: bool, confirmed_http_error: bool = False) -> bool:
-    """Health-алерт. При подтверждённом 4xx/5xx после in-run retry — сразу (threshold=1)."""
+def should_send_lk_telegram(
+    *,
+    overall_ok: bool,
+    confirmed_http_error: bool = False,
+    failure_kind: str | None = None,
+    lk_skipped_busy: bool = False,
+) -> bool:
+    """Health-алерт. При подтверждённом 4xx/5xx после in-run retry — сразу (threshold=1).
+
+    Chrome busy (ЛК не проверяли) и infra (Chrome/WebDriver) → не пейджим как «ЛК лежит».
+    Streak prod-инцидента при этом не трогаем (ни сброс, ни +1).
+    """
+    if lk_skipped_busy:
+        print(
+            "Alert suppressed: health LK skipped (Chrome busy) — "
+            "metric/logs only, no TG page"
+        )
+        return False
+
+    if not overall_ok and failure_kind == "infra":
+        print(
+            "Alert suppressed: health failure classified as chrome/infra "
+            "(WebDriver) — Grafana only; not paging as LK/PROD down"
+        )
+        return False
+
     state = AlertState.load()
     threshold = 1 if confirmed_http_error else MONITOR_ALERT_AFTER_FAILURES
     send_fail = state.evaluate_lk_alert(
