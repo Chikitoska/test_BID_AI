@@ -1,5 +1,7 @@
 # Ветки — не забыть
 
+бэклог: `monitor/BACKLOG.md` (ветка `docs/monitor-backlog`)
+
 ## ⛔ `feature/unified-spa-uuid`
 
 **НЕ мержить в `main`. НЕ выкатывать на VPS** — пока пользователь явно не скажет.
