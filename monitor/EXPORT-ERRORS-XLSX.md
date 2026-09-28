@@ -1,7 +1,6 @@
 # Выгрузка ошибок в XLSX (Grafana → Basic Auth)
 
-Ветка: **`feature/grafana-errors-xlsx-export`**.  
-**Не мержить в `main` и не выкатывать на VPS без явной отмашки.**
+Влито в **`main`** (merge `6c0aa5b`). Выкат на VPS — по чеклисту ниже.
 
 HTTP endpoint отдаёт Excel с колонками **дата | ошибка | прогон** (`health` / `daily` / `lk_pytest`) по measurement `bid_failure` из Influx. Период берётся из таймпикера Grafana (`${__from}` / `${__to}`).
 
@@ -58,10 +57,10 @@ Health: **`GET /health`** (без Basic Auth).
 
 ```text
 Скачать ошибки (XLSX)
-→ http://127.0.0.1:8765/export/errors.xlsx?from=${__from}&to=${__to}
+→ http://157.22.191.247/export/errors.xlsx?from=${__from}&to=${__to}
 ```
 
-На VPS замените host/port на публичный URL (или nginx path). Переменные Grafana:
+Прод-шаблон в JSON (через nginx `/export/`). Локально для отладки сервиса: `http://127.0.0.1:8765/...`. Переменные Grafana:
 
 | Переменная | Смысл |
 |------------|--------|
@@ -115,20 +114,22 @@ location /export/ {
 }
 ```
 
-Тогда ссылка в Grafana:
+Ссылка в Grafana уже на прод:
 
 ```text
-http://YOUR_HOST/export/errors.xlsx?from=${__from}&to=${__to}
+http://157.22.191.247/export/errors.xlsx?from=${__from}&to=${__to}
 ```
 
 Браузер спросит логин/пароль (Basic Auth).
 
-## Что ещё не сделано на VPS
+## VPS после merge (copy-paste)
 
-Эта ветка **только в git**. Пока нет отмашки:
+На `root@157.22.191.247`, репо `/opt/test_BID_AI`:
 
-- не merge в `main`
-- не `systemctl enable` на сервере
-- не менять nginx на проде
-
-После merge: `pip install openpyxl`, env vars, systemd, обновить dashboard link на реальный URL, `systemctl start bid-errors-export`.
+1. `cd /opt/test_BID_AI && git pull origin main`
+2. `.venv/bin/pip install -r requirements.txt` (нужен `openpyxl`)
+3. В `monitor/.env` добавить `EXPORT_BASIC_*` / `EXPORT_BIND` / `EXPORT_PORT` (см. выше)
+4. Создать unit из секции systemd выше → `daemon-reload` → `enable --now bid-errors-export`
+5. Добавить nginx `location /export/` → `nginx -t && reload`
+6. `bash grafana/force_import_dashboard.sh` (или с Mac: `bash grafana/deploy_dashboard.sh`) — проверить link URL
+7. Smoke: `curl -i http://127.0.0.1:8765/health` и `curl -u USER:PASS -OJ 'http://127.0.0.1:8765/export/errors.xlsx?from=…&to=…'` (снаружи — через `http://157.22.191.247/export/...`)

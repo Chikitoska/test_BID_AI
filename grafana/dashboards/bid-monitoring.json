@@ -15,7 +15,7 @@
       "title": "Скачать ошибки (XLSX)",
       "tooltip": "Выгрузка bid_failure за период таймпикера (Basic Auth). from=${__from} to=${__to}",
       "type": "link",
-      "url": "http://127.0.0.1:8765/export/errors.xlsx?from=${__from}&to=${__to}"
+      "url": "http://157.22.191.247/export/errors.xlsx?from=${__from}&to=${__to}"
     }
   ],
   "panels": [
