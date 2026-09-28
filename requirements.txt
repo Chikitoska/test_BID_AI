@@ -7,3 +7,4 @@ requests>=2.31
 pytest-xdist>=3.5
 allure-pytest>=2.13
 influxdb-client>=1.40
+openpyxl>=3.1
