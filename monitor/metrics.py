@@ -23,16 +23,31 @@ class FailureEvent:
 
 def failures_from_checks(results: list[CheckResult]) -> list[FailureEvent]:
     from monitor.alerts import failure_detail
+    from monitor.pytest_failures import extract_failure_url, format_rich_failure_error
 
-    return [
-        FailureEvent(
-            check=item.name,
-            label=get_check_label(item.name),
-            error=failure_detail(item),
+    events: list[FailureEvent] = []
+    for item in results:
+        if item.success:
+            continue
+        detail = failure_detail(item)
+        url = extract_failure_url(detail) or (item.url or None)
+        # HTTP-проверки уже читаемы; обогащаем UI/Selenium с пустым Message.
+        if item.method == "UI" or "Message:" in (detail or ""):
+            error = format_rich_failure_error(
+                test_name=item.name,
+                detail=detail,
+                url=url if url and not url.startswith("about:") else None,
+            )
+        else:
+            error = detail
+        events.append(
+            FailureEvent(
+                check=item.name,
+                label=get_check_label(item.name),
+                error=error[:2000],
+            )
         )
-        for item in results
-        if not item.success
-    ]
+    return events
 
 
 def write_failure_events(*, run_type: str, failures: list[FailureEvent]) -> None:
