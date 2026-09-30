@@ -1,9 +1,9 @@
 # BID monitor digest
 
-- Generated: `2026-09-29T20:50:00.334977+03:00` (Europe/Moscow)
+- Generated: `2026-09-30T08:50:03.884369+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
-- Git HEAD: `f1df232 fix(grafana): clarify XLSX export link tooltip and help text`
+- Git HEAD: `cc65811 fix(monitor): richer bid_failure messages for empty Selenium Message`
 
 ## Influx volume
 
@@ -14,13 +14,7 @@
 
 ## Failures (bid_failure)
 
-- `2026-09-29 13:30:36.417684+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)
-- `2026-09-29 13:25:11.330185+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLCertVerificationError(1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed:
-- `2026-09-29 13:20:15.826383+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLCertVerificationError(1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed:
-- `2026-09-29 13:15:15.986686+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLCertVerificationError(1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed:
-- `2026-09-29 13:10:15.754224+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLCertVerificationError(1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed:
-- `2026-09-29 13:05:25.709823+00:00` | Лендинг + мин ЛК (5 мин) | `main_page` | Главная страница лендинга | HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLCertVerificationError(1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed:
-- `2026-09-29 13:34:59.228690+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_accreditation_navigation` | tests/lk/test_lk_accreditation.py::test_lk_accreditation_navigation | tests/lk/test_lk_accreditation.py::test_lk_accreditation_navigation: selenium.common.exceptions.TimeoutException: Message
+(ошибок bid_failure за период нет)
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
@@ -60,12 +54,6 @@ Health monitor finished in 35.7s — FAIL (run_status=fail)
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 252.4s
-LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 255.5s
-LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 275.8s
-LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 253.4s
-LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 250.3s
-LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 249.6s
 LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 251.0s
 LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 262.1s
 LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 263.2s
@@ -90,14 +78,17 @@ Failure events sent to InfluxDB (таблица Grafana)
 Alert suppressed: lk_pytest failures look like autotest/UI flake (TimeoutException/assert/selector) — Grafana only; prod pulse is health every 5 min
 LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 259.8s
 LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 256.0s
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 258.3s
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 254.3s
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 262.1s
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 255.5s
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 254.5s
+LK pytest: 19/20 passed, failed=0, errors=0, skipped=1 in 259.1s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 6.9s
-Metrics sent to InfluxDB
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 8.3s
 Metrics sent to InfluxDB
@@ -124,6 +115,9 @@ Pytest: 39/39 passed, failed=0, errors=0 in 6.4s
 Metrics sent to InfluxDB
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 10.8s
+Metrics sent to InfluxDB
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 7.4s
 Metrics sent to InfluxDB
 ```
 
