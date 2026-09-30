@@ -53,9 +53,11 @@ def should_send_lk_telegram(
 ) -> bool:
     """Health-алерт. При подтверждённом 4xx/5xx после in-run retry — сразу (threshold=1).
 
-    Chrome busy (ЛК не проверяли) и infra (Chrome/WebDriver) → не пейджим как «ЛК лежит».
+    Chrome busy (ЛК не проверяли) и autotest (UI/Chrome) → не пейджим как «ЛК лежит».
     Streak prod-инцидента при этом не трогаем (ни сброс, ни +1).
     """
+    from monitor.health_classify import is_autotest_failure_kind
+
     if lk_skipped_busy:
         print(
             "Alert suppressed: health LK skipped (Chrome busy) — "
@@ -63,10 +65,10 @@ def should_send_lk_telegram(
         )
         return False
 
-    if not overall_ok and failure_kind == "infra":
+    if not overall_ok and is_autotest_failure_kind(failure_kind):
         print(
-            "Alert suppressed: health failure classified as chrome/infra "
-            "(WebDriver) — Grafana only; not paging as LK/PROD down"
+            "Alert suppressed: health failure classified as autotest "
+            "(UI flake / Chrome/WebDriver) — Grafana orange; not paging as LK/PROD down"
         )
         return False
 

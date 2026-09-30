@@ -23,9 +23,15 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from monitor.config import INFLUX_ENABLED, PROJECT_ROOT as CFG_ROOT
 from monitor.chrome_lock import ChromeBusyError, chrome_run_lock
 from monitor.github_dispatch import notify_github_on_failure
+from monitor.health_classify import pytest_run_status
 from monitor.metrics import FailureEvent, write_failure_events, write_lk_pytest_run
 from monitor.probe_alert import should_send_lk_pytest_telegram
-from monitor.pytest_failures import parse_pytest_failures, pytest_failure_snippet, pytest_summary_failure
+from monitor.pytest_failures import (
+    classify_lk_pytest_failure,
+    parse_pytest_failures,
+    pytest_failure_snippet,
+    pytest_summary_failure,
+)
 
 
 @dataclass
@@ -106,7 +112,13 @@ def main() -> int:
         print(f"FAIL: {exc}", flush=True)
         if INFLUX_ENABLED:
             try:
-                write_lk_pytest_run(total=0, passed=0, failed=1, duration_sec=0.0)
+                write_lk_pytest_run(
+                    total=0,
+                    passed=0,
+                    failed=1,
+                    duration_sec=0.0,
+                    run_status="autotest",
+                )
                 write_failure_events(
                     run_type="lk_pytest",
                     failures=[
@@ -117,7 +129,7 @@ def main() -> int:
                         )
                     ],
                 )
-                print("Pytest metrics + failure sent to InfluxDB")
+                print("Pytest metrics + failure sent to InfluxDB (run_status=autotest)")
             except Exception as write_exc:
                 print(f"WARN: InfluxDB write failed: {write_exc}")
         return 1
@@ -130,6 +142,16 @@ def main() -> int:
     )
     print(f"Allure results: {result.allure_dir}")
 
+    overall_ok = result.pytest_failed == 0 and result.total > 0
+    failure_kind = None
+    if not overall_ok:
+        failure_kind = classify_lk_pytest_failure(
+            result.output,
+            failed=result.pytest_failed,
+            total=result.total,
+        )
+    run_status = pytest_run_status(overall_ok=overall_ok, failure_kind=failure_kind)
+
     if INFLUX_ENABLED:
         try:
             write_lk_pytest_run(
@@ -137,13 +159,13 @@ def main() -> int:
                 passed=result.passed,
                 failed=result.pytest_failed,
                 duration_sec=result.duration_sec,
+                run_status=run_status,
             )
-            print("Pytest metrics sent to InfluxDB")
+            print(f"Pytest metrics sent to InfluxDB (run_status={run_status})")
         except Exception as exc:
             print(f"WARN: InfluxDB write failed: {exc}")
 
     failure_events = parse_pytest_failures(result.output)
-    overall_ok = result.pytest_failed == 0 and result.total > 0
 
     if result.pytest_failed and not failure_events:
         failure_events = [

@@ -5,13 +5,15 @@ from __future__ import annotations
 import re
 from typing import Literal
 
+from monitor.health_classify import is_autotest_error, is_chrome_infra_error
 from monitor.metrics import FailureEvent
 
 FailureKind = Literal["prod", "autotest"]
 
-# Сеть / PROD / инфраструктура — алертим сразу (даже из боевого UI-прогона).
+# Сеть / HTTP 4xx/5xx — алертим сразу (красный в Grafana).
+# Chrome/WebDriver — НЕ сюда: это autotest (оранжевый), см. health_classify.
 # Не ставить короткие/шумные подстроки вроде "dns" или просто "chromedriver":
-# путь к chromedriver есть почти в любом Selenium-логе → ложный prod-алерт.
+# путь к chromedriver есть почти в любом Selenium-логе.
 _PROD_MARKERS = (
     "Read timed out",
     "ConnectTimeout",
@@ -35,18 +37,13 @@ _PROD_MARKERS = (
     "ERR_NAME_NOT_RESOLVED",
     "ERR_TIMED_OUT",
     "Temporary failure in name resolution",
-    "SessionNotCreatedException",
-    "chrome not reachable",
-    "chromedriver unexpectedly exited",
-    "Chrome failed to start",
-    "session not created",
     "WebDriverException: Message: unknown error: net::",
     "/error/4",
     "/error/5",
     "HttpStatusError",
 )
 
-# Типичный хрупкий UI-автотест — в Grafana пишем, в TG/email не спамим.
+# Типичный хрупкий UI-автотест — в Grafana оранжевый, в TG/email не спамим.
 _AUTOTEST_MARKERS = (
     "TimeoutException",
     "NoSuchElementException",
@@ -89,27 +86,37 @@ _EMPTY_MESSAGE_FALLBACKS: dict[str, str] = {
 
 
 def classify_lk_pytest_failure(output: str, *, failed: int = 0, total: int = 0) -> FailureKind:
-    """prod = сеть/лежит сайт/инфра; autotest = селекторы/ожидания/assert UI."""
+    """prod = сеть/4xx/5xx; autotest = UI-флак или Chrome/WebDriver.
+
+    Согласовано с health_classify / Grafana run_status=autotest (оранжевый).
+    """
     text = output or ""
     lower = text.lower()
 
     if total == 0 and failed > 0:
+        # Pytest не стартовал / chrome busy — harness, не пейдж «PROD лежит».
+        if is_chrome_infra_error(text) or "chrome занят" in lower or "chrome_lock" in lower:
+            return "autotest"
         return "prod"
 
     prod_hit = any(marker.lower() in lower for marker in _PROD_MARKERS)
-    autotest_hit = any(marker.lower() in lower for marker in _AUTOTEST_MARKERS)
+    # Chrome crash / UI wait — через общие хелперы (не дублировать маркеры).
+    chrome_or_ui = is_autotest_error(text) or any(
+        marker.lower() in lower for marker in _AUTOTEST_MARKERS
+    )
     mass_fail = total > 0 and failed >= max(3, (total + 1) // 2)
 
-    # Явная сеть/5xx/падение Chrome — всегда prod (даже если в логе есть UI-слова).
+    # Явная сеть/4xx/5xx — всегда prod (даже если в логе есть UI-слова).
     if prod_hit:
         return "prod"
 
-    # Массовый провал без сетевых маркеров — тоже prod (стенд/логин).
+    # Массовый провал без сети/HTTP — всё же prod (стенд/логин), кроме чистого Chrome.
     if mass_fail:
+        if is_chrome_infra_error(text) and not prod_hit:
+            return "autotest"
         return "prod"
 
-    # Одиночный UI/assert/pytest.fail — только Grafana.
-    if autotest_hit:
+    if chrome_or_ui:
         return "autotest"
 
     # Непонятный одиночный FAIL — не пейджим (пульс PROD = health каждые 5 мин).

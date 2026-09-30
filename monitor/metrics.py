@@ -104,16 +104,22 @@ def write_pytest_run(
     passed: int,
     failed: int,
     duration_sec: float,
+    run_status: str = "",
 ) -> None:
-    """run_daily → bid_run (Лендинг + API autotests)."""
+    """run_daily → bid_run (Лендинг + API autotests).
+
+    run_status: ok | fail | autotest — оранжевый в Grafana при autotest.
+    """
     if not INFLUXDB_TOKEN:
         return
 
     success = 1 if failed == 0 and total > 0 else 0
+    status = (run_status or ("ok" if success else "fail")).strip() or "fail"
     with InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
         write_api = client.write_api(write_options=SYNCHRONOUS)
         point = (
             Point("bid_run")
+            .tag("run_status", status[:32])
             .field("total", total)
             .field("passed", passed)
             .field("failed", failed)
@@ -174,7 +180,8 @@ def write_lk_run(
 ) -> None:
     """run_health_monitor → bid_lk_run (Лендинг + мин ЛК).
 
-    run_status: ok | fail | skipped_busy | infra
+    run_status: ok | fail | skipped_busy | autotest
+    (legacy tag value infra ≡ autotest — читается Grafana как оранжевый)
     skipped=1 — ЛК не проверяли (Chrome занят); success при этом 0 (не зелёный).
     """
     if not INFLUXDB_TOKEN:
@@ -201,16 +208,22 @@ def write_lk_pytest_run(
     passed: int,
     failed: int,
     duration_sec: float,
+    run_status: str = "",
 ) -> None:
-    """run_lk_pytest → bid_lk_pytest (Боевой прогон ЛК)."""
+    """run_lk_pytest → bid_lk_pytest (Боевой прогон ЛК).
+
+    run_status: ok | fail | autotest — оранжевый в Grafana при autotest.
+    """
     if not INFLUXDB_TOKEN:
         return
 
     success = 1 if failed == 0 and total > 0 else 0
+    status = (run_status or ("ok" if success else "fail")).strip() or "fail"
     with InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
         write_api = client.write_api(write_options=SYNCHRONOUS)
         point = (
             Point("bid_lk_pytest")
+            .tag("run_status", status[:32])
             .field("total", total)
             .field("passed", passed)
             .field("failed", failed)

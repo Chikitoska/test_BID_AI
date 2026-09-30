@@ -133,10 +133,12 @@
   **Зачем:** не сломать crontab при переустановке.  
   **Риск:** нулевой, если только доки.
 
-- [ ] **Chrome infra в lk_pytest → тип `infra`, не `prod`**  
-  **Что сделать:** краш Chrome/chromedriver не классифицировать как «PROD лежит».  
-  **Зачем:** чище сигналы в TG.  
+- [x] **Chrome infra в lk_pytest → тип `autotest`, не `prod`**
+  **Что сделать:** краш Chrome/chromedriver не классифицировать как «PROD лежит».
+  **Зачем:** чище сигналы в TG + оранжевый в Grafana.
   **Риск:** средний (infra-outage может не пейджить как prod).
+  **Сделано:** Chrome вынесен из `_PROD_MARKERS`; `run_status=autotest` на всех 3 панелях
+  (health / daily / lk_pytest); TimeoutException тоже autotest (оранжевый).
 
 ### P3 — потом
 

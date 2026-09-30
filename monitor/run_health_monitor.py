@@ -28,7 +28,11 @@ from monitor.config import (
     MONITOR_PROBE_RETRIES,
 )
 from monitor.github_dispatch import notify_github_on_failure
-from monitor.health_classify import classify_health_failure, health_run_status
+from monitor.health_classify import (
+    classify_health_failure,
+    health_run_status,
+    is_autotest_failure_kind,
+)
 from monitor.http_session import create_monitor_session
 from monitor.http_status import is_http_4xx_or_5xx, results_have_http_4xx_or_5xx
 from monitor.lk_checks import run_lk_monitor_checks
@@ -115,9 +119,9 @@ def main() -> int:
     failure_kind = None
     if not overall_ok and not lk_skipped_busy:
         failure_kind = classify_health_failure(all_results)
-        if failure_kind == "infra":
+        if is_autotest_failure_kind(failure_kind):
             print(
-                "CLASSIFIED=infra — Chrome/WebDriver flake; "
+                "CLASSIFIED=autotest — UI flake / Chrome/WebDriver; "
                 "не считаем подтверждённым падением ЛК/PROD",
                 flush=True,
             )
@@ -158,11 +162,11 @@ def main() -> int:
             print(f"WARN: InfluxDB failure events: {exc}")
 
     # 4xx/5xx уже перепроверены в этом же прогоне → алертим сразу, не ждём следующий cron.
-    # Infra/busy — не confirmed prod.
+    # Autotest/busy — не confirmed prod.
     confirmed_http_error = (
         (not overall_ok)
         and (not lk_skipped_busy)
-        and failure_kind != "infra"
+        and (not is_autotest_failure_kind(failure_kind))
         and (
             results_have_http_4xx_or_5xx(all_results)
             or is_http_4xx_or_5xx(http_code=landing.http_code, error=landing.error)
@@ -174,8 +178,8 @@ def main() -> int:
         failure_kind=failure_kind,
         lk_skipped_busy=lk_skipped_busy,
     )
-    # TG/email только при prod (не infra, не busy).
-    if not overall_ok and send_alert and failure_kind != "infra" and not lk_skipped_busy:
+    # TG/email только при prod (не autotest, не busy).
+    if not overall_ok and send_alert and not is_autotest_failure_kind(failure_kind) and not lk_skipped_busy:
         notify_github_on_failure(
             run_type="health",
             http_results=all_results,
@@ -190,8 +194,8 @@ def main() -> int:
     elif overall_ok:
         outcome = "OK"
         exit_code = 0
-    elif failure_kind == "infra":
-        outcome = "FAIL_INFRA"
+    elif is_autotest_failure_kind(failure_kind):
+        outcome = "FAIL_AUTOTEST"
         exit_code = 1
     else:
         outcome = "FAIL"
