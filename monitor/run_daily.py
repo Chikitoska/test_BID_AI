@@ -2,7 +2,7 @@
 """
 Полный мониторинг BID (cron каждый час):
 1. HTTP-проверки публичных API
-2. pytest tests/api/ (опционально)
+2. pytest tests/api/ (опционально; BE ЛК / -m lk_be — в run_lk_pytest, не здесь)
 3. метрики → InfluxDB
 4. алерт через GitHub → Telegram при ошибках
 """

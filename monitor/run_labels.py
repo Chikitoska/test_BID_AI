@@ -16,7 +16,7 @@ RUN_TYPE_ZONES: dict[str, str] = {
     "probe": "HTTP-проверки лендинга (run_light)",
     "health": "лендинг (HTTP) или личный кабинет (run_health_monitor)",
     "full": "HTTP/API лендинга и pytest tests/api (run_daily)",
-    "lk_pytest": "pytest tests/lk — авторизация и UI ЛК (run_lk_pytest)",
+    "lk_pytest": "pytest tests/lk — UI ЛК + BE smoke (lk_be) (run_lk_pytest)",
     "lk": "личный кабинет",
 }
 
