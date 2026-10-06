@@ -1,29 +1,24 @@
 # BID monitor digest
 
-- Generated: `2026-10-06T08:50:03.867052+03:00` (Europe/Moscow)
+- Generated: `2026-10-06T20:50:22.679872+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `f14f91f feat(monitor): orange Grafana for autotest failures on all 3 runs`
 
 ## Influx volume
 
-- `bid_failure`: 4 точек (~1д)
+- `bid_failure`: 3 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 1152 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-- `2026-10-06 04:56:25.139354+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/error/500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-- `2026-10-06 04:52:31.130113+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/error/500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-- `2026-10-06 04:42:41.607045+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/error/500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+(ошибок bid_failure за период нет)
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-Alert suppressed: health fail streak 4/2
-Health monitor finished in 11.2s — FAIL (run_status=fail)
-main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLCertVerificationError(1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'bid.gazprom-neft.ru'. (_ssl.c:1000)")))), повтор через 10 с (ещё 1 раз)…
 [FAIL] main_page 0 126ms HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLCertVerificationError(1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'bid.gazprom-neft.ru'. (_ssl.c:1000)")))
 Metrics sent to InfluxDB (run_status=fail)
 Alert suppressed: health fail streak 5/2
@@ -51,17 +46,14 @@ Health monitor finished in 127.8s — FAIL (run_status=fail)
 Metrics sent to InfluxDB (run_status=fail)
 Alert suppressed: health fail streak 2/1
 Health monitor finished in 80.6s — FAIL (run_status=fail)
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
+[lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 90 с…
+[lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 90 с…
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 251.4s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 766.9s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 264.0s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 249.3s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 253.0s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 249.3s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 252.1s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 252.4s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 256.7s
@@ -86,14 +78,17 @@ LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 520.6s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 285.5s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 260.3s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 261.4s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 261.8s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 266.2s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 272.7s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 263.0s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 252.2s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 255.5s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 8.9s
-Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 7.0s
 Metrics sent to InfluxDB (run_status=ok)
@@ -120,6 +115,9 @@ Pytest: 39/39 passed, failed=0, errors=0 in 8.3s
 Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 9.5s
+Metrics sent to InfluxDB (run_status=ok)
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 6.8s
 Metrics sent to InfluxDB (run_status=ok)
 ```
 
