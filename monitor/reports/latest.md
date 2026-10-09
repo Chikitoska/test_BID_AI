@@ -1,27 +1,24 @@
 # BID monitor digest
 
-- Generated: `2026-10-09T08:50:03.880053+03:00` (Europe/Moscow)
+- Generated: `2026-10-09T20:50:02.868706+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `f14f91f feat(monitor): orange Grafana for autotest failures on all 3 runs`
 
 ## Influx volume
 
+- `bid_failure`: 1 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 1152 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-(ошибок bid_failure за период нет)
+- `2026-10-09 11:07:29.556572+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/error/500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-Alert suppressed: health fail streak 5/2
-Health monitor finished in 10.2s — FAIL (run_status=fail)
-main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLCertVerificationError(1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'bid.gazprom-neft.ru'. (_ssl.c:1000)")))), повтор через 10 с (ещё 1 раз)…
-[FAIL] main_page 0 15106ms HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)
 Metrics sent to InfluxDB (run_status=fail)
 Alert suppressed: health fail streak 6/2
 Health monitor finished in 35.7s — FAIL (run_status=fail)
@@ -48,17 +45,15 @@ main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read 
 [lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 90 с…
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 [lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 90 с…
+[lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 90 с…
+[FAIL] lk_auth_login 17301ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+Metrics sent to InfluxDB (run_status=fail)
+Health monitor finished in 126.2s — FAIL (run_status=fail)
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-    pytest.fail("Раздел «Аккредитация» не загрузился или нет текущего уровня")
-E   Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
-FAILED tests/lk/test_lk_accreditation.py::test_lk_accreditation_apply_button_without_submit - Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
-======= 1 failed, 17 passed, 2 skipped, 3 warnings in 308.68s (0:05:08) ========
-LK pytest: 17/20 passed, failed=1, errors=0, skipped=2 in 309.8s
-Failure events sent to InfluxDB (таблица Grafana)
 Alert suppressed: lk_pytest failures look like autotest/UI flake (TimeoutException/assert/selector) — Grafana only; prod pulse is health every 5 min
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 284.2s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 278.1s
@@ -83,14 +78,17 @@ LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 252.5s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 252.5s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 250.0s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 251.9s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 258.9s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 252.5s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 273.8s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.7s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.1s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 253.6s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 14.3s
-Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 6.3s
 Metrics sent to InfluxDB (run_status=ok)
@@ -117,6 +115,9 @@ Pytest: 39/39 passed, failed=0, errors=0 in 7.2s
 Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 6.8s
+Metrics sent to InfluxDB (run_status=ok)
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 7.3s
 Metrics sent to InfluxDB (run_status=ok)
 ```
 
