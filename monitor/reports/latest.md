@@ -1,6 +1,6 @@
 # BID monitor digest
 
-- Generated: `2026-10-08T20:50:03.873051+03:00` (Europe/Moscow)
+- Generated: `2026-10-09T08:50:03.880053+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `f14f91f feat(monitor): orange Grafana for autotest failures on all 3 runs`
@@ -53,12 +53,6 @@ main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 249.4s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 248.9s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 250.9s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 252.6s
-tests/lk/test_lk_accreditation.py::test_lk_accreditation_apply_button_without_submit FAILED
-=================================== FAILURES ===================================
     pytest.fail("Раздел «Аккредитация» не загрузился или нет текущего уровня")
 E   Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
 FAILED tests/lk/test_lk_accreditation.py::test_lk_accreditation_apply_button_without_submit - Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
@@ -83,14 +77,17 @@ LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 260.7s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 258.2s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 259.8s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 258.4s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 249.9s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 249.1s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 252.5s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 252.5s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 250.0s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 251.9s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 6.7s
-Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 14.3s
 Metrics sent to InfluxDB (run_status=ok)
@@ -117,6 +114,9 @@ Pytest: 39/39 passed, failed=0, errors=0 in 7.5s
 Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 7.2s
+Metrics sent to InfluxDB (run_status=ok)
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 6.8s
 Metrics sent to InfluxDB (run_status=ok)
 ```
 
