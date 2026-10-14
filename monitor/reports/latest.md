@@ -1,13 +1,12 @@
 # BID monitor digest
 
-- Generated: `2026-10-14T08:50:03.865621+03:00` (Europe/Moscow)
+- Generated: `2026-10-14T20:50:01.594330+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `f14f91f feat(monitor): orange Grafana for autotest failures on all 3 runs`
 
 ## Influx volume
 
-- `bid_failure`: 2 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 1152 точек (~1д)
 - `bid_run`: 10 точек (~1д)
@@ -19,9 +18,6 @@
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-[FAIL] lk_auth_login 15206ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-Metrics sent to InfluxDB (run_status=fail)
-Alert suppressed: health fail streak 2/1
 Health monitor finished in 80.6s — FAIL (run_status=fail)
 main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
 [lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 90 с…
@@ -49,17 +45,14 @@ Health monitor finished in 147.2s — FAIL (run_status=fail)
 [FAIL] lk_auth_login 15846ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
 Metrics sent to InfluxDB (run_status=fail)
 Health monitor finished in 132.7s — FAIL (run_status=fail)
+[lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 90 с…
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<HTTPSConnection(host='bid.gazprom-neft.ru', port=443) at 0x7f837c5441a0>, 'Connection to bid.gazprom-neft.ru timed out. (connect timeout=15)'))), повтор через 10 с (ещё 1 раз)…
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<HTTPSConnection(host='bid.gazprom-neft.ru', port=443) at 0x7428f031fad0>, 'Connection to bid.gazprom-neft.ru timed out. (connect timeout=15)'))), повтор через 10 с (ещё 1 раз)…
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 251.2s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 251.1s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 248.6s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 252.0s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 249.2s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 253.2s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 269.2s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 265.9s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 261.6s
@@ -84,14 +77,17 @@ LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 249.4s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 514.8s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 256.9s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.4s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 263.6s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 261.0s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 257.9s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 272.3s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.3s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 252.1s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 7.3s
-Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 6.5s
 Metrics sent to InfluxDB (run_status=ok)
@@ -118,6 +114,9 @@ Pytest: 39/39 passed, failed=0, errors=0 in 8.8s
 Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 6.7s
+Metrics sent to InfluxDB (run_status=ok)
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 9.6s
 Metrics sent to InfluxDB (run_status=ok)
 ```
 
