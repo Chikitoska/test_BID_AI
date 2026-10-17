@@ -1,20 +1,20 @@
 # BID monitor digest
 
-- Generated: `2026-10-16T20:50:03.901931+03:00` (Europe/Moscow)
+- Generated: `2026-10-17T08:50:03.869759+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `f14f91f feat(monitor): orange Grafana for autotest failures on all 3 runs`
 
 ## Influx volume
 
-- `bid_failure`: 46 точек (~1д)
+- `bid_failure`: 1 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 1152 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-- `2026-10-16 05:51:23.318479+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/error/500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+(ошибок bid_failure за период нет)
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
@@ -54,12 +54,6 @@ Health monitor finished in 78.9s — FAIL (run_status=fail)
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 264.7s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.4s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 253.6s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 251.7s
-    raise LkPageError("Не отображается текущий уровень аккредитации")
-E   pages.lk_page.LkPageError: Не отображается текущий уровень аккредитации
     pytest.fail("Раздел «Аккредитация» не загрузился или нет текущего уровня")
 E   Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
 FAILED tests/lk/test_lk_accreditation.py::test_lk_accreditation_current_level_displayed - pages.lk_page.LkPageError: Не отображается текущий уровень аккредитации
@@ -84,14 +78,17 @@ LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 267.0s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 259.0s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.0s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.3s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 522.2s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 251.9s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 248.7s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 250.2s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 275.3s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 250.4s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 6.8s
-Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 8.8s
 Metrics sent to InfluxDB (run_status=ok)
@@ -118,6 +115,9 @@ Pytest: 39/39 passed, failed=0, errors=0 in 6.6s
 Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 7.5s
+Metrics sent to InfluxDB (run_status=ok)
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 6.6s
 Metrics sent to InfluxDB (run_status=ok)
 ```
 
