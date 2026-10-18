@@ -1,6 +1,6 @@
 # BID monitor digest
 
-- Generated: `2026-10-17T20:50:22.676522+03:00` (Europe/Moscow)
+- Generated: `2026-10-18T08:50:03.865281+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `f14f91f feat(monitor): orange Grafana for autotest failures on all 3 runs`
@@ -9,12 +9,12 @@
 
 - `bid_failure`: 1 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
-- `bid_lk_run`: 1148 точек (~1д)
+- `bid_lk_run`: 1152 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-- `2026-10-17 07:01:47.886554+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/service-providers | Message: stale element reference: stale element not found (Session info: chrome=155.0.8059.39); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubl
+(ошибок bid_failure за период нет)
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
@@ -54,12 +54,6 @@ Health monitor finished in 105.5s — FAIL (run_status=fail)
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-LK pytest: 16/20 passed, failed=2, errors=1, skipped=1 in 531.9s
-Failure events sent to InfluxDB (таблица Grafana)
-Alert suppressed: lk_pytest failures look like autotest/UI flake (TimeoutException/assert/selector) — Grafana only; prod pulse is health every 5 min
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 270.4s
-FAILED tests/lk/test_lk_auth.py::test_fio_in_service_provider - selenium.common.exceptions.TimeoutException: Message: Processor: не видно «ФИО» (.User-Name) после 2 попыток по 45s. URL=https://processor.gazprom-neft.ru/. Message:
-== 1 failed, 16 passed, 3 skipped, 3 warnings, 2 rerun in 1029.98s (0:17:09) ===
 LK pytest: 16/20 passed, failed=1, errors=0, skipped=3 in 1031.0s
 Failure events sent to InfluxDB (таблица Grafana)
 Alert suppressed: lk_pytest failures look like autotest/UI flake (TimeoutException/assert/selector) — Grafana only; prod pulse is health every 5 min
@@ -84,14 +78,17 @@ LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 277.2s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 250.6s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 251.1s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 256.8s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 261.5s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 250.4s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 775.4s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 252.3s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 249.9s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 250.0s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 7.2s
-Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 8.8s
 Metrics sent to InfluxDB (run_status=ok)
@@ -118,6 +115,9 @@ Pytest: 39/39 passed, failed=0, errors=0 in 6.6s
 Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 7.0s
+Metrics sent to InfluxDB (run_status=ok)
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 6.3s
 Metrics sent to InfluxDB (run_status=ok)
 ```
 
