@@ -6,7 +6,7 @@ import os
 import re
 import time
 
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as EC
@@ -64,8 +64,11 @@ class LkFlow:
     def _find_visible(self, selectors: tuple[tuple[str, str], ...]):
         for by, value in selectors:
             for element in self.driver.find_elements(by, value):
-                if element.is_displayed() and element.is_enabled():
-                    return element
+                try:
+                    if element.is_displayed() and element.is_enabled():
+                        return element
+                except StaleElementReferenceException:
+                    continue
         return None
 
     def _open_keycloak_login(self) -> None:
@@ -144,10 +147,16 @@ class LkFlow:
     def _has_lk_session(self) -> bool:
         if "lk.bid.gazprom-neft.ru" not in self.driver.current_url:
             return False
-        badges = self.driver.find_elements(
-            By.CSS_SELECTOR, "[data-testid='md-user_badge']"
-        )
-        return any(badge.is_displayed() for badge in badges)
+        # SPA/модалки после входа перерисовывают бейдж — stale не значит «нет сессии».
+        for _ in range(3):
+            try:
+                badges = self.driver.find_elements(
+                    By.CSS_SELECTOR, "[data-testid='md-user_badge']"
+                )
+                return any(badge.is_displayed() for badge in badges)
+            except StaleElementReferenceException:
+                time.sleep(0.1)
+        return False
 
     def _wait_auth_or_lk_session(self) -> None:
         WebDriverWait(self.driver, self.wait_sec).until(
@@ -261,8 +270,11 @@ class LkFlow:
 
             for by, value in otp_selectors:
                 for element in self.driver.find_elements(by, value):
-                    if element.is_displayed():
-                        return element
+                    try:
+                        if element.is_displayed():
+                            return element
+                    except StaleElementReferenceException:
+                        continue
             time.sleep(0.2)
 
         raise LkAuthError(
@@ -301,14 +313,17 @@ class LkFlow:
         ready_sec = max(self.wait_sec, LK_UI_WAIT_SEC)
         deadline = time.time() + ready_sec
         while time.time() < deadline:
-            accept_lk_consent_modals(self.driver, timeout=3)
-            url = self.driver.current_url or ""
-            if re.search(r"/error/(4\d{2}|5\d{2})\b", url, flags=re.I):
-                raise HttpStatusError(
-                    f"ЛК вернул HTTP error page после входа, URL: {url[:160]}"
-                )
-            if self._has_lk_session():
-                return
+            try:
+                accept_lk_consent_modals(self.driver, timeout=3)
+                url = self.driver.current_url or ""
+                if re.search(r"/error/(4\d{2}|5\d{2})\b", url, flags=re.I):
+                    raise HttpStatusError(
+                        f"ЛК вернул HTTP error page после входа, URL: {url[:160]}"
+                    )
+                if self._has_lk_session():
+                    return
+            except StaleElementReferenceException:
+                pass
             time.sleep(0.3)
 
         url = self.driver.current_url
