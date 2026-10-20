@@ -1,6 +1,6 @@
 # BID monitor digest
 
-- Generated: `2026-10-19T20:50:07.897220+03:00` (Europe/Moscow)
+- Generated: `2026-10-20T08:50:02.320244+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `f14f91f feat(monitor): orange Grafana for autotest failures on all 3 runs`
@@ -14,15 +14,7 @@
 
 ## Failures (bid_failure)
 
-- `2026-10-19 12:12:04.856424+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/service-providers | Message: timeout: Timed out receiving message from renderer: -0.001 (Session info: chrome=155.0.8059.79)
-- `2026-10-19 11:45:26.275904+00:00` | Боевой прогон ЛК (2 ч) | `test_company_in_service_provider` | tests/lk/test_lk_auth.py::test_company_in_service_provider | test_company_in_service_provider | TimeoutException: element not found / wait timed out
-- `2026-10-19 11:45:26.275904+00:00` | Боевой прогон ЛК (2 ч) | `test_company_name_in_lk` | tests/lk/test_lk_auth.py::test_company_name_in_lk | test_company_name_in_lk | TimeoutException: element not found / wait timed out
-- `2026-10-19 11:45:26.275904+00:00` | Боевой прогон ЛК (2 ч) | `test_fio_in_service_provider` | tests/lk/test_lk_auth.py::test_fio_in_service_provider | test_fio_in_service_provider | TimeoutException: element not found / wait timed out
-- `2026-10-19 11:45:26.275904+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_accreditation_current_level_displayed` | tests/lk/test_lk_accreditation.py::test_lk_accreditation_current_level_displayed | test_lk_accreditation_current_level_displayed | TimeoutException: element not found / wait timed out
-- `2026-10-19 11:45:26.275904+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_accreditation_level_selection_visible` | tests/lk/test_lk_accreditation.py::test_lk_accreditation_level_selection_visible | test_lk_accreditation_level_selection_visible | Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
-- `2026-10-19 11:45:26.275904+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_processor_card_on_vitrina` | tests/lk/test_lk_smoke.py::test_lk_processor_card_on_vitrina | test_lk_processor_card_on_vitrina | AssertionError: На витрине нет карточки Processor
-- `2026-10-19 11:45:26.275904+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_user_badge_has_profile_data` | tests/lk/test_lk_smoke.py::test_lk_user_badge_has_profile_data | test_lk_user_badge_has_profile_data | TimeoutException: element not found / wait timed out
-- `2026-10-19 11:45:26.275904+00:00` | Боевой прогон ЛК (2 ч) | `test_service_provider_opens` | tests/lk/test_lk_auth.py::test_service_provider_opens | test_service_provider_opens | TimeoutException: element not found / wait timed out
+(ошибок bid_failure за период нет)
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
@@ -62,12 +54,6 @@ Health monitor finished in 120.4s — FAIL (run_status=fail)
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 250.4s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 775.4s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 252.3s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 249.9s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 250.0s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 253.8s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 251.6s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 278.2s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 251.6s
@@ -92,14 +78,17 @@ Alert suppressed: lk_pytest failures look like autotest/UI flake (TimeoutExcepti
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 259.4s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 253.3s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 332.8s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 260.4s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 250.4s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.9s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 262.0s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 255.0s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 259.1s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 6.7s
-Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 7.6s
 Metrics sent to InfluxDB (run_status=ok)
@@ -126,6 +115,9 @@ Pytest: 39/39 passed, failed=0, errors=0 in 6.3s
 Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 10.2s
+Metrics sent to InfluxDB (run_status=ok)
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 6.5s
 Metrics sent to InfluxDB (run_status=ok)
 ```
 
