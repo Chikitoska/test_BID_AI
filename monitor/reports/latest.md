@@ -1,13 +1,12 @@
 # BID monitor digest
 
-- Generated: `2026-10-20T08:50:02.320244+03:00` (Europe/Moscow)
+- Generated: `2026-10-20T20:50:04.015492+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `f14f91f feat(monitor): orange Grafana for autotest failures on all 3 runs`
 
 ## Influx volume
 
-- `bid_failure`: 9 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 1152 точек (~1д)
 - `bid_run`: 10 точек (~1д)
@@ -19,9 +18,6 @@
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-[FAIL] lk_auth_login 14736ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-Metrics sent to InfluxDB (run_status=fail)
-Alert suppressed: health fail streak 8/1
 Health monitor finished in 123.3s — FAIL (run_status=fail)
 [lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 90 с…
 [FAIL] lk_auth_login 14045ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
@@ -49,17 +45,14 @@ Health monitor finished in 105.5s — FAIL (run_status=fail)
 Metrics sent to InfluxDB (run_status=fail)
 Alert suppressed: health fail streak 1/2
 Health monitor finished in 120.4s — FAIL (run_status=fail)
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
+main_page FAIL (HTTPSConnectionPool(host='bid.gazprom-neft.ru', port=443): Read timed out. (read timeout=15)), повтор через 10 с (ещё 1 раз)…
+[lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 90 с…
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 251.6s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 278.2s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 251.6s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 255.1s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 265.2s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 776.4s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 270.1s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 262.9s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.0s
@@ -84,14 +77,17 @@ LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.9s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 262.0s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 255.0s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 259.1s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 265.8s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 264.9s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 268.0s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 264.9s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 256.5s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.8s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 7.6s
-Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 6.6s
 Metrics sent to InfluxDB (run_status=ok)
@@ -118,6 +114,9 @@ Pytest: 39/39 passed, failed=0, errors=0 in 10.2s
 Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 6.5s
+Metrics sent to InfluxDB (run_status=ok)
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 14.3s
 Metrics sent to InfluxDB (run_status=ok)
 ```
 
