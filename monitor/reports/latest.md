@@ -1,6 +1,6 @@
 # BID monitor digest
 
-- Generated: `2026-10-21T20:50:03.878148+03:00` (Europe/Moscow)
+- Generated: `2026-10-22T08:50:01.311170+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `f14f91f feat(monitor): orange Grafana for autotest failures on all 3 runs`
@@ -14,11 +14,7 @@
 
 ## Failures (bid_failure)
 
-- `2026-10-21 16:52:46.807193+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/service-providers | ЛК не загрузился после входа (нет бейджа пользователя), URL: https://lk.bid.gazprom-neft.ru/service-providers
-- `2026-10-21 15:47:07.908240+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/error/500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-- `2026-10-21 09:02:35.279588+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/service-providers | ЛК не загрузился после входа (нет бейджа пользователя), URL: https://lk.bid.gazprom-neft.ru/service-providers
-- `2026-10-21 08:58:03.028573+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/service-providers | ЛК не загрузился после входа (нет бейджа пользователя), URL: https://lk.bid.gazprom-neft.ru/service-providers
-- `2026-10-21 08:52:33.935219+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/error/500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+(ошибок bid_failure за период нет)
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
@@ -58,12 +54,6 @@ Health monitor finished in 162.2s — FAIL (run_status=fail)
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-LK pytest: 10/20 passed, failed=4, errors=4, skipped=2 in 1513.4s
-Failure events sent to InfluxDB (таблица Grafana)
-Alert suppressed: lk_pytest failures look like autotest/UI flake (TimeoutException/assert/selector) — Grafana only; prod pulse is health every 5 min
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 259.4s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 253.3s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 332.8s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 260.4s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 250.4s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.9s
@@ -88,14 +78,17 @@ LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 259.5s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 260.0s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 256.8s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 252.4s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.5s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 253.3s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.6s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 507.5s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 250.8s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 260.4s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 6.6s
-Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 7.0s
 Metrics sent to InfluxDB (run_status=ok)
@@ -122,6 +115,9 @@ Pytest: 39/39 passed, failed=0, errors=0 in 7.0s
 Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 9.6s
+Metrics sent to InfluxDB (run_status=ok)
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 6.8s
 Metrics sent to InfluxDB (run_status=ok)
 ```
 
