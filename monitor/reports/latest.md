@@ -1,6 +1,6 @@
 # BID monitor digest
 
-- Generated: `2026-10-24T20:50:22.705968+03:00` (Europe/Moscow)
+- Generated: `2026-10-25T08:50:03.866275+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `f14f91f feat(monitor): orange Grafana for autotest failures on all 3 runs`
@@ -53,12 +53,6 @@ Health monitor finished in 135.6s — FAIL (run_status=fail)
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 263.7s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.1s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 255.2s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 253.8s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 265.9s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 252.6s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 255.2s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 257.3s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 271.9s
@@ -83,14 +77,17 @@ LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 256.4s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 249.8s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 251.4s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 253.0s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 255.8s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 249.7s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 253.3s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 250.0s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 256.2s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 256.3s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 6.5s
-Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 14.3s
 Metrics sent to InfluxDB (run_status=ok)
@@ -117,6 +114,9 @@ Pytest: 39/39 passed, failed=0, errors=0 in 6.8s
 Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 8.3s
+Metrics sent to InfluxDB (run_status=ok)
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 6.6s
 Metrics sent to InfluxDB (run_status=ok)
 ```
 
