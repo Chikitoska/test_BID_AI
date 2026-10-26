@@ -1,34 +1,26 @@
 # BID monitor digest
 
-- Generated: `2026-10-26T08:50:03.863329+03:00` (Europe/Moscow)
+- Generated: `2026-10-26T20:50:03.873049+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `f14f91f feat(monitor): orange Grafana for autotest failures on all 3 runs`
 
 ## Influx volume
 
+- `bid_failure`: 3 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 1152 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-(ошибок bid_failure за период нет)
+- `2026-10-26 11:01:48.804098+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/error/500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+- `2026-10-26 10:57:48.253745+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/service-providers | ЛК не загрузился после входа (нет бейджа пользователя), URL: https://lk.bid.gazprom-neft.ru/service-providers
+- `2026-10-26 06:46:07.335188+00:00` | Лендинг + мин ЛК (5 мин) | `lk_company_badge` | ЛК: компания в шапке | lk_company_badge | https://lk.bid.gazprom-neft.ru/service-providers | Message:
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-Metrics sent to InfluxDB (run_status=fail)
-Health monitor finished in 130.6s — FAIL (run_status=fail)
-[lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 90 с…
-[FAIL] lk_auth_login 59247ms ЛК не загрузился после входа (нет бейджа пользователя), URL: https://lk.bid.gazprom-neft.ru/service-providers
-Metrics sent to InfluxDB (run_status=fail)
-Alert suppressed: health fail streak 2/2
-Health monitor finished in 178.4s — FAIL (run_status=fail)
-[FAIL] lk_auth_login 71761ms ЛК не загрузился после входа (нет бейджа пользователя), URL: https://lk.bid.gazprom-neft.ru/service-providers
-Metrics sent to InfluxDB (run_status=fail)
-Alert suppressed: health fail streak 3/2
-Health monitor finished in 150.6s — FAIL (run_status=fail)
 [lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 90 с…
 [lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 90 с…
 [FAIL] lk_auth_login 14491ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
@@ -48,17 +40,22 @@ Health monitor finished in 126.3s — FAIL (run_status=fail)
 [FAIL] lk_auth_login 23509ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
 Metrics sent to InfluxDB (run_status=fail)
 Health monitor finished in 135.6s — FAIL (run_status=fail)
+[FAIL] lk_company_badge 45067ms Message:
+Alert suppressed: health failure classified as autotest (UI flake / Chrome/WebDriver) — Grafana orange; not paging as LK/PROD down
+Health monitor finished in 62.8s — FAIL_AUTOTEST (run_status=autotest)
+[FAIL] lk_auth_login 83259ms ЛК не загрузился после входа (нет бейджа пользователя), URL: https://lk.bid.gazprom-neft.ru/service-providers
+Metrics sent to InfluxDB (run_status=fail)
+Alert suppressed: health fail streak 1/2
+Health monitor finished in 163.6s — FAIL (run_status=fail)
+[FAIL] lk_auth_login 20892ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+Metrics sent to InfluxDB (run_status=fail)
+Health monitor finished in 104.2s — FAIL (run_status=fail)
+[lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 90 с…
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.4s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.5s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 253.3s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 248.1s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 247.9s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 251.3s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 249.7s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 255.7s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 256.4s
@@ -83,14 +80,17 @@ LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 248.2s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 249.3s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 249.1s
 LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.5s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 260.6s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 265.5s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 257.7s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 264.8s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 255.8s
+LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 282.4s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 9.6s
-Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 6.8s
 Metrics sent to InfluxDB (run_status=ok)
@@ -117,6 +117,9 @@ Pytest: 39/39 passed, failed=0, errors=0 in 9.5s
 Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 6.7s
+Metrics sent to InfluxDB (run_status=ok)
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 12.0s
 Metrics sent to InfluxDB (run_status=ok)
 ```
 
