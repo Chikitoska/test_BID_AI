@@ -1,41 +1,30 @@
 # BID monitor digest
 
-- Generated: `2026-10-27T08:50:03.597649+03:00` (Europe/Moscow)
+- Generated: `2026-10-27T20:50:00.735043+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `f14f91f feat(monitor): orange Grafana for autotest failures on all 3 runs`
 
 ## Influx volume
 
-- `bid_failure`: 16 точек (~1д)
+- `bid_failure`: 20 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 1152 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-- `2026-10-27 05:47:51.781850+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/service-providers | ЛК не загрузился после входа (нет бейджа пользователя), URL: https://lk.bid.gazprom-neft.ru/service-providers
-- `2026-10-26 19:17:09.573318+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/error/500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-- `2026-10-26 19:11:45.342593+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/service-providers | Message:
-- `2026-10-26 19:06:44.923591+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/service-providers | Message:
-- `2026-10-26 19:01:46.407111+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/service-providers | Message:
-- `2026-10-26 18:56:45.164228+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/service-providers | Message:
-- `2026-10-26 18:52:12.571016+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/service-providers | Message:
-- `2026-10-26 18:46:42.006127+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/service-providers | Message:
-- `2026-10-26 18:41:59.845002+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/service-providers | Message:
-- `2026-10-26 18:36:46.012802+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/service-providers | Message:
-- `2026-10-26 18:31:45.332725+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/service-providers | Message:
-- `2026-10-26 18:26:42.706979+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/service-providers | Message:
-- `2026-10-26 18:22:02.706368+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/service-providers | Message:
+- `2026-10-27 05:52:11.574654+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | https://lk.bid.gazprom-neft.ru/error/500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+- `2026-10-27 17:24:22.775677+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_header_action_buttons` | tests/lk/test_lk_smoke.py::test_lk_header_action_buttons | test_lk_header_action_buttons | AssertionError: Кнопка «Написать нам» не видна или недоступна
+- `2026-10-27 15:24:16.755654+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_header_action_buttons` | tests/lk/test_lk_smoke.py::test_lk_header_action_buttons | test_lk_header_action_buttons | AssertionError: Кнопка «Написать нам» не видна или недоступна
+- `2026-10-27 13:25:51.938621+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_header_action_buttons` | tests/lk/test_lk_smoke.py::test_lk_header_action_buttons | test_lk_header_action_buttons | AssertionError: Кнопка «Написать нам» не видна или недоступна
+- `2026-10-27 11:24:26.604625+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_header_action_buttons` | tests/lk/test_lk_smoke.py::test_lk_header_action_buttons | test_lk_header_action_buttons | AssertionError: Кнопка «Написать нам» не видна или недоступна
+- `2026-10-27 09:24:37.727223+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_header_action_buttons` | tests/lk/test_lk_smoke.py::test_lk_header_action_buttons | test_lk_header_action_buttons | AssertionError: Кнопка «Написать нам» не видна или недоступна
+- `2026-10-27 07:24:53.468831+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_header_action_buttons` | tests/lk/test_lk_smoke.py::test_lk_header_action_buttons | test_lk_header_action_buttons | AssertionError: Кнопка «Написать нам» не видна или недоступна
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-[FAIL] lk_auth_login 47330ms Message:
-Alert suppressed: health failure classified as autotest (UI flake / Chrome/WebDriver) — Grafana orange; not paging as LK/PROD down
-Health monitor finished in 115.3s — FAIL_AUTOTEST (run_status=autotest)
-[FAIL] lk_auth_login 46967ms Message:
-Alert suppressed: health failure classified as autotest (UI flake / Chrome/WebDriver) — Grafana orange; not paging as LK/PROD down
 Health monitor finished in 101.0s — FAIL_AUTOTEST (run_status=autotest)
 [FAIL] lk_auth_login 46629ms Message:
 Alert suppressed: health failure classified as autotest (UI flake / Chrome/WebDriver) — Grafana orange; not paging as LK/PROD down
@@ -61,49 +50,51 @@ Health monitor finished in 128.3s — FAIL (run_status=fail)
 Metrics sent to InfluxDB (run_status=fail)
 Alert suppressed: health fail streak 1/2
 Health monitor finished in 170.2s — FAIL (run_status=fail)
+[lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 90 с…
+[FAIL] lk_auth_login 17224ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+Metrics sent to InfluxDB (run_status=fail)
+Health monitor finished in 127.3s — FAIL (run_status=fail)
+[lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 90 с…
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 255.8s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 249.7s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 253.3s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 250.0s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 256.2s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 256.3s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 249.8s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 257.8s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.9s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 253.7s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 253.9s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 257.0s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 264.5s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.5s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 248.2s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 249.3s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 249.1s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 254.5s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 260.6s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 265.5s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 257.7s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 264.8s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 255.8s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 282.4s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 270.6s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 251.5s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 257.0s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 253.6s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 266.3s
-LK pytest: 17/20 passed, failed=0, errors=0, skipped=3 in 253.8s
+E   AssertionError: Кнопка «Написать нам» не видна или недоступна
+FAILED tests/lk/test_lk_smoke.py::test_lk_header_action_buttons - AssertionError: Кнопка «Написать нам» не видна или недоступна
+======= 1 failed, 16 passed, 3 skipped, 3 warnings in 261.44s (0:04:21) ========
+LK pytest: 16/20 passed, failed=1, errors=0, skipped=3 in 262.6s
+Failure events sent to InfluxDB (таблица Grafana)
+Alert suppressed: lk_pytest failures look like autotest/UI flake (TimeoutException/assert/selector) — Grafana only; prod pulse is health every 5 min
+tests/lk/test_lk_smoke.py::test_lk_header_action_buttons FAILED
+=================================== FAILURES ===================================
+E   AssertionError: Кнопка «Написать нам» не видна или недоступна
+FAILED tests/lk/test_lk_smoke.py::test_lk_header_action_buttons - AssertionError: Кнопка «Написать нам» не видна или недоступна
+=== 1 failed, 16 passed, 3 skipped, 3 warnings, 1 rerun in 345.90s (0:05:45) ===
+LK pytest: 16/20 passed, failed=1, errors=0, skipped=3 in 346.9s
+Failure events sent to InfluxDB (таблица Grafana)
+Alert suppressed: lk_pytest failures look like autotest/UI flake (TimeoutException/assert/selector) — Grafana only; prod pulse is health every 5 min
+tests/lk/test_lk_smoke.py::test_lk_header_action_buttons FAILED
+=================================== FAILURES ===================================
+E   AssertionError: Кнопка «Написать нам» не видна или недоступна
+FAILED tests/lk/test_lk_smoke.py::test_lk_header_action_buttons - AssertionError: Кнопка «Написать нам» не видна или недоступна
+======= 1 failed, 16 passed, 3 skipped, 3 warnings in 254.97s (0:04:14) ========
+LK pytest: 16/20 passed, failed=1, errors=0, skipped=3 in 256.1s
+Failure events sent to InfluxDB (таблица Grafana)
+Alert suppressed: lk_pytest failures look like autotest/UI flake (TimeoutException/assert/selector) — Grafana only; prod pulse is health every 5 min
+tests/lk/test_lk_smoke.py::test_lk_header_action_buttons FAILED
+=================================== FAILURES ===================================
+E   AssertionError: Кнопка «Написать нам» не видна или недоступна
+FAILED tests/lk/test_lk_smoke.py::test_lk_header_action_buttons - AssertionError: Кнопка «Написать нам» не видна или недоступна
+======= 1 failed, 16 passed, 3 skipped, 3 warnings in 259.54s (0:04:19) ========
+LK pytest: 16/20 passed, failed=1, errors=0, skipped=3 in 260.6s
+Failure events sent to InfluxDB (таблица Grafana)
+Alert suppressed: lk_pytest failures look like autotest/UI flake (TimeoutException/assert/selector) — Grafana only; prod pulse is health every 5 min
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 12.0s
-Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 6.6s
 Metrics sent to InfluxDB (run_status=ok)
@@ -130,6 +121,9 @@ Pytest: 39/39 passed, failed=0, errors=0 in 12.0s
 Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 7.2s
+Metrics sent to InfluxDB (run_status=ok)
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 8.9s
 Metrics sent to InfluxDB (run_status=ok)
 ```
 
