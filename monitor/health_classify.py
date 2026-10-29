@@ -49,6 +49,8 @@ _UI_WAIT_EXCEPTION_MARKERS = (
     "elementnotvisibleexception",
     "invalidselectorexception",
     "assertionerror",
+    "chatboterror",
+    "mincifryerror",
 )
 
 # Пустой Message: / Message:\nStacktrace без имени wait-exception — краш драйвера.

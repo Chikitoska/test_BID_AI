@@ -44,13 +44,16 @@ def _result(
 def _run_chatbot_steps(driver, *, prefix: str, url: str) -> list[CheckResult]:
     bot = ChatbotWidget(driver)
     results: list[CheckResult] = []
-    for name, action in bot.health_steps(prefix):
-        item = _run_step(name, action)
-        item.url = url
-        results.append(item)
-        if not item.success:
-            break
-    return results
+    try:
+        for name, action in bot.health_steps(prefix):
+            item = _run_step(name, action)
+            item.url = url
+            results.append(item)
+            if not item.success:
+                break
+        return results
+    finally:
+        bot.close()
 
 
 def _run_step(name: str, action) -> CheckResult:
@@ -153,10 +156,12 @@ def run_mincifry_checks() -> list[CheckResult]:
     try:
         driver = create_chrome_driver()
         driver.get(LANDING_BASE_URL)
+        time.sleep(1.5)
         page = MincifryPage(driver)
         for name, action in page.health_steps():
             item = _run_step(name, action)
             item.url = driver.current_url or LANDING_BASE_URL
+            print(f"  {name} url={item.url}", flush=True)
             results.append(item)
             if not item.success:
                 break

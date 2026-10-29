@@ -47,12 +47,16 @@ def main() -> int:
             print(f"WARN: InfluxDB write failed: {exc}")
 
     if not overall_ok:
-        notify_github_on_failure(
-            run_type="mincifry",
-            http_results=results,
-            failed_count=sum(1 for r in results if not r.success),
-            duration_sec=duration_sec,
-        )
+        # Ручной скрипт по умолчанию не спамит почту; алерты — из run_daily.
+        if os.getenv("MINCIFRY_ALERT", "false").lower() in ("1", "true", "yes"):
+            notify_github_on_failure(
+                run_type="mincifry",
+                http_results=results,
+                failed_count=sum(1 for r in results if not r.success),
+                duration_sec=duration_sec,
+            )
+        else:
+            print("Alert skipped (ручной прогон). Для письма: MINCIFRY_ALERT=true")
         print(f"Mincifry finished in {duration_sec:.1f}s — FAIL")
         return 1
 

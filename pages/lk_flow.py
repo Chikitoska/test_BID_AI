@@ -349,6 +349,12 @@ class LkFlow:
         """Открыть лендинг (для проверок виджетов до входа)."""
         self._log("Открываем лендинг")
         self.driver.get(LANDING_BASE_URL)
+        try:
+            WebDriverWait(self.driver, min(self.wait_sec, 20)).until(
+                lambda d: d.execute_script("return document.readyState") == "complete"
+            )
+        except Exception:
+            pass
 
     def login(self, *, already_on_landing: bool = False) -> str:
         """Полный вход до целевой страницы ЛК."""

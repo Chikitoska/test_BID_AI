@@ -8,7 +8,12 @@ from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 
-from pages.widget_urls import is_blank_target
+from pages.widget_urls import (
+    is_blank_target,
+    is_yandex_browser_href,
+    mentions_yandex_browser,
+    normalize_page_text,
+)
 
 
 class MincifryError(Exception):
@@ -19,11 +24,6 @@ BANNER_SNIPPETS = (
     "Установите российские сертификаты",
     "не терять доступ к сервисам",
     "российские сертификаты",
-)
-YANDEX_SNIPPETS = (
-    "яндекс браузер",
-    "яндекс.браузер",
-    "yandex browser",
 )
 FAQ_SNIPPETS = (
     "частые вопросы",
@@ -39,16 +39,58 @@ class MincifryPage:
         self.driver = driver
         self.timeout = timeout
 
-    def _page_text(self) -> str:
+    def _body_text(self) -> str:
         try:
             return (
                 self.driver.execute_script(
                     "return (document.body && (document.body.innerText || document.body.textContent) || '');"
                 )
                 or ""
-            ).lower()
+            )
         except WebDriverException:
-            return (self.driver.page_source or "").lower()
+            return self.driver.page_source or ""
+
+    def _page_text(self) -> str:
+        chunks = [self._body_text()]
+        try:
+            frames = list(self.driver.find_elements(By.TAG_NAME, "iframe"))
+        except WebDriverException:
+            frames = []
+        for frame in frames[:8]:
+            try:
+                self.driver.switch_to.frame(frame)
+                chunks.append(self._body_text())
+            except WebDriverException:
+                continue
+            finally:
+                try:
+                    self.driver.switch_to.default_content()
+                except WebDriverException:
+                    pass
+        return "\n".join(chunks)
+
+    def _has_yandex_browser(self) -> bool:
+        if mentions_yandex_browser(self._page_text()):
+            return True
+        try:
+            hrefs = [
+                el.get_attribute("href") or ""
+                for el in self.driver.find_elements(By.CSS_SELECTOR, "a[href]")
+            ]
+        except WebDriverException:
+            hrefs = []
+        if any(is_yandex_browser_href(href) for href in hrefs):
+            return True
+        source = (self.driver.page_source or "").lower()
+        return any(
+            token in source
+            for token in ("browser.yandex", "yandex.ru/download", "ya.ru/browser")
+        )
+
+    def _debug_where(self) -> str:
+        url = self.driver.current_url or ""
+        snippet = normalize_page_text(self._page_text())[:220]
+        return f" url={url!r} текст={snippet!r}"
 
     def _visible_by_texts(self, snippets: tuple[str, ...]):
         for snippet in snippets:
@@ -70,10 +112,23 @@ class MincifryPage:
     def _wait_banner(self):
         deadline = time.time() + self.timeout
         last = None
+        scrolled = 0
         while time.time() < deadline:
             last = self._visible_by_texts(BANNER_SNIPPETS)
             if last is not None:
+                try:
+                    self.driver.execute_script(
+                        "arguments[0].scrollIntoView({block:'center'});", last
+                    )
+                except WebDriverException:
+                    pass
                 return last
+            if scrolled < 8:
+                try:
+                    self.driver.execute_script("window.scrollBy(0, 500);")
+                except WebDriverException:
+                    pass
+                scrolled += 1
             time.sleep(0.4)
         return last
 
@@ -131,35 +186,43 @@ class MincifryPage:
             if extra:
                 self.driver.switch_to.window(extra[-1])
             url = (self.driver.current_url or "").strip()
-            text = self._page_text()
-            opened = bool(extra) or url != before_url or any(s in text for s in YANDEX_SNIPPETS)
-            if opened:
-                if is_blank_target(url):
-                    raise MincifryError(f"После клика открылся пустой URL: {url!r}")
+            text = normalize_page_text(self._page_text())
+            opened = bool(extra) or url != before_url or self._has_yandex_browser()
+            loaded = (not is_blank_target(url)) and (len(text) > 20 or self._has_yandex_browser())
+            if opened and loaded:
                 return
+            if opened and is_blank_target(url):
+                time.sleep(0.4)
+                continue
             time.sleep(0.4)
-        raise MincifryError("Клик по блоку Минцифр не открыл новую страницу")
+        url = (self.driver.current_url or "").strip()
+        if is_blank_target(url):
+            raise MincifryError(f"После клика открылся пустой URL:{self._debug_where()}")
+        raise MincifryError(f"Клик по блоку Минцифр не открыл новую страницу:{self._debug_where()}")
 
     def step_yandex_browser_section(self) -> None:
-        deadline = time.time() + self.timeout
+        deadline = time.time() + max(self.timeout, 30)
         while time.time() < deadline:
-            text = self._page_text()
-            if any(s in text for s in YANDEX_SNIPPETS):
-                return
-            if self._visible_by_texts(("Яндекс Браузер", "Яндекс.Браузер", "Яндекс браузер")):
+            if self._has_yandex_browser():
                 return
             time.sleep(0.4)
-        raise MincifryError("На странице нет указания по установке Яндекс Браузера")
+        raise MincifryError(
+            "На странице нет указания по установке Яндекс Браузера:"
+            f"{self._debug_where()}"
+        )
 
     def step_certs_section(self) -> None:
-        text = self._page_text()
+        text = normalize_page_text(self._page_text())
         has_cert = "сертификат" in text
-        has_mincifry = any(s in text for s in ("минцифр", "мин цифр"))
+        has_mincifry = any(s in text for s in ("минцифр", "мин цифр", "нуц"))
         if has_cert and has_mincifry:
             return
-        if has_cert and self._visible_by_texts(("Минцифр", "Минцифры")):
+        if has_cert and self._visible_by_texts(("Минцифр", "Минцифры", "НУЦ")):
             return
-        raise MincifryError("На странице нет блока установки сертификатов Минцифры")
+        raise MincifryError(
+            "На странице нет блока установки сертификатов Минцифры:"
+            f"{self._debug_where()}"
+        )
 
     def _faq_root(self):
         node = self._visible_by_texts(
@@ -179,8 +242,12 @@ class MincifryPage:
         return node
 
     def step_faq_visible(self) -> None:
-        if self._faq_root() is None and not any(s in self._page_text() for s in FAQ_SNIPPETS):
-            raise MincifryError("На странице Минцифр не отображается блок с частыми вопросами")
+        text = normalize_page_text(self._page_text())
+        if self._faq_root() is None and not any(s in text for s in FAQ_SNIPPETS):
+            raise MincifryError(
+                "На странице Минцифр не отображается блок с частыми вопросами:"
+                f"{self._debug_where()}"
+            )
 
     def _is_expanded(self, element) -> bool:
         aria = (element.get_attribute("aria-expanded") or "").lower()
@@ -257,10 +324,10 @@ class MincifryPage:
                         return
                 except WebDriverException:
                     continue
-        text = self._page_text()
+        text = normalize_page_text(self._page_text())
         if any(s in text for s in ("©", "газпром", "правила использования", "политика")):
             return
-        raise MincifryError("На странице Минцифр не отображается футер")
+        raise MincifryError(f"На странице Минцифр не отображается футер:{self._debug_where()}")
 
     def health_steps(self):
         return [
