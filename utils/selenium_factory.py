@@ -23,6 +23,8 @@ LK_PAGE_LOAD_TIMEOUT = int(os.getenv("LK_PAGE_LOAD_TIMEOUT", "30"))
 LK_IMPLICIT_WAIT = float(os.getenv("LK_IMPLICIT_WAIT", "0"))
 
 _CHROME_CANDIDATES = (
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/Applications/Chromium.app/Contents/MacOS/Chromium",
     "/usr/bin/google-chrome-stable",
     "/usr/bin/google-chrome",
     "/usr/bin/chromium-browser",
@@ -157,6 +159,19 @@ def _set_spa_uid_cookies_cdp(driver: webdriver.Chrome, uid: str) -> None:
         print(f"[chrome] WARN: CDP setCookie SPA uid: {exc}", flush=True)
 
 
+def _inject_events_uid_rewrite(driver: webdriver.Chrome, uid: str) -> None:
+    """Патч fetch/XHR/sendBeacon: uid в POST /events = MONITOR_ANALYTICS_UID."""
+    from utils.spa_analytics import events_uid_rewrite_js
+
+    try:
+        driver.execute_cdp_cmd(
+            "Page.addScriptToEvaluateOnNewDocument",
+            {"source": events_uid_rewrite_js(uid)},
+        )
+    except Exception as exc:
+        print(f"[chrome] WARN: SPA events uid rewrite: {exc}", flush=True)
+
+
 def _inject_gpn_spa_analytics_uid(driver: webdriver.Chrome) -> None:
     """Фиксированный MONITOR_ANALYTICS_UID на все SPA-неймспейсы.
 
@@ -165,8 +180,12 @@ def _inject_gpn_spa_analytics_uid(driver: webdriver.Chrome) -> None:
     Мониторинг НЕ генерирует randomUUID — всегда хардкодный uid + cookie
     (CDP до навигации). localStorage gpnSpaUid пишется опционально
     (совместимость с counter.js), источником истины не является.
+    Fetch/XHR/sendBeacon на spa-back/events дополнительно штампуют тот же uid
+    в теле (в т.ч. customparams.as_user_id) — Consta-виджет иначе шлёт random UUID.
     """
-    uid = MONITOR_ANALYTICS_UID.strip()
+    from utils.spa_analytics import spa_events_uid
+
+    uid = spa_events_uid() or MONITOR_ANALYTICS_UID.strip()
     if not uid:
         return
 
@@ -186,14 +205,24 @@ def _inject_gpn_spa_analytics_uid(driver: webdriver.Chrome) -> None:
     except Exception as exc:
         print(f"[chrome] WARN: не удалось задать SPA uid script: {exc}", flush=True)
 
+    _inject_events_uid_rewrite(driver, uid)
 
-def create_chrome_driver(*, headless: bool | None = None) -> webdriver.Chrome:
+
+def create_chrome_driver(
+    *,
+    headless: bool | None = None,
+    enable_performance_log: bool = False,
+) -> webdriver.Chrome:
     use_headless = MONITOR_HEADLESS if headless is None else headless
     # На Mac headless=new часто падает на кликах — для локальных тестов лучше окно.
     if sys.platform == "darwin" and use_headless and os.getenv("MONITOR_FORCE_HEADLESS") != "true":
         use_headless = False
 
     options = _build_chrome_options(use_headless)
+    if enable_performance_log:
+        from utils.spa_events_sniffer import enable_performance_log as _enable_perf
+
+        _enable_perf(options)
     retries = int(os.getenv("CHROME_START_RETRIES", "3"))
     delay = float(os.getenv("CHROME_START_RETRY_DELAY_SEC", "3"))
     last_error: Exception | None = None
@@ -204,6 +233,11 @@ def create_chrome_driver(*, headless: bool | None = None) -> webdriver.Chrome:
             service = Service(executable_path=chromedriver_path) if chromedriver_path else Service()
             driver = webdriver.Chrome(service=service, options=options)
             _inject_gpn_spa_analytics_uid(driver)
+            if enable_performance_log:
+                try:
+                    driver.execute_cdp_cmd("Network.enable", {})
+                except Exception as exc:
+                    print(f"[chrome] WARN: Network.enable: {exc}", flush=True)
             driver.set_page_load_timeout(LK_PAGE_LOAD_TIMEOUT)
             driver.implicitly_wait(LK_IMPLICIT_WAIT)
             if not use_headless:

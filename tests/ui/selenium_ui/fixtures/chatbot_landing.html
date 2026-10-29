@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Газпром Бизнес ID</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; }
+    header { padding: 16px; }
+    ._iconWrapper_fix { width: 60px; height: 60px; position: fixed; right: 24px; bottom: 24px; z-index: 3; cursor: pointer; background: #0a5; border-radius: 50%; }
+    ._chatWrapper_fix { width: 400px; height: 600px; position: absolute; right: 24px; bottom: 96px; z-index: 2; background: #fff; border: 1px solid #ccc; display: flex; flex-direction: column; }
+    ._chatWrapper__closed_fix { visibility: hidden; }
+    ._closeButton_fix { width: 24px; height: 24px; cursor: pointer; }
+    ._suggestions__button_fix { display: block; margin: 8px 0; }
+    ._informer_fix { margin: 24px; padding: 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="https://id.bid.gazprom-neft.ru/realms/ecoportal/protocol/openid-connect/auth?client_id=self-authentication">Войти</a>
+    <a href="https://lk.bid.gazprom-neft.ru/registration">Получить ID</a>
+  </header>
+  <main>
+    <div class="_informer_fix">Установите российские сертификаты, чтобы не терять доступ к сервисам</div>
+    <button type="button">Покупателям</button>
+  </main>
+  <div class="_widgets_fix">
+    <div class="_iconWrapper_fix" id="chat-fab" onclick="openChat()"></div>
+    <div class="Card _wrapper_fix _chatWrapper_fix _chatWrapper__closed_fix" id="chat-panel">
+      <header>
+        <div class="_title_fix">Ассистент</div>
+        <div class="_closeButton_fix" id="chat-close" onclick="closeChat()"></div>
+      </header>
+      <div id="chat-body">
+        <div class="_bubble_fix"><div class="_textContainer_fix">Здравствуйте! Я виртуальный помощник.</div></div>
+        <div class="_suggestions_fix" id="chat-topics">
+          <button type="button" class="Button _suggestions__button_fix" onclick="ask(this)">Регистрация</button>
+          <button type="button" class="Button _suggestions__button_fix" onclick="ask(this)">Авторизация</button>
+        </div>
+      </div>
+      <input placeholder="Введите сообщение" readonly>
+    </div>
+  </div>
+  <script>
+    function panel() { return document.getElementById('chat-panel'); }
+    function openChat() {
+      panel().classList.remove('_chatWrapper__closed_fix');
+    }
+    function closeChat() {
+      panel().classList.add('_chatWrapper__closed_fix');
+    }
+    function ask(btn) {
+      const topic = (btn.innerText || '').trim();
+      const body = document.getElementById('chat-body');
+      const bubble = document.createElement('div');
+      bubble.className = '_bubble_fix';
+      bubble.innerHTML = '<div class="_textContainer_fix">Ответ по теме: ' + topic + '</div>';
+      body.appendChild(bubble);
+      const topics = document.getElementById('chat-topics');
+      topics.innerHTML = '';
+      const nested = document.createElement('button');
+      nested.type = 'button';
+      nested.className = 'Button _suggestions__button_fix';
+      nested.textContent = 'Да, нужна инструкция';
+      nested.onclick = function () { ask(nested); };
+      const back = document.createElement('button');
+      back.type = 'button';
+      back.className = 'Button _suggestions__button_fix';
+      back.textContent = 'Назад';
+      back.onclick = function () { location.hash = '#back'; };
+      const start = document.createElement('button');
+      start.type = 'button';
+      start.className = 'Button _suggestions__button_fix';
+      start.textContent = 'Вернуться в начало';
+      start.onclick = function () { location.hash = '#start'; };
+      topics.appendChild(nested);
+      topics.appendChild(back);
+      topics.appendChild(start);
+    }
+  </script>
+</body>
+</html>

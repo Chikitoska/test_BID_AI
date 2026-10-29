@@ -12,6 +12,7 @@ LK_CHECK_LABELS: dict[str, str] = {
     "lk_chatbot_answer": "ЛК: ответ чат-бота",
     "lk_chatbot_nav": "ЛК: Назад / в начало чат-бота",
     "lk_chatbot_close": "ЛК: закрытие окна чат-бота",
+    "lk_chatbot_events": "ЛК: SPA UUID в events чат-бота",
 }
 
 CHECK_LABELS: dict[str, str] = {
@@ -29,6 +30,7 @@ CHECK_LABELS: dict[str, str] = {
     "landing_chatbot_answer": "Лендинг: ответ чат-бота",
     "landing_chatbot_nav": "Лендинг: Назад / в начало чат-бота",
     "landing_chatbot_close": "Лендинг: закрытие окна чат-бота",
+    "landing_chatbot_events": "Лендинг: SPA UUID в events чат-бота",
     "landing_mincifry": "Лендинг: страница Минцифр (сертификаты)",
     "landing_mincifry_banner": "Минцифр: блок на лендинге",
     "landing_mincifry_click": "Минцифр: блок кликабелен, открылась страница",

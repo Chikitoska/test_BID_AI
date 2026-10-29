@@ -20,6 +20,13 @@ from pages.lk_page import LkPage
 from pages.mincifry_page import MincifryPage
 from utils.lk_modals import accept_lk_consent_modals
 from utils.selenium_factory import create_chrome_driver
+from utils.spa_events_sniffer import (
+    assert_only_monitor_uid,
+    collect_events_posts,
+    drain_performance_log,
+    event_names_from_posts,
+    uids_from_posts,
+)
 
 
 def _result(
@@ -41,7 +48,20 @@ def _result(
     )
 
 
+def _assert_chatbot_events(driver, *, prefix: str) -> None:
+    time.sleep(2.5)
+    posts = collect_events_posts(driver)
+    names = event_names_from_posts(posts)
+    uids = uids_from_posts(posts)
+    print(
+        f"[{prefix}_events] posts={len(posts)} events={names} uids={uids}",
+        flush=True,
+    )
+    assert_only_monitor_uid(posts, require_posts=True, context=prefix)
+
+
 def _run_chatbot_steps(driver, *, prefix: str, url: str) -> list[CheckResult]:
+    drain_performance_log(driver)
     bot = ChatbotWidget(driver)
     results: list[CheckResult] = []
     try:
@@ -51,9 +71,12 @@ def _run_chatbot_steps(driver, *, prefix: str, url: str) -> list[CheckResult]:
             results.append(item)
             if not item.success:
                 break
-        return results
     finally:
         bot.close()
+    events = _run_step(f"{prefix}_events", lambda: _assert_chatbot_events(driver, prefix=prefix))
+    events.url = url
+    results.append(events)
+    return results
 
 
 def _run_step(name: str, action) -> CheckResult:
@@ -116,7 +139,7 @@ def _run_lk_monitor_checks_once(*, include_lk: bool = True) -> list[CheckResult]
     flow: LkFlow | None = None
 
     try:
-        driver = create_chrome_driver()
+        driver = create_chrome_driver(enable_performance_log=True)
         flow = LkFlow(driver)
         flow.open_landing()
         results.extend(_run_chatbot_steps(driver, prefix="landing_chatbot", url=LANDING_BASE_URL))
