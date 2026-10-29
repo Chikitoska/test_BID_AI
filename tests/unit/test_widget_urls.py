@@ -1,5 +1,6 @@
 from pages.widget_urls import (
     is_blank_target,
+    is_certs_href,
     is_certs_target,
     is_login_target,
     is_yandex_browser_href,
@@ -44,6 +45,10 @@ def test_login_target_is_keycloak_not_certs() -> None:
         "auth?client_id=self-authentication"
     )
     assert is_login_target(login)
+    assert is_login_target("https://lk.bid.gazprom-neft.ru/registration")
     assert not is_certs_target(login, "Войти")
+    assert not is_certs_href("https://lk.bid.gazprom-neft.ru/registration")
+    assert not is_certs_target("https://lk.bid.gazprom-neft.ru/registration", "Получить ID")
+    assert is_certs_href("https://www.gosuslugi.ru/crt")
     assert is_certs_target("https://www.gosuslugi.ru/crt", "Сертификаты")
     assert is_certs_target("https://bid.gazprom-neft.ru/certs")

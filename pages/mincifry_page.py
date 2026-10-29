@@ -10,6 +10,7 @@ from selenium.webdriver.remote.webdriver import WebDriver
 
 from pages.widget_urls import (
     is_blank_target,
+    is_certs_href,
     is_certs_target,
     is_login_target,
     is_yandex_browser_href,
@@ -150,23 +151,35 @@ class MincifryPage:
         except WebDriverException:
             return ""
 
+    def _own_label(self, element) -> str:
+        try:
+            return " ".join(
+                (
+                    element.get_attribute("aria-label")
+                    or element.get_attribute("title")
+                    or element.text
+                    or ""
+                ).split()
+            )[:120]
+        except WebDriverException:
+            return ""
+
     def _is_usable_click_target(self, element) -> bool:
         if element is None:
             return False
         href = self._href_of(element)
         if href and (is_blank_target(href) or is_login_target(href)):
             return False
-        try:
-            text = " ".join((element.text or "").split())
-        except WebDriverException:
-            text = ""
-        if is_login_target(text) or "войти" in text.lower():
+        text = self._own_label(element).lower()
+        if is_login_target(text) or any(
+            s in text for s in ("войти", "регистрац", "получить id", "получить идентификатор")
+        ):
             return False
         return True
 
     def _certs_link(self):
         try:
-            links = self.driver.find_elements(By.CSS_SELECTOR, "a[href], button")
+            links = self.driver.find_elements(By.CSS_SELECTOR, "a[href]")
         except WebDriverException:
             return None
         for el in links:
@@ -176,49 +189,74 @@ class MincifryPage:
             except WebDriverException:
                 continue
             href = self._href_of(el)
-            try:
-                text = el.text or el.get_attribute("aria-label") or ""
-            except WebDriverException:
-                text = ""
-            if is_certs_target(href, text) and self._is_usable_click_target(el):
-                return el
+            text = self._own_label(el)
+            if is_certs_href(href) or (
+                len(text) <= 80 and is_certs_target(href, text) and self._is_usable_click_target(el)
+            ):
+                if self._is_usable_click_target(el):
+                    return el
         return None
 
-    def _clickable_from(self, node):
-        if node is None:
-            return None
-        tag = (node.tag_name or "").lower()
-        if tag in {"a", "button"} and self._is_usable_click_target(node):
-            return node
-        for xpath in (
-            "./ancestor-or-self::a[1]",
-            "./ancestor-or-self::button[1]",
-            ".//a",
-            ".//button",
-        ):
-            try:
-                found = node.find_element(By.XPATH, xpath)
-            except WebDriverException:
-                continue
-            if self._is_usable_click_target(found):
-                return found
+    def _auth_ancestor_href(self, node) -> str:
+        try:
+            found = node.find_element(By.XPATH, "./ancestor-or-self::a[1]")
+            href = self._href_of(found)
+            if is_login_target(href):
+                return href
+        except WebDriverException:
+            pass
+        return ""
+
+    def _nearby_cta(self, node):
+        """Кнопка в том же коротком блоке баннера, не «Войти»/регистрация."""
         container = node
-        for _ in range(8):
+        for _ in range(6):
             try:
-                candidates = container.find_elements(By.CSS_SELECTOR, "a, button")
+                text_len = len(" ".join((container.text or "").split()))
+            except WebDriverException:
+                break
+            if text_len > 420:
+                break
+            try:
+                candidates = container.find_elements(By.CSS_SELECTOR, "a[href], button")
             except WebDriverException:
                 candidates = []
+            usable = []
             for el in candidates:
                 try:
-                    if el.is_displayed() and self._is_usable_click_target(el):
-                        return el
+                    if not el.is_displayed() or not self._is_usable_click_target(el):
+                        continue
                 except WebDriverException:
                     continue
+                href = self._href_of(el)
+                if is_certs_href(href):
+                    return el
+                usable.append(el)
+            if usable:
+                return usable[0]
             try:
                 container = container.find_element(By.XPATH, "..")
             except WebDriverException:
                 break
-        return self._certs_link() or node
+        return None
+
+    def _clickable_from(self, node):
+        """Ссылка про сертификаты или CTA баннера — не соседние «Войти»/регистрацию."""
+        if node is None:
+            return None
+        for xpath in ("./ancestor-or-self::a[1]", "./ancestor-or-self::button[1]"):
+            try:
+                found = node.find_element(By.XPATH, xpath)
+            except WebDriverException:
+                continue
+            href = self._href_of(found)
+            if is_login_target(href):
+                continue
+            if self._is_usable_click_target(found) and (
+                is_certs_href(href) or is_certs_target(href, self._own_label(found))
+            ):
+                return found
+        return self._nearby_cta(node)
 
     def _click(self, element) -> None:
         self.driver.execute_script("arguments[0].scrollIntoView({block:'center'});", element)
@@ -242,9 +280,21 @@ class MincifryPage:
         target = self._certs_link() or self._clickable_from(banner)
         if target is None:
             raise MincifryError("Блок Минцифр на лендинге некликабелен")
+        trapped = self._auth_ancestor_href(target)
+        if trapped:
+            raise MincifryError(
+                "Блок сертификатов вложен в ссылку входа/регистрации, "
+                f"отдельной ссылки на сертификаты нет: {trapped!r}"
+            )
         href = self._href_of(target)
+        print(
+            f"  mincifry click href={href!r} label={self._own_label(target)!r}",
+            flush=True,
+        )
         if href and is_login_target(href):
-            raise MincifryError(f"Клик Минцифр указывает на «Войти», а не на сертификаты: {href!r}")
+            raise MincifryError(
+                f"Клик Минцифр указывает на вход/регистрацию, а не на сертификаты: {href!r}"
+            )
         if href and is_blank_target(href):
             raise MincifryError(f"Ссылка Минцифр ведёт в about:blank: {href!r}")
 
@@ -263,7 +313,7 @@ class MincifryPage:
             url = (self.driver.current_url or "").strip()
             if is_login_target(url):
                 raise MincifryError(
-                    "Клик по блоку Минцифр открыл страницу входа Keycloak, "
+                    "Клик по блоку Минцифр открыл вход или регистрацию, "
                     f"а не сертификаты:{self._debug_where()}"
                 )
             text = normalize_page_text(self._page_text())
@@ -278,7 +328,7 @@ class MincifryPage:
         url = (self.driver.current_url or "").strip()
         if is_login_target(url):
             raise MincifryError(
-                "Клик по блоку Минцифр открыл страницу входа Keycloak, "
+                "Клик по блоку Минцифр открыл вход или регистрацию, "
                 f"а не сертификаты:{self._debug_where()}"
             )
         if is_blank_target(url):

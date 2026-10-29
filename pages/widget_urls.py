@@ -46,7 +46,7 @@ def mentions_yandex_browser(text: str | None) -> bool:
 
 
 def is_login_target(url: str | None) -> bool:
-    """Войти / Keycloak — не страница сертификатов Минцифры."""
+    """Войти / регистрация / Keycloak — не страница сертификатов Минцифры."""
     href = (url or "").lower()
     return any(
         token in href
@@ -55,28 +55,41 @@ def is_login_target(url: str | None) -> bool:
             "self-authentication",
             "id.bid.gazprom-neft.ru",
             "/login",
+            "/registration",
             "keycloak",
         )
     )
 
 
-def is_certs_target(url: str | None, text: str | None = None) -> bool:
-    blob = f"{url or ''} {text or ''}".lower()
-    if is_login_target(blob):
+def is_certs_href(url: str | None) -> bool:
+    """Только URL страницы сертификатов, не «Войти» и не регистрация."""
+    href = (url or "").lower()
+    if not href or is_login_target(href) or is_blank_target(href):
         return False
     return any(
-        token in blob
+        token in href
         for token in (
-            "сертификат",
-            "минцифр",
-            "gosuslugi",
-            "/crt",
+            "gosuslugi.ru/crt",
             "/certs",
+            "/crt",
             "certificate",
-            "яндекс",
-            "yandex",
+            "mincifry",
+            "mintsifr",
+            "сертификат",
         )
     )
+
+
+def is_certs_target(url: str | None, text: str | None = None) -> bool:
+    if is_certs_href(url):
+        return True
+    label = " ".join((text or "").split())
+    if len(label) > 120 or is_login_target(label):
+        return False
+    lower = label.lower()
+    if any(s in lower for s in ("войти", "регистрац", "получить id", "получить идентификатор")):
+        return False
+    return any(s in lower for s in ("сертификат", "минцифр"))
 
 
 def is_yandex_browser_href(url: str | None) -> bool:
