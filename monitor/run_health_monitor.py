@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Health-мониторинг: лендинг (HTTP) + ЛК (вход, ФИО, компания).
+Health-мониторинг: лендинг (HTTP) + чат-бот лендинга/ЛК + ЛК (вход, ФИО, компания).
 
-Один контур для prod: «сайт жив» + «ЛК доступен».
-Запуск: cron каждые 5 мин (см. monitor/MONITOR-ARCH.md).
+Один контур для prod: «сайт жив» + «ассистент работает» + «ЛК доступен».
+Запуск: cron каждые 5 мин.
 
 Тяжёлый регресс ЛК — отдельно: run_lk_pytest.py (каждые 2 ч + Allure).
 """
@@ -76,42 +76,39 @@ def main() -> int:
 
     lk_ok = True
     lk_skipped_busy = False
-    if LK_MONITOR_ENABLED:
-        if not landing.success:
-            print("SKIP LK: лендинг недоступен")
-            lk_ok = False
-        else:
-            lk_wait = float(os.getenv("CHROME_LOCK_WAIT_HEALTH_SEC", "120"))
-            try:
-                with chrome_run_lock(owner="health", wait_sec=lk_wait):
-                    lk_results = run_lk_monitor_checks()
-            except ChromeBusyError as exc:
-                lk_skipped_busy = True
-                lk_results = []
-                print(f"SKIP LK (chrome busy): {exc}")
-                print(
-                    "STATUS=skipped_busy — ЛК не проверяли; "
-                    "overall не OK (метрика skipped=1), TG не пейджим",
-                    flush=True,
-                )
-            for item in lk_results:
-                st = "OK" if item.success else "FAIL"
-                print(f"[{st}] {item.name} {item.duration_ms:.0f}ms {item.error}")
-            if lk_results:
-                lk_ok = all(item.success for item in lk_results)
-            elif not lk_skipped_busy:
-                lk_ok = False
-            if lk_results:
-                all_results.extend(lk_results)
+    if not landing.success:
+        print("SKIP UI: лендинг недоступен (чат-бот и ЛК не проверяем)")
+        lk_ok = False
     else:
-        print("SKIP LK: MONITOR_RUN_LK=false или нет credentials")
+        lk_wait = float(os.getenv("CHROME_LOCK_WAIT_HEALTH_SEC", "120"))
+        try:
+            with chrome_run_lock(owner="health", wait_sec=lk_wait):
+                lk_results = run_lk_monitor_checks(include_lk=LK_MONITOR_ENABLED)
+        except ChromeBusyError as exc:
+            lk_skipped_busy = True
+            lk_results = []
+            print(f"SKIP UI (chrome busy): {exc}")
+            print(
+                "STATUS=skipped_busy — чат-бот/ЛК не проверяли; "
+                "overall не OK (метрика skipped=1), TG не пейджим",
+                flush=True,
+            )
+        for item in lk_results:
+            st = "OK" if item.success else "FAIL"
+            print(f"[{st}] {item.name} {item.duration_ms:.0f}ms {item.error}")
+        if lk_results:
+            lk_ok = all(item.success for item in lk_results)
+        elif not lk_skipped_busy:
+            lk_ok = False
+        if lk_results:
+            all_results.extend(lk_results)
+        if not LK_MONITOR_ENABLED and not lk_skipped_busy:
+            print("SKIP LK auth: MONITOR_RUN_LK=false или нет credentials (чат-бот лендинга уже проверен)")
 
     duration_sec = time.perf_counter() - start
     http_ok = landing.success
-    # Busy ≠ полный успех: ЛК не проверяли → overall_ok=False (не маскируем зелёным).
-    if not LK_MONITOR_ENABLED:
-        overall_ok = http_ok
-    elif lk_skipped_busy:
+    # Busy ≠ полный успех: чат-бот/ЛК не проверяли → overall_ok=False.
+    if lk_skipped_busy:
         overall_ok = False
     else:
         overall_ok = http_ok and lk_ok
@@ -134,8 +131,11 @@ def main() -> int:
 
     if INFLUX_ENABLED:
         try:
-            write_check_results([landing])
-            if LK_MONITOR_ENABLED and landing.success and not lk_skipped_busy:
+            write_check_results(
+                [landing]
+                + [r for r in all_results if r.name.startswith("landing_chatbot")]
+            )
+            if landing.success and not lk_skipped_busy:
                 lk_only = [r for r in all_results if r.name.startswith("lk_")]
                 if lk_only:
                     write_lk_check_results(lk_only)

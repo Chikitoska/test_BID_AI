@@ -19,6 +19,7 @@ RUN_TYPE_EXPORT: dict[str, str] = {
     "daily": "daily",
     "lk_pytest": "lk_pytest",
     "probe": "probe",  # legacy run_light
+    "mincifry": "mincifry",
 }
 
 MSK = timezone(timedelta(hours=3))

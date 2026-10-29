@@ -1,5 +1,5 @@
 #!/bin/bash
-# Health-мониторинг: лендинг (HTTP) + ЛК (вход, ФИО, компания)
+# Health-мониторинг: лендинг (HTTP) + чат-бот + ЛК (вход, ФИО, компания)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

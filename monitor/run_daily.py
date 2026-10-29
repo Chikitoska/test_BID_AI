@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """
-Полный мониторинг BID (cron каждый час):
+Полный мониторинг BID (cron 2 раза в день):
 1. HTTP-проверки публичных API
-2. pytest tests/api/ (опционально)
-3. метрики → InfluxDB
-4. алерт через GitHub → Telegram при ошибках
+2. UI Минцифр (сертификаты на лендинге)
+3. pytest tests/api/ (опционально)
+4. метрики → InfluxDB
+5. алерт через GitHub → Telegram при ошибках
 """
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 import sys
@@ -19,12 +21,15 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from config.lk_settings import LANDING_BASE_URL
 from monitor.alert_policy import notify_full_run_result
-from monitor.checks import run_http_checks
+from monitor.checks import CheckResult, run_http_checks
+from monitor.chrome_lock import ChromeBusyError, chrome_run_lock
 from monitor.config import INFLUX_ENABLED, MONITOR_RUN_PYTEST, MONITOR_RUN_UI, PROJECT_ROOT
 from monitor.github_dispatch import notify_github_on_failure
 from monitor.health_classify import pytest_run_status
 from monitor.http_session import create_monitor_session
+from monitor.lk_checks import run_mincifry_checks
 from monitor.metrics import (
     failures_from_checks,
     write_check_results,
@@ -96,6 +101,28 @@ def _run_pytest() -> PytestResult:
     )
 
 
+def _run_daily_mincifry() -> list[CheckResult]:
+    """Страница Минцифр — часть дневного прогона (Chrome, lock с health/lk_pytest)."""
+    wait_sec = float(os.getenv("CHROME_LOCK_WAIT_DAILY_SEC", "360"))
+    print("Минцифр: UI-проверка страницы сертификатов…", flush=True)
+    try:
+        with chrome_run_lock(owner="daily_mincifry", wait_sec=wait_sec):
+            return run_mincifry_checks()
+    except ChromeBusyError as exc:
+        print(f"FAIL Минцифр (chrome busy): {exc}", flush=True)
+        return [
+            CheckResult(
+                name="landing_mincifry",
+                url=LANDING_BASE_URL,
+                method="UI",
+                success=False,
+                http_code=0,
+                duration_ms=0,
+                error=str(exc),
+            )
+        ]
+
+
 def _pytest_error_snippet(result: PytestResult) -> str:
     lines = [line.strip() for line in result.output.splitlines() if line.strip()]
     tail = "\n".join(lines[-8:])
@@ -117,6 +144,17 @@ def main() -> int:
         status = "OK" if item.success else "FAIL"
         print(f"[{status}] {item.name} {item.http_code} {item.duration_ms:.0f}ms {item.error}")
 
+    landing_ok = any(item.name == "main_page" and item.success for item in http_results)
+    if landing_ok:
+        mincifry_results = _run_daily_mincifry()
+    else:
+        mincifry_results = []
+        print("SKIP Минцифр: лендинг HTTP недоступен", flush=True)
+    for item in mincifry_results:
+        status = "OK" if item.success else "FAIL"
+        print(f"[{status}] {item.name} {item.duration_ms:.0f}ms {item.error}")
+    mincifry_failed = [r for r in mincifry_results if not r.success]
+
     if MONITOR_RUN_PYTEST:
         pytest_result = _run_pytest()
         print(
@@ -131,7 +169,7 @@ def main() -> int:
         pytest_result = PytestResult(0, 0, 0, 0, 0.0, "", False)
         print("Pytest: skipped (MONITOR_RUN_PYTEST=false)")
 
-    overall_ok = not http_failed and pytest_result.pytest_failed == 0
+    overall_ok = not http_failed and not mincifry_failed and pytest_result.pytest_failed == 0
     # Grafana bid_run = только pytest: HTTP-фейлы идут в bid_check/таблицу.
     pytest_metric_ok = pytest_result.pytest_failed == 0 and pytest_result.total > 0
     if pytest_metric_ok:
@@ -149,7 +187,7 @@ def main() -> int:
 
     if INFLUX_ENABLED:
         try:
-            write_check_results(http_results)
+            write_check_results(http_results + mincifry_results)
             write_pytest_run(
                 total=pytest_result.total,
                 passed=pytest_result.passed,
@@ -161,7 +199,7 @@ def main() -> int:
         except Exception as exc:
             print(f"WARN: InfluxDB write failed: {exc}")
 
-    failure_events = failures_from_checks(http_failed)
+    failure_events = failures_from_checks(http_failed + mincifry_failed)
     if pytest_result.pytest_failed:
         parsed = parse_pytest_failures(pytest_result.output)
         failure_events.extend(parsed)
@@ -180,8 +218,9 @@ def main() -> int:
         except Exception as exc:
             print(f"WARN: InfluxDB failure events: {exc}")
 
+    daily_results = http_results + mincifry_results
     notify_full_run_result(
-        http_results,
+        daily_results,
         overall_ok=overall_ok,
         passed=pytest_result.passed,
         total=pytest_result.total,
@@ -193,8 +232,8 @@ def main() -> int:
     if not overall_ok and send_alert:
         notify_github_on_failure(
             run_type="full",
-            http_results=http_results,
-            failed_count=len(http_failed),
+            http_results=daily_results,
+            failed_count=len(http_failed) + len(mincifry_failed),
             duration_sec=pytest_result.duration_sec,
             pytest_failed=pytest_result.pytest_failed,
             pytest_total=pytest_result.total,

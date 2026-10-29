@@ -345,9 +345,17 @@ class LkFlow:
         self._ensure_lk_ready()
         return self.driver.current_url
 
-    def login(self) -> str:
+    def open_landing(self) -> None:
+        """Открыть лендинг (для проверок виджетов до входа)."""
+        self._log("Открываем лендинг")
+        self.driver.get(LANDING_BASE_URL)
+
+    def login(self, *, already_on_landing: bool = False) -> str:
         """Полный вход до целевой страницы ЛК."""
-        self._open_auth_entry()
+        if already_on_landing and not LK_SKIP_LANDING:
+            self._open_keycloak_login()
+        else:
+            self._open_auth_entry()
         if not self._has_lk_session():
             self._fill_credentials()
             self._submit_otp_if_needed()

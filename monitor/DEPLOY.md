@@ -130,7 +130,7 @@ crontab -e
 | Режим | Скрипт | Частота | Что делает | Telegram |
 |-------|--------|---------|------------|----------|
 | **Probe** | `run_light.sh` | каждые 10 мин | только HTTP | падение / восстановление |
-| **Full** | `run_daily.sh` | 2 раза в день | HTTP + pytest API | сводка OK или алерт FAIL |
+| **Full** | `run_daily.sh` | 2 раза в день | HTTP + Минцифр + pytest API | сводка OK или алерт FAIL |
 
 ### Настройки в `monitor/.env`
 
@@ -154,7 +154,7 @@ crontab -e
 # HTTP-probe каждые 10 минут
 */10 * * * * /opt/test_BID_AI/monitor/run_light.sh >> /opt/test_BID_AI/monitor/probe.log 2>&1
 
-# Полный прогон pytest — 08:00 и 20:00 МСК (сервер в UTC: 05:00 и 17:00)
+# Полный прогон: HTTP + Минцифр + pytest — 08:00 и 20:00 МСК (сервер в UTC: 05:00 и 17:00)
 0 5,17 * * * /opt/test_BID_AI/monitor/run_daily.sh >> /opt/test_BID_AI/monitor/cron.log 2>&1
 ```
 
