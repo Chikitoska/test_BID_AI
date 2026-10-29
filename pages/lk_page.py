@@ -24,7 +24,6 @@ class LkPage:
     CONTENT = "[data-testid='md-content']"
     FOOTER = "[data-testid='md-footer']"
     USER_BADGE = "[data-testid='md-user_badge']"
-    BTN_WRITE_US = "[data-testid='btn-write_us']"
     BTN_HELP = "[data-testid='btn-help-page']"
 
     NAV_ITEMS = ("Витрина", "Профиль компании", "Аккредитация", "Заявки")
@@ -94,11 +93,11 @@ class LkPage:
         return items
 
     def header_buttons_visible(self) -> dict[str, bool]:
-        result: dict[str, bool] = {}
-        for testid in (self.BTN_WRITE_US, self.BTN_HELP):
-            elements = self.driver.find_elements(By.CSS_SELECTOR, testid)
-            result[testid] = any(el.is_displayed() and el.is_enabled() for el in elements)
-        return result
+        """Кнопки шапки, которые ещё есть в UI. «Написать нам» / btn-write_us сняты."""
+        elements = self.driver.find_elements(By.CSS_SELECTOR, self.BTN_HELP)
+        return {
+            self.BTN_HELP: any(el.is_displayed() and el.is_enabled() for el in elements),
+        }
 
     def footer_link_texts(self) -> list[str]:
         footer = self._visible(self.FOOTER)

@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """
-Полный регресс ЛК (pytest tests/lk/ + Allure).
+Боевой UI-прогон (~каждые 2 ч): ЛК + чат-бот (лендинг/ЛК) + Минцифр + Allure.
 
-Боевой прогон 2 раза в день — не prod-мониторинг, а детальная проверка UI.
-Результаты: allure-results/lk-YYYYMMDD-HHMM/
+Не prod-пульс (это health каждые 5 мин). Результаты: allure-results/lk-YYYYMMDD-HHMM/
 """
 
 from __future__ import annotations
@@ -58,6 +57,9 @@ def _run_lk_pytest() -> PytestResult:
     cmd = [
         str(CFG_ROOT / ".venv" / "bin" / "pytest"),
         "tests/lk/",
+        "tests/ui/selenium_ui/test_landing_chatbot.py",
+        "tests/ui/selenium_ui/test_mincifry.py",
+        "--ignore=tests/lk/test_lk_smoke.py",
         "-v",
         "--tb=short",
         "--reruns",
@@ -106,7 +108,11 @@ def main() -> int:
     lk_wait = float(os.getenv("CHROME_LOCK_WAIT_LK_PYTEST_SEC", "900"))
     try:
         with chrome_run_lock(owner="lk_pytest", wait_sec=lk_wait):
-            print("Запуск pytest tests/lk/ … обычно 4–5 мин, подождите", flush=True)
+            print(
+                "Запуск боевого pytest: tests/lk + чат-бот лендинга + Минцифр "
+                "(ignore leftover test_lk_smoke.py) … обычно 5–8 мин",
+                flush=True,
+            )
             result = _run_lk_pytest()
     except ChromeBusyError as exc:
         print(f"FAIL: {exc}", flush=True)

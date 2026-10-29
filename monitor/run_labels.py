@@ -17,7 +17,7 @@ RUN_TYPE_ZONES: dict[str, str] = {
     "probe": "HTTP-проверки лендинга (run_light)",
     "health": "лендинг (HTTP), чат-бот лендинга/ЛК или личный кабинет (run_health_monitor)",
     "full": "HTTP/API лендинга, страница Минцифр и pytest tests/api (run_daily)",
-    "lk_pytest": "pytest tests/lk — авторизация и UI ЛК (run_lk_pytest)",
+    "lk_pytest": "pytest ЛК + чат-бот (лендинг/ЛК) + Минцифр (run_lk_pytest)",
     "lk": "личный кабинет",
     "mincifry": "лендинг: блок Минцифр, Яндекс Браузер, сертификаты, FAQ, футер",
 }
