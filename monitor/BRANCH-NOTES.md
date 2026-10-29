@@ -1,12 +1,13 @@
-# Ветки — не забыть
+# Заметки по веткам monitor
 
-бэклог: `monitor/BACKLOG.md` (ветка `docs/monitor-backlog`)
+бэклог: `monitor/BACKLOG.md`
 
-## ⛔ `feature/unified-spa-uuid`
+- **`feature/grafana-errors-xlsx-export`** — HTTP Basic Auth выгрузка `bid_failure` → XLSX + ссылка Grafana `${__from}`/`${__to}`. См. `monitor/EXPORT-ERRORS-XLSX.md`.
+- **`feature/unified-spa-uuid`** — единый SPA UUID через cookie `gpn_spa_custom_user_id_cookie`. Фронт уже на PROD; ветка сливается в `main`.
 
-**НЕ мержить в `main`. НЕ выкатывать на VPS** — пока пользователь явно не скажет.
+## `feature/unified-spa-uuid`
 
-Смысл ветки: единый хардкодный SPA UUID на лендинг + Keycloak + portal-fe (ЛК); адаптация логики фронта (`getOrCreateCustomUserId` / shared cookie), без `crypto.randomUUID()`.
+Смысл: единый хардкодный SPA UUID на лендинг + Keycloak + portal-fe (ЛК); адаптация логики фронта (`getOrCreateCustomUserId` / shared cookie), без `crypto.randomUUID()`.
 
 ### Сделано
 
@@ -16,6 +17,7 @@
 - Domain cookie: `bid.gazprom-neft.ru` (видны на bid / id.bid / lk.bid).
 - Атрибуты cookie (как у фронта `setSharedCookie`): `path=/`, `Secure` (на https / CDP), `SameSite=Lax`, `max-age` = `SPA_USER_ID_COOKIE_MAX_AGE_SEC` (дефолт `365*24*60*60`).
 - `monitor/verify_analytics_uid.py`: основной check = cookie + POST `/events`; localStorage — информативно/warn.
+- HTTP POST `/events` в автотестах тоже шлёт этот же UUID.
 
 ### Ответы фронта (2026-09-25)
 
@@ -29,12 +31,3 @@
 | 6 | `max-age` = фронтовый `DEFAULT_COOKIE_AGE_SECONDS`? | ✅ ДА ставить как у них, **но число не назвали** |
 | — | Cookie key `gpn_spa_custom_user_id_cookie` | ✅ уже в коде |
 | — | `Secure` + `SameSite=Lax` | ⚠️ **не подтверждено явно**; в коде как у фронта (`setSharedCookie`) |
-
-### Ещё нужно спросить у фронта
-
-- **Число `DEFAULT_COOKIE_AGE_SECONDS`** — в прошлых кусках кода константа есть по имени, значения нет. Сейчас у нас дефолт `31536000` (365 дней). Когда дадут число — выставить то же в `SPA_USER_ID_COOKIE_MAX_AGE_SEC`.
-- **Дата релиза на prod** — чтобы синхронно выкатить эту ветку (merge → VPS только по явной команде).
-
-### Ждёт отмашки
-
-- Merge в `main` и деплой на VPS — только по явной команде.

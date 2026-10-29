@@ -23,16 +23,31 @@ class FailureEvent:
 
 def failures_from_checks(results: list[CheckResult]) -> list[FailureEvent]:
     from monitor.alerts import failure_detail
+    from monitor.pytest_failures import extract_failure_url, format_rich_failure_error
 
-    return [
-        FailureEvent(
-            check=item.name,
-            label=get_check_label(item.name),
-            error=failure_detail(item),
+    events: list[FailureEvent] = []
+    for item in results:
+        if item.success:
+            continue
+        detail = failure_detail(item)
+        url = extract_failure_url(detail) or (item.url or None)
+        # HTTP-проверки уже читаемы; обогащаем UI/Selenium с пустым Message.
+        if item.method == "UI" or "Message:" in (detail or ""):
+            error = format_rich_failure_error(
+                test_name=item.name,
+                detail=detail,
+                url=url if url and not url.startswith("about:") else None,
+            )
+        else:
+            error = detail
+        events.append(
+            FailureEvent(
+                check=item.name,
+                label=get_check_label(item.name),
+                error=error[:2000],
+            )
         )
-        for item in results
-        if not item.success
-    ]
+    return events
 
 
 def write_failure_events(*, run_type: str, failures: list[FailureEvent]) -> None:
@@ -89,16 +104,22 @@ def write_pytest_run(
     passed: int,
     failed: int,
     duration_sec: float,
+    run_status: str = "",
 ) -> None:
-    """run_daily → bid_run (Лендинг + API autotests)."""
+    """run_daily → bid_run (Лендинг + API autotests).
+
+    run_status: ok | fail | autotest — оранжевый в Grafana при autotest.
+    """
     if not INFLUXDB_TOKEN:
         return
 
     success = 1 if failed == 0 and total > 0 else 0
+    status = (run_status or ("ok" if success else "fail")).strip() or "fail"
     with InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
         write_api = client.write_api(write_options=SYNCHRONOUS)
         point = (
             Point("bid_run")
+            .tag("run_status", status[:32])
             .field("total", total)
             .field("passed", passed)
             .field("failed", failed)
@@ -149,16 +170,31 @@ def write_lk_check_results(results: list[CheckResult]) -> None:
         write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points)
 
 
-def write_lk_run(*, success: bool, failed_count: int, duration_sec: float) -> None:
-    """run_health_monitor → bid_lk_run (Лендинг + мин ЛК)."""
+def write_lk_run(
+    *,
+    success: bool,
+    failed_count: int,
+    duration_sec: float,
+    skipped: bool = False,
+    run_status: str = "",
+) -> None:
+    """run_health_monitor → bid_lk_run (Лендинг + мин ЛК).
+
+    run_status: ok | fail | skipped_busy | autotest
+    (legacy tag value infra ≡ autotest — читается Grafana как оранжевый)
+    skipped=1 — ЛК не проверяли (Chrome занят); success при этом 0 (не зелёный).
+    """
     if not INFLUXDB_TOKEN:
         return
 
+    status = (run_status or ("ok" if success else "fail")).strip() or "fail"
     with InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
         write_api = client.write_api(write_options=SYNCHRONOUS)
         point = (
             Point("bid_lk_run")
+            .tag("run_status", status[:32])
             .field("success", 1 if success else 0)
+            .field("skipped", 1 if skipped else 0)
             .field("failed_checks", failed_count)
             .field("duration_sec", duration_sec)
             .time(datetime.now(timezone.utc))
@@ -172,16 +208,22 @@ def write_lk_pytest_run(
     passed: int,
     failed: int,
     duration_sec: float,
+    run_status: str = "",
 ) -> None:
-    """run_lk_pytest → bid_lk_pytest (Боевой прогон ЛК)."""
+    """run_lk_pytest → bid_lk_pytest (Боевой прогон ЛК).
+
+    run_status: ok | fail | autotest — оранжевый в Grafana при autotest.
+    """
     if not INFLUXDB_TOKEN:
         return
 
     success = 1 if failed == 0 and total > 0 else 0
+    status = (run_status or ("ok" if success else "fail")).strip() or "fail"
     with InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
         write_api = client.write_api(write_options=SYNCHRONOUS)
         point = (
             Point("bid_lk_pytest")
+            .tag("run_status", status[:32])
             .field("total", total)
             .field("passed", passed)
             .field("failed", failed)

@@ -23,6 +23,7 @@ from monitor.alert_policy import notify_full_run_result
 from monitor.checks import run_http_checks
 from monitor.config import INFLUX_ENABLED, MONITOR_RUN_PYTEST, MONITOR_RUN_UI, PROJECT_ROOT
 from monitor.github_dispatch import notify_github_on_failure
+from monitor.health_classify import pytest_run_status
 from monitor.http_session import create_monitor_session
 from monitor.metrics import (
     failures_from_checks,
@@ -31,7 +32,11 @@ from monitor.metrics import (
     write_pytest_run,
 )
 from monitor.probe_alert import should_send_daily_telegram
-from monitor.pytest_failures import parse_pytest_failures, pytest_summary_failure
+from monitor.pytest_failures import (
+    classify_lk_pytest_failure,
+    parse_pytest_failures,
+    pytest_summary_failure,
+)
 
 
 @dataclass
@@ -126,6 +131,22 @@ def main() -> int:
         pytest_result = PytestResult(0, 0, 0, 0, 0.0, "", False)
         print("Pytest: skipped (MONITOR_RUN_PYTEST=false)")
 
+    overall_ok = not http_failed and pytest_result.pytest_failed == 0
+    # Grafana bid_run = только pytest: HTTP-фейлы идут в bid_check/таблицу.
+    pytest_metric_ok = pytest_result.pytest_failed == 0 and pytest_result.total > 0
+    if pytest_metric_ok:
+        pytest_kind = None
+    elif pytest_result.pytest_failed > 0 or pytest_result.crashed:
+        pytest_kind = classify_lk_pytest_failure(
+            pytest_result.output,
+            failed=max(pytest_result.pytest_failed, 1),
+            total=pytest_result.total,
+        )
+    else:
+        # total=0 без провала — pytest skipped; success=0 → красный как раньше.
+        pytest_kind = "prod"
+    run_status = pytest_run_status(overall_ok=pytest_metric_ok, failure_kind=pytest_kind)
+
     if INFLUX_ENABLED:
         try:
             write_check_results(http_results)
@@ -134,8 +155,9 @@ def main() -> int:
                 passed=pytest_result.passed,
                 failed=pytest_result.pytest_failed,
                 duration_sec=pytest_result.duration_sec,
+                run_status=run_status,
             )
-            print("Metrics sent to InfluxDB")
+            print(f"Metrics sent to InfluxDB (run_status={run_status})")
         except Exception as exc:
             print(f"WARN: InfluxDB write failed: {exc}")
 
@@ -157,8 +179,6 @@ def main() -> int:
             write_failure_events(run_type="full", failures=failure_events)
         except Exception as exc:
             print(f"WARN: InfluxDB failure events: {exc}")
-
-    overall_ok = not http_failed and pytest_result.pytest_failed == 0
 
     notify_full_run_result(
         http_results,
