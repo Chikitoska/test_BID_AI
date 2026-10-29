@@ -34,11 +34,11 @@ Python QA/ops-контур вокруг **BID** (лендинг + личный �
 - Снаружи: nginx **`/export/`** → localhost:8765.
 - Подробности: `monitor/EXPORT-ERRORS-XLSX.md`.
 
-## Ветка / ожидание — не выкатывать
+## SPA UUID (cookie)
 
-Ветка **`feature/unified-spa-uuid`**: единый SPA UUID (landing + Keycloak + portal-fe).
+Ветка **`feature/unified-spa-uuid`**: единый SPA UUID на landing + Keycloak + portal-fe.
 
-**Не мержить в `main` и не деплоить на VPS**, пока на фронте не выйдет cookie `gpn_spa_custom_user_id_cookie` и не будет **явной отмашки**. Иначе мониторинг/логин могут разъехаться с продом. См. `monitor/BRANCH-NOTES.md`.
+Фронт на PROD читает cookie `gpn_spa_custom_user_id_cookie`. Мониторинг всегда подставляет `MONITOR_ANALYTICS_UID` (`b1d00000-0000-4000-a000-000000000001`) в эту cookie и в POST `/events`. Проверка: `monitor/verify_analytics_uid.sh`. См. `monitor/BRANCH-NOTES.md`.
 
 ## Бэклог
 

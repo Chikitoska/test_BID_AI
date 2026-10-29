@@ -14,6 +14,7 @@ from config.api_catalog import (
 )
 from config.settings import BASE_URL
 from utils.http_checks import assert_success_status
+from utils.spa_analytics import spa_events_cookie_header, spa_events_payload, spa_events_uid
 
 
 def _url(api: LandingApiMethod) -> str:
@@ -38,8 +39,8 @@ def test_external_landing_api_methods(http_session, api_method: LandingApiMethod
         response = http_session.get(url, timeout=30)
         assert_success_status(response, url)
     elif api_method.method == "POST":
-        # Формат тела: list[RegisterEventInput] (как в Network DevTools)
-        payload = [{"event": "page_view", "counterId": 1212}]
+        # Формат тела: list[RegisterEventInput] + фиксированный MONITOR_ANALYTICS_UID
+        payload = spa_events_payload()
         response = http_session.post(
             url,
             json=payload,
@@ -47,8 +48,10 @@ def test_external_landing_api_methods(http_session, api_method: LandingApiMethod
             headers={
                 "Origin": BASE_URL.rstrip("/"),
                 "Referer": BASE_URL,
+                "Cookie": spa_events_cookie_header(),
             },
         )
+        assert payload[0]["uid"] == spa_events_uid()
         assert response.status_code < 500, (
             f"POST {url} -> {response.status_code}: {response.text[:200]}"
         )
