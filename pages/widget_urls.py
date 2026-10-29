@@ -45,6 +45,40 @@ def mentions_yandex_browser(text: str | None) -> bool:
     return False
 
 
+def is_login_target(url: str | None) -> bool:
+    """Войти / Keycloak — не страница сертификатов Минцифры."""
+    href = (url or "").lower()
+    return any(
+        token in href
+        for token in (
+            "openid-connect",
+            "self-authentication",
+            "id.bid.gazprom-neft.ru",
+            "/login",
+            "keycloak",
+        )
+    )
+
+
+def is_certs_target(url: str | None, text: str | None = None) -> bool:
+    blob = f"{url or ''} {text or ''}".lower()
+    if is_login_target(blob):
+        return False
+    return any(
+        token in blob
+        for token in (
+            "сертификат",
+            "минцифр",
+            "gosuslugi",
+            "/crt",
+            "/certs",
+            "certificate",
+            "яндекс",
+            "yandex",
+        )
+    )
+
+
 def is_yandex_browser_href(url: str | None) -> bool:
     href = (url or "").lower()
     return any(

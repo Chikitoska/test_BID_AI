@@ -1,5 +1,7 @@
 from pages.widget_urls import (
     is_blank_target,
+    is_certs_target,
+    is_login_target,
     is_yandex_browser_href,
     mentions_yandex_browser,
     normalize_page_text,
@@ -34,3 +36,14 @@ def test_normalize_page_text_collapses_nbsp() -> None:
 def test_yandex_browser_href() -> None:
     assert is_yandex_browser_href("https://browser.yandex.ru/")
     assert not is_yandex_browser_href("https://bid.gazprom-neft.ru/")
+
+
+def test_login_target_is_keycloak_not_certs() -> None:
+    login = (
+        "https://id.bid.gazprom-neft.ru/realms/ecoportal/protocol/openid-connect/"
+        "auth?client_id=self-authentication"
+    )
+    assert is_login_target(login)
+    assert not is_certs_target(login, "Войти")
+    assert is_certs_target("https://www.gosuslugi.ru/crt", "Сертификаты")
+    assert is_certs_target("https://bid.gazprom-neft.ru/certs")

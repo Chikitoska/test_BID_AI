@@ -10,6 +10,8 @@ from selenium.webdriver.remote.webdriver import WebDriver
 
 from pages.widget_urls import (
     is_blank_target,
+    is_certs_target,
+    is_login_target,
     is_yandex_browser_href,
     mentions_yandex_browser,
     normalize_page_text,
@@ -93,6 +95,9 @@ class MincifryPage:
         return f" url={url!r} текст={snippet!r}"
 
     def _visible_by_texts(self, snippets: tuple[str, ...]):
+        """Самый короткий видимый узел с текстом — не html/body, иначе клик попадёт в «Войти»."""
+        best = None
+        best_len = 10**9
         for snippet in snippets:
             xpath = f"//*[contains(normalize-space(.), '{snippet}')]"
             try:
@@ -101,13 +106,20 @@ class MincifryPage:
                 continue
             for el in matches:
                 try:
-                    if el.is_displayed():
-                        return el
+                    tag = (el.tag_name or "").lower()
+                    if tag in {"html", "body", "script", "style", "head"}:
+                        continue
+                    if not el.is_displayed():
+                        continue
+                    text = " ".join((el.text or "").split())
+                    if not text or len(text) > 500:
+                        continue
+                    if len(text) < best_len:
+                        best = el
+                        best_len = len(text)
                 except WebDriverException:
                     continue
-            if matches:
-                return matches[0]
-        return None
+        return best
 
     def _wait_banner(self):
         deadline = time.time() + self.timeout
@@ -132,20 +144,81 @@ class MincifryPage:
             time.sleep(0.4)
         return last
 
+    def _href_of(self, element) -> str:
+        try:
+            return (element.get_attribute("href") or "").strip()
+        except WebDriverException:
+            return ""
+
+    def _is_usable_click_target(self, element) -> bool:
+        if element is None:
+            return False
+        href = self._href_of(element)
+        if href and (is_blank_target(href) or is_login_target(href)):
+            return False
+        try:
+            text = " ".join((element.text or "").split())
+        except WebDriverException:
+            text = ""
+        if is_login_target(text) or "войти" in text.lower():
+            return False
+        return True
+
+    def _certs_link(self):
+        try:
+            links = self.driver.find_elements(By.CSS_SELECTOR, "a[href], button")
+        except WebDriverException:
+            return None
+        for el in links:
+            try:
+                if not el.is_displayed():
+                    continue
+            except WebDriverException:
+                continue
+            href = self._href_of(el)
+            try:
+                text = el.text or el.get_attribute("aria-label") or ""
+            except WebDriverException:
+                text = ""
+            if is_certs_target(href, text) and self._is_usable_click_target(el):
+                return el
+        return None
+
     def _clickable_from(self, node):
         if node is None:
             return None
         tag = (node.tag_name or "").lower()
-        if tag in {"a", "button"}:
+        if tag in {"a", "button"} and self._is_usable_click_target(node):
             return node
-        for xpath in (".//a", ".//button", "./ancestor::a[1]", "./ancestor::button[1]"):
+        for xpath in (
+            "./ancestor-or-self::a[1]",
+            "./ancestor-or-self::button[1]",
+            ".//a",
+            ".//button",
+        ):
             try:
                 found = node.find_element(By.XPATH, xpath)
-                if found:
-                    return found
             except WebDriverException:
                 continue
-        return node
+            if self._is_usable_click_target(found):
+                return found
+        container = node
+        for _ in range(8):
+            try:
+                candidates = container.find_elements(By.CSS_SELECTOR, "a, button")
+            except WebDriverException:
+                candidates = []
+            for el in candidates:
+                try:
+                    if el.is_displayed() and self._is_usable_click_target(el):
+                        return el
+                except WebDriverException:
+                    continue
+            try:
+                container = container.find_element(By.XPATH, "..")
+            except WebDriverException:
+                break
+        return self._certs_link() or node
 
     def _click(self, element) -> None:
         self.driver.execute_script("arguments[0].scrollIntoView({block:'center'});", element)
@@ -166,10 +239,12 @@ class MincifryPage:
         banner = self._wait_banner()
         if banner is None:
             raise MincifryError("Блок Минцифр пропал до клика")
-        target = self._clickable_from(banner)
+        target = self._certs_link() or self._clickable_from(banner)
         if target is None:
             raise MincifryError("Блок Минцифр на лендинге некликабелен")
-        href = (target.get_attribute("href") or "").strip()
+        href = self._href_of(target)
+        if href and is_login_target(href):
+            raise MincifryError(f"Клик Минцифр указывает на «Войти», а не на сертификаты: {href!r}")
         if href and is_blank_target(href):
             raise MincifryError(f"Ссылка Минцифр ведёт в about:blank: {href!r}")
 
@@ -186,6 +261,11 @@ class MincifryPage:
             if extra:
                 self.driver.switch_to.window(extra[-1])
             url = (self.driver.current_url or "").strip()
+            if is_login_target(url):
+                raise MincifryError(
+                    "Клик по блоку Минцифр открыл страницу входа Keycloak, "
+                    f"а не сертификаты:{self._debug_where()}"
+                )
             text = normalize_page_text(self._page_text())
             opened = bool(extra) or url != before_url or self._has_yandex_browser()
             loaded = (not is_blank_target(url)) and (len(text) > 20 or self._has_yandex_browser())
@@ -196,6 +276,11 @@ class MincifryPage:
                 continue
             time.sleep(0.4)
         url = (self.driver.current_url or "").strip()
+        if is_login_target(url):
+            raise MincifryError(
+                "Клик по блоку Минцифр открыл страницу входа Keycloak, "
+                f"а не сертификаты:{self._debug_where()}"
+            )
         if is_blank_target(url):
             raise MincifryError(f"После клика открылся пустой URL:{self._debug_where()}")
         raise MincifryError(f"Клик по блоку Минцифр не открыл новую страницу:{self._debug_where()}")
