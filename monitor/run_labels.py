@@ -6,7 +6,7 @@ from __future__ import annotations
 RUN_TYPE_LABELS: dict[str, str] = {
     "probe": "Мониторинг каждые 5 мин",  # legacy run_light
     "health": "Лендинг + мин ЛК (каждые 5 мин)",
-    "full": "Лендинг + API autotests",
+    "full": "Лендинг + сервисы (2×/день)",
     "lk_pytest": "Боевой прогон ЛК (каждые 2 ч)",
     "lk": "Лендинг + мин ЛК",
     "mincifry": "Лендинг: Минцифр (ручной прогон)",

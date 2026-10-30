@@ -19,7 +19,7 @@ from monitor.config import INFLUXDB_BUCKET, INFLUXDB_ORG, INFLUXDB_TOKEN, INFLUX
 
 RUN_NAMES = {
     "health": "Лендинг + мин ЛК (5 мин)",
-    "full": "Лендинг + API autotests",
+    "full": "Лендинг + сервисы (2×/день)",
     "lk_pytest": "Боевой прогон ЛК (2 ч)",
 }
 

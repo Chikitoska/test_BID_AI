@@ -33,7 +33,7 @@ MSK = timezone(timedelta(hours=3))
 
 RUN_NAMES = {
     "health": "Лендинг + мин ЛК (5 мин)",
-    "full": "Лендинг + API autotests",
+    "full": "Лендинг + сервисы (2×/день)",
     "lk_pytest": "Боевой прогон ЛК (2 ч)",
     "probe": "HTTP probe (legacy)",
 }

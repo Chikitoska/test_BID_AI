@@ -2,23 +2,15 @@
 
 from __future__ import annotations
 
-import socket
 from pathlib import Path
 
 import pytest
 
 from pages.chatbot_widget import ChatbotWidget
 from pages.landing_page import LandingPage
+from tests.ui.selenium_ui.live_bid import require_live_bid
 
 FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures"
-
-
-def _bid_tcp_ok(timeout: float = 5) -> bool:
-    try:
-        with socket.create_connection(("bid.gazprom-neft.ru", 443), timeout=timeout):
-            return True
-    except OSError:
-        return False
 
 
 @pytest.mark.ui
@@ -37,8 +29,5 @@ def test_landing_chatbot_skips_login_and_registration(driver):
 @pytest.mark.ui
 @pytest.mark.selenium
 def test_landing_chatbot_full_flow(landing_page: LandingPage):
-    if not _bid_tcp_ok():
-        pytest.skip(
-            "BID недоступен с этой машины (TCP :443 timeout) — живой прогон лендинга пропущен"
-        )
+    require_live_bid()
     ChatbotWidget(landing_page.driver).assert_interactive(context="Лендинг")

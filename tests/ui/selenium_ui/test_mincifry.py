@@ -2,23 +2,15 @@
 
 from __future__ import annotations
 
-import socket
 from pathlib import Path
 
 import pytest
 
 from pages.landing_page import LandingPage
 from pages.mincifry_page import MincifryPage
+from tests.ui.selenium_ui.live_bid import require_live_bid
 
 FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures"
-
-
-def _bid_tcp_ok(timeout: float = 5) -> bool:
-    try:
-        with socket.create_connection(("bid.gazprom-neft.ru", 443), timeout=timeout):
-            return True
-    except OSError:
-        return False
 
 
 @pytest.mark.ui
@@ -37,9 +29,6 @@ def test_mincifry_card_click_skips_login_and_registration(driver):
 @pytest.mark.ui
 @pytest.mark.selenium
 def test_landing_mincifry_full_flow(driver):
-    if not _bid_tcp_ok():
-        pytest.skip(
-            "BID недоступен с этой машины (TCP :443 timeout) — живой прогон лендинга пропущен"
-        )
+    require_live_bid()
     LandingPage(driver).open()
     MincifryPage(driver).assert_full_flow()

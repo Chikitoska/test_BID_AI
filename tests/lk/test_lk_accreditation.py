@@ -24,9 +24,8 @@ def test_lk_accreditation_level_selection_visible(lk_page: LkPage):
     if state == "page_error":
         pytest.fail("Раздел «Аккредитация» не загрузился или нет текущего уровня")
     if state == "max_level":
-        pytest.skip(
-            f"Нет доступных уровней выше текущего ({current}) — UI выбора не обязателен"
-        )
+        assert current >= 1, f"Максимальный уровень без номера: {current}"
+        return
     assert lk_page.accreditation_level_selection_available(), (
         "Не отображается UI выбора уровня аккредитации "
         "(карточки «ДОСТУПНО» или опросник «Выбрать уровень»)"
@@ -39,9 +38,8 @@ def test_lk_accreditation_apply_button_without_submit(lk_page: LkPage):
     if state == "page_error":
         pytest.fail("Раздел «Аккредитация» не загрузился или нет текущего уровня")
     if state == "max_level":
-        pytest.skip(
-            f"Нет пути повышения уровня (текущий={current}) — кнопка выбора не обязательна"
-        )
+        assert current >= 1, f"Максимальный уровень без номера: {current}"
+        return
     assert lk_page.accreditation_apply_button_visible(), (
         "Не отображается элемент начала выбора уровня "
         "(«Заполнить анкету», «Выбрать уровень» или «Далее»)"

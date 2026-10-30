@@ -103,7 +103,7 @@ def _run_pytest() -> PytestResult:
 
 def _run_daily_mincifry() -> list[CheckResult]:
     """Страница Минцифр — часть дневного прогона (Chrome, lock с health/lk_pytest)."""
-    wait_sec = float(os.getenv("CHROME_LOCK_WAIT_DAILY_SEC", "360"))
+    wait_sec = float(os.getenv("CHROME_LOCK_WAIT_DAILY_SEC", "1200"))
     print("Минцифр: UI-проверка страницы сертификатов…", flush=True)
     try:
         with chrome_run_lock(owner="daily_mincifry", wait_sec=wait_sec):
@@ -144,12 +144,7 @@ def main() -> int:
         status = "OK" if item.success else "FAIL"
         print(f"[{status}] {item.name} {item.http_code} {item.duration_ms:.0f}ms {item.error}")
 
-    landing_ok = any(item.name == "main_page" and item.success for item in http_results)
-    if landing_ok:
-        mincifry_results = _run_daily_mincifry()
-    else:
-        mincifry_results = []
-        print("SKIP Минцифр: лендинг HTTP недоступен", flush=True)
+    mincifry_results = _run_daily_mincifry()
     for item in mincifry_results:
         status = "OK" if item.success else "FAIL"
         print(f"[{status}] {item.name} {item.duration_ms:.0f}ms {item.error}")

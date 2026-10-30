@@ -106,7 +106,7 @@ def write_pytest_run(
     duration_sec: float,
     run_status: str = "",
 ) -> None:
-    """run_daily → bid_run (Лендинг + API autotests).
+    """run_daily → bid_run (Лендинг + сервисы, 2×/день).
 
     run_status: ok | fail | autotest — оранжевый в Grafana при autotest.
     """

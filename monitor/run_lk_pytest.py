@@ -76,8 +76,10 @@ def _run_lk_pytest() -> PytestResult:
         "HttpStatusError",
         f"--alluredir={allure_dir}",
     ]
+    env = os.environ.copy()
+    env["MONITOR_REQUIRE_LIVE"] = "1"
     start = time.perf_counter()
-    proc = subprocess.run(cmd, cwd=PROJECT_ROOT, capture_output=True, text=True)
+    proc = subprocess.run(cmd, cwd=PROJECT_ROOT, capture_output=True, text=True, env=env)
     duration = time.perf_counter() - start
     output = (proc.stdout or "") + (proc.stderr or "")
 
@@ -105,7 +107,7 @@ def _run_lk_pytest() -> PytestResult:
 
 def main() -> int:
     print("=== BID LK Full Pytest (Allure) ===", flush=True)
-    lk_wait = float(os.getenv("CHROME_LOCK_WAIT_LK_PYTEST_SEC", "900"))
+    lk_wait = float(os.getenv("CHROME_LOCK_WAIT_LK_PYTEST_SEC", "1800"))
     try:
         with chrome_run_lock(owner="lk_pytest", wait_sec=lk_wait):
             print(
