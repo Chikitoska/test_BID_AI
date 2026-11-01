@@ -1,35 +1,36 @@
 """Fixtures Selenium UI-тестов."""
 
+from pathlib import Path
+
 import pytest
+from selenium.common.exceptions import WebDriverException
+
+from monitor.load_env import load_project_env
+
+# Как tests/lk/conftest.py: .env до импорта фабрики (MONITOR_HEADLESS, CHROME_BINARY).
+load_project_env(Path(__file__).resolve().parents[2])
 
 
 @pytest.fixture(scope="function")
 def driver():
-    from selenium import webdriver
-    from selenium.webdriver.chrome.options import Options
-    from selenium.webdriver.chrome.service import Service as ChromeService
-    from webdriver_manager.chrome import ChromeDriverManager
+    """Тот же Chrome, что у ЛК/health: headless на VPS, system chromedriver, retry.
 
+    Старый путь (ChromeDriverManager + maximize без --headless) на сервере без DISPLAY
+    даёт SessionNotCreatedException: Chrome instance exited — в т.ч. на локальных HTML-фикстурах.
+    """
     from config.settings import IMPLICIT_WAIT, PAGE_LOAD_TIMEOUT
+    from utils.selenium_factory import create_chrome_driver
 
-    options = Options()
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--window-size=1920,1080")
-    options.set_capability("goog:loggingPrefs", {"performance": "ALL", "browser": "ALL"})
-
-    service = ChromeService(ChromeDriverManager().install())
-    browser = webdriver.Chrome(service=service, options=options)
+    browser = create_chrome_driver(enable_performance_log=True)
     browser.set_page_load_timeout(PAGE_LOAD_TIMEOUT)
     browser.implicitly_wait(IMPLICIT_WAIT)
-    browser.maximize_window()
-    browser.execute_cdp_cmd("Network.enable", {})
-    browser.execute_cdp_cmd("Performance.enable", {})
-
-    yield browser
-
-    browser.quit()
+    try:
+        yield browser
+    finally:
+        try:
+            browser.quit()
+        except WebDriverException:
+            pass
 
 
 @pytest.fixture(scope="function")
