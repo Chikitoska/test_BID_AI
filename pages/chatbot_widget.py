@@ -16,31 +16,43 @@ class ChatbotError(Exception):
 
 
 # Прод: Consta-виджет без iframe. Иконка — _iconWrapper_*, панель — _chatWrapper_*.
+# Ищем глубоко (shadow) и не режем видимый FAB из‑за r.bottom / «строго 20–120px».
 _LAUNCHER_JS = r"""
 const skip = /войти|логин|cookie|соглас|покупател|поставщик|получить id|получить идентификатор|сертификат/i;
+function allDeep(sel) {
+  const out = [];
+  function walk(root) {
+    if (!root || !root.querySelectorAll) return;
+    root.querySelectorAll(sel).forEach((el) => out.push(el));
+    root.querySelectorAll('*').forEach((el) => {
+      if (el.shadowRoot) walk(el.shadowRoot);
+    });
+  }
+  walk(document);
+  return out;
+}
 function vis(el) {
   if (!el || !el.getBoundingClientRect) return null;
+  try { el.scrollIntoView({block: 'nearest', inline: 'nearest'}); } catch (e) {}
   const r = el.getBoundingClientRect();
   const st = window.getComputedStyle(el);
   if (st.visibility === 'hidden' || st.display === 'none') return null;
-  if (r.width < 20 || r.height < 20 || r.bottom <= 0) return null;
+  if (parseFloat(st.opacity || '1') === 0) return null;
+  if (r.width < 16 || r.height < 16) return null;
   return r;
 }
 function labelOf(el) {
   return ((el.getAttribute('aria-label') || el.getAttribute('title') || el.innerText || '') + '').trim();
 }
-const icons = Array.from(document.querySelectorAll('[class*="_iconWrapper_"]'));
-const iconHit = icons.find((el) => {
-  const r = vis(el);
-  return r && r.width <= 120 && r.height <= 120;
-});
+const icons = allDeep('[class*="_iconWrapper_"], [class*="iconWrapper"], [class*="IconWrapper"], #chat-fab');
+const iconHit = icons.find((el) => vis(el));
 if (iconHit) return iconHit;
 
 const re = /ассистент|помощник|чат[-\s]?бот|задать вопрос|написать (нам|в чат)/i;
-const clsOk = /chat-?bot|chatbot|assistant|jivo|webim|helpdesk|support-widget|_iconWrapper_/i;
-const nodes = Array.from(document.querySelectorAll(
-  'button, a, [role="button"], [class*="_iconWrapper_"], [class*="chat"], [id*="chat"], [class*="assistant"], [id*="assistant"], [class*="widget"]'
-));
+const clsOk = /chat-?bot|chatbot|assistant|jivo|webim|helpdesk|support-widget|_iconWrapper_|iconWrapper/i;
+const nodes = allDeep(
+  'button, a, [role="button"], [class*="_iconWrapper_"], [class*="iconWrapper"], [class*="chat"], [id*="chat"], [class*="assistant"], [id*="assistant"], [class*="widget"]'
+);
 return nodes.find((el) => {
   const href = ((el.getAttribute && (el.getAttribute('href') || '')) + '').toLowerCase();
   if (/self-authentication|openid-connect|\/registration|id\.bid\.gazprom-neft/.test(href)) return false;
@@ -49,9 +61,30 @@ return nodes.find((el) => {
   const cls = ((el.className || '') + ' ' + (el.id || '')).toString();
   if (!re.test(label) && !clsOk.test(cls)) return false;
   const r = vis(el);
-  return r && r.width <= 280 && r.height <= 160;
+  return r && r.width <= 320 && r.height <= 240;
 }) || null;
 """
+
+def is_displayed_launcher(element) -> bool:
+    """Видимый launcher: displayed + ненулевой размер (не «сразу нет»)."""
+    try:
+        if not element.is_displayed():
+            return False
+        size = element.size or {}
+        return float(size.get("width") or 0) >= 16 and float(size.get("height") or 0) >= 16
+    except WebDriverException:
+        return False
+
+
+_LAUNCHER_SELECTORS = (
+    "[class*='_iconWrapper_']",
+    "[class*='iconWrapper']",
+    "[class*='IconWrapper']",
+    "#chat-fab",
+    "[aria-label*='ассистент']",
+    "[aria-label*='помощник']",
+    "[title*='ассистент']",
+)
 
 _PANEL_JS = r"""
 function openPanel() {
@@ -324,14 +357,32 @@ class ChatbotWidget:
             uniq.append((btn, text))
         return uniq
 
-    def _launcher_visible(self) -> bool:
-        def look():
+    def _selenium_launcher(self):
+        """Запасной поиск, если JS-хит слишком строгий, а иконка на странице есть."""
+        for selector in _LAUNCHER_SELECTORS:
             try:
-                return self.driver.execute_script(_LAUNCHER_JS) is not None
+                candidates = self.driver.find_elements(By.CSS_SELECTOR, selector)
             except WebDriverException:
-                return False
+                continue
+            for element in candidates:
+                if is_displayed_launcher(element):
+                    return element
+        return None
 
-        return bool(self._first_context(look)) or self._panel_present()
+    def _js_launcher(self):
+        try:
+            return self.driver.execute_script(_LAUNCHER_JS)
+        except WebDriverException:
+            return None
+
+    def _find_visible_launcher(self):
+        def look():
+            return self._js_launcher() or self._selenium_launcher()
+
+        return self._first_context(look)
+
+    def _launcher_visible(self) -> bool:
+        return self._find_visible_launcher() is not None or self._panel_present()
 
     def _wait_until(self, predicate, *, timeout: float | None = None) -> bool:
         deadline = time.time() + (timeout if timeout is not None else self.timeout)
@@ -348,10 +399,13 @@ class ChatbotWidget:
         dismiss_blocking_lk_modals(self.driver, timeout=4)
 
     def step_icon_visible(self, context: str) -> None:
+        """Ждём, пока иконка появится и станет displayed — не падаем на первом кадре SPA."""
         self._dismiss_page_overlays()
-        if self._wait_until(self._launcher_visible):
+        try:
+            WebDriverWait(self.driver, self.timeout).until(lambda _d: self._launcher_visible())
             return
-        raise ChatbotError(f"{context}: иконка чат-бота не отображается")
+        except TimeoutException:
+            raise ChatbotError(f"{context}: иконка чат-бота не отображается") from None
 
     def step_icon_clickable(self, context: str) -> None:
         if self._panel_present():
@@ -361,7 +415,7 @@ class ChatbotWidget:
         self._topics_before_open = len(self._collect_topics())
 
         def try_click():
-            el = self.driver.execute_script(_LAUNCHER_JS)
+            el = self._js_launcher() or self._selenium_launcher()
             if el is None:
                 return None
             try:
@@ -514,7 +568,7 @@ class ChatbotWidget:
                 pass
             if self._panel_present():
                 def toggle_icon():
-                    el = self.driver.execute_script(_LAUNCHER_JS)
+                    el = self._js_launcher() or self._selenium_launcher()
                     if el is None:
                         return None
                     self._click(el)
