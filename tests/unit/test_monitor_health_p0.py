@@ -137,6 +137,11 @@ def test_health_run_status_busy() -> None:
     assert health_run_status(overall_ok=False, lk_skipped_busy=True) == "skipped_busy"
 
 
+def test_health_run_status_busy_http_ok_is_green() -> None:
+    """HTTP лендинга прошёл — весь health не красим в skipped_busy."""
+    assert health_run_status(overall_ok=True, lk_skipped_busy=True, http_ok=True) == "ok"
+
+
 def test_health_run_status_legacy_infra_alias() -> None:
     assert health_run_status(overall_ok=False, failure_kind="infra") == "autotest"
 
@@ -201,6 +206,27 @@ def test_classify_lk_pytest_http_5xx_prod() -> None:
     out = "FAILED tests/lk/x.py::t - HttpStatusError: /error/500\n1 failed"
     assert classify_lk_pytest_failure(out, failed=1, total=5) == "prod"
     assert pytest_run_status(overall_ok=False, failure_kind="prod") == "fail"
+
+
+def test_classify_events_harness_miss_is_autotest() -> None:
+    results = [
+        _http("main_page", code=200, success=True),
+        _ui(
+            "landing_chatbot_events",
+            "landing_chatbot: POST /events не обнаружен (harness: страница 200, сниффер пуст)",
+        ),
+    ]
+    assert is_autotest_error(results[1].error) is True
+    assert classify_health_failure(results) == "autotest"
+
+
+def test_classify_spa_back_5xx_is_prod() -> None:
+    results = [
+        _http("main_page", code=200, success=True),
+        _ui("landing_chatbot_events", "landing_chatbot: spa-back HTTP 502 — POST /events"),
+    ]
+    assert is_autotest_error(results[1].error) is False
+    assert classify_health_failure(results) == "prod"
 
 
 def test_classify_lk_pytest_dns_prod() -> None:

@@ -39,6 +39,7 @@ def test_format_rich_with_url() -> None:
     )
     assert err == (
         "test_lk_accreditation_navigation | "
+        "lk | "
         "https://lk.bid.gazprom-neft.ru/accreditation | "
         "TimeoutException: element not found / wait timed out"
     )
@@ -101,9 +102,20 @@ FAILED tests/lk/test_lk_smoke.py::test_lk_nav_profile_and_back - selenium.common
     assert len(events) == 1
     assert events[0].error == (
         "test_lk_nav_profile_and_back | "
+        "lk | "
         "https://lk.bid.gazprom-neft.ru/profile | "
         "TimeoutException: element not found / wait timed out"
     )
+
+
+def test_format_rich_empty_detail_uses_spa_back_host() -> None:
+    err = format_rich_failure_error(
+        test_name="test_external_landing_api_methods[spa_events]",
+        detail="",
+        url="https://spa-back.gazprom-neft.ru/events",
+    )
+    assert "spa-back" in err
+    assert "unknown error" not in err
 
 
 def test_extract_failure_url_prefers_lk() -> None:
@@ -130,6 +142,7 @@ def test_failures_from_checks_enriches_ui_empty_message() -> None:
     assert len(events) == 1
     assert events[0].error == (
         "lk_auth_login | "
+        "lk | "
         "https://lk.bid.gazprom-neft.ru/service-providers | "
         "TimeoutException: element not found / wait timed out"
     )

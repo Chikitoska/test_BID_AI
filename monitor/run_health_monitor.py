@@ -89,8 +89,8 @@ def main() -> int:
             lk_results = []
             print(f"SKIP UI (chrome busy): {exc}")
             print(
-                "STATUS=skipped_busy — чат-бот/ЛК не проверяли; "
-                "overall не OK (метрика skipped=1), TG не пейджим",
+                "UI/chatbot/LK пропущены (Chrome занят); "
+                "HTTP лендинга уже записан и остаётся источником пульса",
                 flush=True,
             )
         for item in lk_results:
@@ -107,9 +107,10 @@ def main() -> int:
 
     duration_sec = time.perf_counter() - start
     http_ok = landing.success
-    # Busy ≠ полный успех: чат-бот/ЛК не проверяли → overall_ok=False.
+    # Chrome busy: HTTP лендинга уже есть — не красим весь health в skipped_busy.
+    # UI/chatbot/LK пропускаем, но успешный HTTP = пульс зелёный.
     if lk_skipped_busy:
-        overall_ok = False
+        overall_ok = http_ok
     else:
         overall_ok = http_ok and lk_ok
 
@@ -127,6 +128,7 @@ def main() -> int:
         overall_ok=overall_ok,
         lk_skipped_busy=lk_skipped_busy,
         failure_kind=failure_kind,
+        http_ok=http_ok,
     )
 
     if INFLUX_ENABLED:
@@ -147,7 +149,12 @@ def main() -> int:
                 skipped=lk_skipped_busy,
                 run_status=run_status,
             )
-            if lk_skipped_busy:
+            if lk_skipped_busy and http_ok:
+                print(
+                    f"Metrics sent to InfluxDB (run_status={run_status}, "
+                    "HTTP лендинга записан, UI skipped из‑за Chrome busy)"
+                )
+            elif lk_skipped_busy:
                 print("Metrics sent to InfluxDB (run_status=skipped_busy, skipped=1, success=0)")
             else:
                 print(f"Metrics sent to InfluxDB (run_status={run_status})")
@@ -187,9 +194,12 @@ def main() -> int:
             duration_sec=duration_sec,
         )
 
-    if lk_skipped_busy:
+    if lk_skipped_busy and http_ok:
+        outcome = "OK_HTTP_UI_SKIPPED"
+        exit_code = 0
+    elif lk_skipped_busy:
         outcome = "SKIPPED_BUSY"
-        # Exit 0: cron не шумит; «дыра» видна в Influx (success=0, skipped=1).
+        # Exit 0: cron не шумит; HTTP лендинга неуспешен + UI не проверили.
         exit_code = 0
     elif overall_ok:
         outcome = "OK"

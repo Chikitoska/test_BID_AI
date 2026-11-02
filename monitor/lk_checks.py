@@ -19,10 +19,10 @@ from pages.lk_flow import LkAuthError, LkFlow
 from pages.lk_page import LkPage
 from pages.mincifry_page import MincifryPage
 from utils.lk_modals import accept_lk_consent_modals, dismiss_blocking_lk_modals
-from utils.selenium_factory import create_chrome_driver
+from utils.selenium_factory import create_chrome_driver, quit_chrome_driver
 from utils.spa_events_sniffer import (
     assert_only_monitor_uid,
-    collect_events_posts,
+    collect_events_capture,
     event_names_from_posts,
     uids_from_posts,
 )
@@ -50,18 +50,34 @@ def _result(
 def _assert_chatbot_events(driver, *, prefix: str) -> None:
     deadline = time.time() + 12
     posts = []
+    statuses: list[int] = []
+    errors: list[str] = []
+    page_status = 0
     while time.time() < deadline:
-        posts = collect_events_posts(driver)
+        posts, hints = collect_events_capture(driver)
+        statuses.extend(hints.statuses)
+        errors.extend(hints.errors)
+        page_status = hints.page_status or page_status
         if any(item.body for item in posts) or any(item.uids for item in posts):
+            break
+        if any(code >= 500 for code in statuses) or errors:
             break
         time.sleep(0.5)
     names = event_names_from_posts(posts)
     uids = uids_from_posts(posts)
     print(
-        f"[{prefix}_events] posts={len(posts)} events={names} uids={uids}",
+        f"[{prefix}_events] posts={len(posts)} events={names} uids={uids} "
+        f"page={page_status} spa_status={statuses} spa_err={errors}",
         flush=True,
     )
-    assert_only_monitor_uid(posts, require_posts=True, context=prefix)
+    assert_only_monitor_uid(
+        posts,
+        require_posts=True,
+        context=prefix,
+        page_status=page_status,
+        spa_statuses=statuses,
+        spa_errors=errors,
+    )
 
 
 def _run_chatbot_steps(driver, *, prefix: str, url: str) -> list[CheckResult]:
@@ -170,7 +186,7 @@ def _run_lk_monitor_checks_once(*, include_lk: bool = True) -> list[CheckResult]
         return results
     finally:
         if driver is not None:
-            driver.quit()
+            quit_chrome_driver(driver)
 
 
 run_lk_checks = run_lk_monitor_checks
@@ -205,7 +221,7 @@ def run_mincifry_checks() -> list[CheckResult]:
         ]
     finally:
         if driver is not None:
-            driver.quit()
+            quit_chrome_driver(driver)
 
 
 def _has_lk_session(flow: LkFlow) -> None:

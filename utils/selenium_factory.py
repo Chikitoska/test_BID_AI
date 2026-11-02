@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import signal
 import subprocess
 import sys
 import tempfile
@@ -39,6 +40,93 @@ _CHROMEDRIVER_CANDIDATES = (
     "/usr/bin/chromedriver",
     "/snap/bin/chromium.chromedriver",
 )
+
+
+def user_data_dir_from_options(options) -> str:
+    """--user-data-dir этого запуска (уникальный temp)."""
+    args = getattr(options, "arguments", None) or []
+    for arg in args:
+        if isinstance(arg, str) and arg.startswith("--user-data-dir="):
+            return arg.split("=", 1)[1].strip()
+    return ""
+
+
+def _pids_for_user_data_dir(user_data_dir: str) -> list[int]:
+    """Только chrome/chromedriver с ЭТИМ user-data-dir — чужой Chrome на Mac не трогаем."""
+    marker = (user_data_dir or "").strip()
+    if len(marker) < 12:
+        return []
+    try:
+        proc = subprocess.run(
+            ["ps", "-ax", "-o", "pid=,command="],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return []
+    pids: list[int] = []
+    for line in (proc.stdout or "").splitlines():
+        raw = line.strip()
+        if marker not in raw:
+            continue
+        low = raw.lower()
+        if not any(token in low for token in ("chromedriver", "google chrome", "chromium", "/chrome")):
+            continue
+        try:
+            pid = int(raw.split(None, 1)[0])
+        except (ValueError, IndexError):
+            continue
+        if pid > 0 and pid != os.getpid():
+            pids.append(pid)
+    return pids
+
+
+def kill_orphans_for_user_data_dir(user_data_dir: str) -> int:
+    """Убить висящие chrome/chromedriver только этого профиля (после SessionNotCreated)."""
+    pids = _pids_for_user_data_dir(user_data_dir)
+    killed = 0
+    for pid in pids:
+        try:
+            os.kill(pid, signal.SIGTERM)
+            killed += 1
+        except OSError:
+            continue
+    if killed:
+        time.sleep(0.25)
+        for pid in _pids_for_user_data_dir(user_data_dir):
+            try:
+                os.kill(pid, signal.SIGKILL)
+            except OSError:
+                continue
+    if killed:
+        print(
+            f"[chrome] сняли {killed} процесс(ов) для user-data-dir={user_data_dir}",
+            flush=True,
+        )
+    return killed
+
+
+def quit_chrome_driver(driver) -> None:
+    """quit + убрать сирот этого user-data-dir (не чужой Chrome)."""
+    user_dir = getattr(driver, "_bid_user_data_dir", "") or ""
+    if not user_dir:
+        try:
+            caps = getattr(driver, "capabilities", None) or {}
+            chrome_opts = caps.get("goog:chromeOptions") or caps.get("chromeOptions") or {}
+            args = chrome_opts.get("args") or []
+            for arg in args:
+                if isinstance(arg, str) and arg.startswith("--user-data-dir="):
+                    user_dir = arg.split("=", 1)[1].strip()
+                    break
+        except Exception:
+            user_dir = ""
+    try:
+        driver.quit()
+    except Exception:
+        pass
+    if user_dir:
+        kill_orphans_for_user_data_dir(user_dir)
 
 
 def _alloc_user_data_dir() -> str:
@@ -242,6 +330,7 @@ def create_chrome_driver(
 
     for attempt in range(1, retries + 1):
         options = _build_chrome_options(use_headless)
+        user_dir = user_data_dir_from_options(options)
         if enable_performance_log:
             from utils.spa_events_sniffer import enable_performance_log as _enable_perf
 
@@ -250,6 +339,7 @@ def create_chrome_driver(
             chromedriver_path = _resolve_chromedriver_path()
             service = Service(executable_path=chromedriver_path) if chromedriver_path else Service()
             driver = webdriver.Chrome(service=service, options=options)
+            driver._bid_user_data_dir = user_dir
             _inject_gpn_spa_analytics_uid(driver)
             if enable_performance_log:
                 try:
@@ -263,6 +353,8 @@ def create_chrome_driver(
             return driver
         except Exception as exc:
             last_error = exc
+            if user_dir:
+                kill_orphans_for_user_data_dir(user_dir)
             if attempt >= retries:
                 break
             print(

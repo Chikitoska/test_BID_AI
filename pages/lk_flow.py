@@ -431,19 +431,20 @@ class LkFlow:
                 f"Processor: User-Block ещё не виден за {wait_sec}s "
                 f"(URL={self.driver.current_url}), чтение ФИО/компании повторит ожидание"
             )
+
     def _read_processor_user_field(self, *, css_child: str, label: str) -> str:
         """Читает поле в шапке Processor с повтором (модалки / медленный SPA)."""
         wait_sec = max(self.wait_sec, LK_UI_WAIT_SEC)
-        child_token = css_child.lstrip(".")
         selectors = (
             f".User-Block {css_child}",
             f"[class='User-Block'] {css_child}",
             f"[class*='User-Block'] {css_child}",
             f"[class*='UserBlock'] {css_child}",
-            f"[class*='{child_token}']",
+            f"header {css_child}",
+            f"[class*='Header'] {css_child}",
+            f"[data-testid='md-user_badge'] {css_child}",
             f"[data-testid*='user'] {css_child}",
         )
-        expected = BID_EXPECTED_FIO if "ФИО" in label else BID_EXPECTED_COMPANY
         attempts = max(1, LK_PROCESSOR_HEADER_ATTEMPTS)
         last_error: Exception | None = None
 
@@ -469,14 +470,6 @@ class LkFlow:
                         self.driver.switch_to.default_content()
                     except Exception:
                         pass
-            if expected:
-                body = ""
-                try:
-                    body = self.driver.find_element(By.TAG_NAME, "body").text or ""
-                except Exception:
-                    body = ""
-                if expected in body:
-                    return expected
 
             last_error = TimeoutException(
                 f"Processor: «{label}» не найдено в шапке/iframe. URL={self.driver.current_url}"

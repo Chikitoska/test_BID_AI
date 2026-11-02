@@ -21,7 +21,7 @@ from monitor.metrics import failures_from_checks, write_check_results, write_fai
 def main() -> int:
     print("=== BID Минцифр (ручной прогон) ===")
     start = time.perf_counter()
-    wait_sec = float(os.getenv("CHROME_LOCK_WAIT_HEALTH_SEC", "120"))
+    wait_sec = float(os.getenv("CHROME_LOCK_WAIT_MINCIFRY_SEC") or os.getenv("CHROME_LOCK_WAIT_HEALTH_SEC", "600"))
     try:
         with chrome_run_lock(owner="mincifry", wait_sec=wait_sec):
             results = run_mincifry_checks()

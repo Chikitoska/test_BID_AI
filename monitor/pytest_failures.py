@@ -6,6 +6,7 @@ import re
 from typing import Literal
 
 from monitor.health_classify import is_autotest_error, is_chrome_infra_error
+from monitor.host_classify import classify_bid_host, extract_http_code, is_timeout_text
 from monitor.metrics import FailureEvent
 
 FailureKind = Literal["prod", "autotest"]
@@ -41,6 +42,9 @@ _PROD_MARKERS = (
     "/error/4",
     "/error/5",
     "HttpStatusError",
+    "SpaEventsNetworkError",
+    "spa-back HTTP 5",
+    "spa-back timeout",
 )
 
 # Типичный хрупкий UI-автотест — в Grafana оранжевый, в TG/email не спамим.
@@ -57,6 +61,9 @@ _AUTOTEST_MARKERS = (
     "не загрузился или нет текущего уровня",
     "Аккредитация",
     "page_error",
+    "SpaEventsHarnessError",
+    "сниффер пуст",
+    "POST /events не обнаружен",
 )
 
 _URL_RE = re.compile(r"https?://[^\s\]\)\"'>,|;]+")
@@ -165,6 +172,10 @@ def brief_exception_text(detail: str) -> str:
     if not text:
         return "unknown error"
 
+    host_kind = classify_bid_host(text)
+    http_code = extract_http_code(text)
+    timeout = is_timeout_text(text)
+
     # Отрезаем Stacktrace / For documentation… — для Grafana нужна одна строка.
     cut = re.split(r"\n\s*(?:Stacktrace:|For documentation on this error)", text, maxsplit=1)
     text = cut[0].strip()
@@ -177,7 +188,15 @@ def brief_exception_text(detail: str) -> str:
     if empty:
         exc = empty.group("exc")
         fallback = _EMPTY_MESSAGE_FALLBACKS.get(exc, "no details")
-        return f"{exc}: {fallback}"
+        extras = []
+        if host_kind != "unknown":
+            extras.append(host_kind)
+        if http_code:
+            extras.append(f"HTTP {http_code}")
+        if timeout and "timeout" not in fallback.lower() and "timed out" not in fallback.lower():
+            extras.append("timeout")
+        suffix = f" ({', '.join(extras)})" if extras else ""
+        return f"{exc}: {fallback}{suffix}"
 
     # TimeoutException: Message:   (с пробелами) / Message:\n...
     soft_empty = re.match(
@@ -214,12 +233,28 @@ def format_rich_failure_error(
     test_name: str,
     detail: str,
     url: str | None = None,
+    http_code: int | None = None,
 ) -> str:
-    """Имя теста [| URL] | краткая ошибка — для bid_failure / Grafana."""
+    """Имя теста [| host] [| URL] [| HTTP N] | краткая ошибка — для bid_failure / Grafana."""
     brief = brief_exception_text(detail)
+    if brief == "unknown error":
+        host_hint = classify_bid_host(url or detail or "")
+        code = http_code or extract_http_code(detail or "")
+        if is_timeout_text(detail or ""):
+            brief = "timeout"
+        elif code:
+            brief = f"HTTP {code}"
+        elif host_hint != "unknown":
+            brief = f"{host_hint} error"
     parts = [test_name.strip() or "unknown_test"]
+    host_kind = classify_bid_host(url or detail or "")
+    if host_kind != "unknown":
+        parts.append(host_kind)
     if url:
         parts.append(url)
+    code = http_code or extract_http_code(detail or "")
+    if code and f"HTTP {code}" not in brief:
+        parts.append(f"HTTP {code}")
     parts.append(brief)
     return " | ".join(parts)
 
@@ -267,7 +302,8 @@ def parse_pytest_failures(output: str) -> list[FailureEvent]:
         label = test_id if len(test_id) <= 120 else f"…{test_id[-117:]}"
         blob = _section_blob_for_test(output, test_id)
         url = extract_failure_url(detail) or extract_failure_url(blob)
-        error = format_rich_failure_error(test_name=short, detail=detail, url=url)
+        rich_detail = detail or blob
+        error = format_rich_failure_error(test_name=short, detail=rich_detail, url=url)
         events.append(FailureEvent(check=short[:128], label=label[:256], error=error[:2000]))
 
     for raw in output.splitlines():

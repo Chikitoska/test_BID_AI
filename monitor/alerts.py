@@ -232,13 +232,18 @@ def format_relay_failure_message(
 
 
 def failure_detail(result: CheckResult) -> str:
+    from monitor.host_classify import classify_bid_host, format_host_error
     from monitor.secrets_redact import redact_secrets
 
     if result.error:
         return redact_secrets(result.error)
+    host_kind = classify_bid_host(result.url)
     if result.http_code:
-        return f"HTTP {result.http_code}"
-    return "unknown error"
+        prefix = f"{host_kind} " if host_kind != "unknown" else ""
+        return f"{prefix}HTTP {result.http_code}".strip()
+    if result.url:
+        return format_host_error(url=result.url, http_code=result.http_code, error="")
+    return f"{host_kind} unknown error" if host_kind != "unknown" else "unknown error"
 
 
 def failures_for_relay(failed_checks: list[CheckResult]) -> list[dict]:
