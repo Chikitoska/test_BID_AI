@@ -1,4 +1,4 @@
-"""Иконка чат-бота: 15 с, displayed = успех, нет = красный fail (не жёлтый)."""
+"""Иконка чат-бота: 30 с, displayed = успех, нет = красный fail (не жёлтый)."""
 
 from types import SimpleNamespace
 
@@ -13,10 +13,10 @@ from monitor.pytest_failures import classify_lk_pytest_failure
 from pages.chatbot_widget import ICON_WAIT_SEC, ChatbotWidget, _LAUNCHER_JS, is_displayed_launcher
 
 
-def test_icon_wait_is_15_seconds():
-    assert ICON_WAIT_SEC == 15
+def test_icon_wait_is_30_seconds():
+    assert ICON_WAIT_SEC == 30
     widget = ChatbotWidget(SimpleNamespace())
-    assert widget.timeout == 15
+    assert widget.timeout == 30
 
 
 def test_launcher_js_has_no_size_or_fold_heuristics():

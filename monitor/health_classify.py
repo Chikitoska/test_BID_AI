@@ -101,7 +101,7 @@ def is_chrome_infra_error(error: str) -> bool:
 
 
 def is_widget_icon_miss(error: str) -> bool:
-    """Иконка чат-бота не появилась за 15 с — боевой fail виджета, не harness."""
+    """Иконка чат-бота не появилась за ICON_WAIT_SEC — боевой fail виджета, не harness."""
     return "иконка чат-бота не отображается" in (error or "").lower()
 
 

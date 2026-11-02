@@ -16,7 +16,8 @@ class ChatbotError(Exception):
 
 
 # Ждём иконку до ICON_WAIT_SEC: present + displayed = успех. Без эвристик размера/fold.
-ICON_WAIT_SEC = 15
+# 15 с на SPA с поздним виджетом мало — после af6e0d9 снова были красные «иконка не отображается».
+ICON_WAIT_SEC = 30
 
 # Прод: Consta-виджет. Иконка — _iconWrapper_*; ищем в iframe и open shadow.
 _LAUNCHER_JS = r"""
@@ -392,7 +393,7 @@ class ChatbotWidget:
         dismiss_blocking_lk_modals(self.driver, timeout=4)
 
     def step_icon_visible(self, context: str) -> None:
-        """До 15 с: displayed = успех; нет элемента = обычный fail (не autotest)."""
+        """До ICON_WAIT_SEC: displayed = успех; нет элемента = обычный fail (не autotest)."""
         self._dismiss_page_overlays()
         try:
             WebDriverWait(self.driver, ICON_WAIT_SEC).until(lambda _d: self._launcher_visible())

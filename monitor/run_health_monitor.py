@@ -11,6 +11,7 @@ Health-мониторинг: лендинг (HTTP) + чат-бот лендин�
 from __future__ import annotations
 
 import os
+import signal
 import sys
 import time
 from pathlib import Path
@@ -45,6 +46,23 @@ from monitor.metrics import (
 )
 from monitor.probe_alert import should_send_lk_telegram
 
+# Слот cron = 5 мин. Ждать lock 600 с = два пропущенных столбца и риск зависания.
+HEALTH_LOCK_WAIT_CAP_SEC = 90.0
+HEALTH_SLOT_SEC_DEFAULT = 220.0
+
+
+class HealthSlotTimeout(Exception):
+    """Health не уложился в слот 5 мин (Chrome hang / lock wait)."""
+
+
+def health_lock_wait_sec(configured: float, *, cap: float = HEALTH_LOCK_WAIT_CAP_SEC) -> float:
+    """Health ждёт Chrome не дольше cap — иначе пропускает слот без точки."""
+    return max(5.0, min(float(configured), cap))
+
+
+def _slot_handler(signum, frame) -> None:
+    raise HealthSlotTimeout(f"signal {signum}: health превысил слот 5 мин")
+
 
 def _check_main_page_with_retry(session) -> CheckResult:
     """GET с повтором при timeout/4xx/5xx — снижает ложные алерты на флапах."""
@@ -63,47 +81,155 @@ def _check_main_page_with_retry(session) -> CheckResult:
     return _check_get(session, "main_page", BASE_URL)
 
 
+def _flush_health_influx(
+    *,
+    landing: CheckResult,
+    all_results: list[CheckResult],
+    overall_ok: bool,
+    lk_skipped_busy: bool,
+    run_status: str,
+    duration_sec: float,
+    http_ok: bool,
+) -> None:
+    """bid_lk_run пишем отдельно: пульс не должен пропадать, если упал write_check_results."""
+    if not INFLUX_ENABLED:
+        return
+    try:
+        write_lk_run(
+            success=overall_ok,
+            failed_count=sum(1 for r in all_results if not r.success),
+            duration_sec=duration_sec,
+            skipped=lk_skipped_busy,
+            run_status=run_status,
+        )
+        if lk_skipped_busy and http_ok:
+            print(
+                f"Metrics sent to InfluxDB (run_status={run_status}, "
+                "HTTP лендинга записан, UI skipped из‑за Chrome busy)"
+            )
+        elif lk_skipped_busy:
+            print("Metrics sent to InfluxDB (run_status=skipped_busy, skipped=1, success=0)")
+        else:
+            print(f"Metrics sent to InfluxDB (run_status={run_status})")
+    except Exception as exc:
+        print(f"WARN: InfluxDB write_lk_run failed: {exc}")
+    try:
+        write_check_results(
+            [landing]
+            + [r for r in all_results if r.name.startswith("landing_chatbot")]
+        )
+        if landing.success and not lk_skipped_busy:
+            lk_only = [r for r in all_results if r.name.startswith("lk_")]
+            if lk_only:
+                write_lk_check_results(lk_only)
+    except Exception as exc:
+        print(f"WARN: InfluxDB write checks failed: {exc}")
+    failed_results = [r for r in all_results if not r.success]
+    if failed_results:
+        try:
+            write_failure_events(run_type="health", failures=failures_from_checks(failed_results))
+        except Exception as exc:
+            print(f"WARN: InfluxDB failure events: {exc}")
+
+
 def main() -> int:
     print("=== BID Health Monitor (landing + LK) ===")
     start = time.perf_counter()
     all_results: list[CheckResult] = []
+    slot_sec = float(os.getenv("HEALTH_SLOT_SEC", str(HEALTH_SLOT_SEC_DEFAULT)))
+    if hasattr(signal, "SIGALRM"):
+        signal.signal(signal.SIGALRM, _slot_handler)
+        signal.alarm(max(1, int(slot_sec)))
+    if hasattr(signal, "SIGTERM"):
+        signal.signal(signal.SIGTERM, _slot_handler)
 
-    session = create_monitor_session()
-    landing = _check_main_page_with_retry(session)
-    all_results.append(landing)
-    status = "OK" if landing.success else "FAIL"
-    print(f"[{status}] main_page {landing.http_code} {landing.duration_ms:.0f}ms {landing.error}")
-
+    landing = CheckResult(
+        name="main_page",
+        url=BASE_URL,
+        method="GET",
+        success=False,
+        http_code=0,
+        duration_ms=0.0,
+        error="health aborted before HTTP",
+    )
     lk_ok = True
     lk_skipped_busy = False
-    if not landing.success:
-        print("SKIP UI: лендинг недоступен (чат-бот и ЛК не проверяем)")
-        lk_ok = False
-    else:
-        lk_wait = float(os.getenv("CHROME_LOCK_WAIT_HEALTH_SEC", "600"))
-        try:
-            with chrome_run_lock(owner="health", wait_sec=lk_wait):
-                lk_results = run_lk_monitor_checks(include_lk=LK_MONITOR_ENABLED)
-        except ChromeBusyError as exc:
-            lk_skipped_busy = True
-            lk_results = []
-            print(f"SKIP UI (chrome busy): {exc}")
-            print(
-                "UI/chatbot/LK пропущены (Chrome занят); "
-                "HTTP лендинга уже записан и остаётся источником пульса",
-                flush=True,
-            )
-        for item in lk_results:
-            st = "OK" if item.success else "FAIL"
-            print(f"[{st}] {item.name} {item.duration_ms:.0f}ms {item.error}")
-        if lk_results:
-            lk_ok = all(item.success for item in lk_results)
-        elif not lk_skipped_busy:
+    lk_results: list[CheckResult] = []
+    try:
+        session = create_monitor_session()
+        landing = _check_main_page_with_retry(session)
+        all_results.append(landing)
+        status = "OK" if landing.success else "FAIL"
+        print(f"[{status}] main_page {landing.http_code} {landing.duration_ms:.0f}ms {landing.error}")
+
+        if not landing.success:
+            print("SKIP UI: лендинг недоступен (чат-бот и ЛК не проверяем)")
             lk_ok = False
-        if lk_results:
-            all_results.extend(lk_results)
-        if not LK_MONITOR_ENABLED and not lk_skipped_busy:
-            print("SKIP LK auth: MONITOR_RUN_LK=false или нет credentials (чат-бот лендинга уже проверен)")
+        else:
+            configured_wait = float(os.getenv("CHROME_LOCK_WAIT_HEALTH_SEC", "90"))
+            lk_wait = health_lock_wait_sec(configured_wait)
+            if lk_wait < configured_wait:
+                print(
+                    f"[chrome-lock] health wait capped {configured_wait:.0f}s → {lk_wait:.0f}s "
+                    "(слот cron 5 мин)",
+                    flush=True,
+                )
+            try:
+                with chrome_run_lock(owner="health", wait_sec=lk_wait):
+                    lk_results = run_lk_monitor_checks(include_lk=LK_MONITOR_ENABLED)
+            except ChromeBusyError as exc:
+                lk_skipped_busy = True
+                print(f"SKIP UI (chrome busy): {exc}")
+                print(
+                    "UI/chatbot/LK пропущены (Chrome занят); "
+                    "HTTP лендинга уже записан и остаётся источником пульса",
+                    flush=True,
+                )
+            except HealthSlotTimeout as exc:
+                print(f"SKIP UI (slot timeout): {exc}", flush=True)
+                lk_ok = False
+                all_results.append(
+                    CheckResult(
+                        name="health_slot",
+                        url=BASE_URL,
+                        method="UI",
+                        success=False,
+                        http_code=0,
+                        duration_ms=(time.perf_counter() - start) * 1000,
+                        error="TimeoutException: health UI exceeded 5-min slot (Chrome hang)",
+                    )
+                )
+            for item in lk_results:
+                st = "OK" if item.success else "FAIL"
+                print(f"[{st}] {item.name} {item.duration_ms:.0f}ms {item.error}")
+            if lk_results:
+                lk_ok = all(item.success for item in lk_results)
+            elif not lk_skipped_busy:
+                lk_ok = False
+            if lk_results:
+                all_results.extend(lk_results)
+            if not LK_MONITOR_ENABLED and not lk_skipped_busy:
+                print("SKIP LK auth: MONITOR_RUN_LK=false или нет credentials (чат-бот лендинга уже проверен)")
+    except HealthSlotTimeout as exc:
+        print(f"Health slot timeout: {exc}", flush=True)
+        lk_ok = False
+        if not any(item.name == "main_page" for item in all_results):
+            all_results.append(landing)
+        if not any(item.name == "health_slot" for item in all_results):
+            all_results.append(
+                CheckResult(
+                    name="health_slot",
+                    url=BASE_URL,
+                    method="UI",
+                    success=False,
+                    http_code=0,
+                    duration_ms=(time.perf_counter() - start) * 1000,
+                    error="TimeoutException: health UI exceeded 5-min slot (Chrome hang)",
+                )
+            )
+    finally:
+        if hasattr(signal, "SIGALRM"):
+            signal.alarm(0)
 
     duration_sec = time.perf_counter() - start
     http_ok = landing.success
@@ -131,42 +257,15 @@ def main() -> int:
         http_ok=http_ok,
     )
 
-    if INFLUX_ENABLED:
-        try:
-            write_check_results(
-                [landing]
-                + [r for r in all_results if r.name.startswith("landing_chatbot")]
-            )
-            if landing.success and not lk_skipped_busy:
-                lk_only = [r for r in all_results if r.name.startswith("lk_")]
-                if lk_only:
-                    write_lk_check_results(lk_only)
-            # Всегда пишем итог прогона — иначе при FAIL лендинга на графике «дыра», а не красный столбец.
-            write_lk_run(
-                success=overall_ok,
-                failed_count=sum(1 for r in all_results if not r.success),
-                duration_sec=duration_sec,
-                skipped=lk_skipped_busy,
-                run_status=run_status,
-            )
-            if lk_skipped_busy and http_ok:
-                print(
-                    f"Metrics sent to InfluxDB (run_status={run_status}, "
-                    "HTTP лендинга записан, UI skipped из‑за Chrome busy)"
-                )
-            elif lk_skipped_busy:
-                print("Metrics sent to InfluxDB (run_status=skipped_busy, skipped=1, success=0)")
-            else:
-                print(f"Metrics sent to InfluxDB (run_status={run_status})")
-        except Exception as exc:
-            print(f"WARN: InfluxDB write failed: {exc}")
-
-    failed_results = [r for r in all_results if not r.success]
-    if INFLUX_ENABLED and failed_results:
-        try:
-            write_failure_events(run_type="health", failures=failures_from_checks(failed_results))
-        except Exception as exc:
-            print(f"WARN: InfluxDB failure events: {exc}")
+    _flush_health_influx(
+        landing=landing,
+        all_results=all_results,
+        overall_ok=overall_ok,
+        lk_skipped_busy=lk_skipped_busy,
+        run_status=run_status,
+        duration_sec=duration_sec,
+        http_ok=http_ok,
+    )
 
     # 4xx/5xx уже перепроверены в этом же прогоне → алертим сразу, не ждём следующий cron.
     # Autotest/busy — не confirmed prod.

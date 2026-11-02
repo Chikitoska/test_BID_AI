@@ -14,4 +14,9 @@ if [ -f monitor/.env ]; then
   set +a
 fi
 
-exec "$PROJECT_DIR/.venv/bin/python" monitor/run_health_monitor.py
+# Слот cron 5 мин: TERM → python пишет bid_lk_run; иначе KILL.
+PYTHON="$PROJECT_DIR/.venv/bin/python"
+if command -v timeout >/dev/null 2>&1; then
+  exec timeout --signal=TERM --kill-after=15 220 "$PYTHON" monitor/run_health_monitor.py
+fi
+exec "$PYTHON" monitor/run_health_monitor.py
