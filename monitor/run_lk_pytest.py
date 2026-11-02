@@ -74,6 +74,8 @@ def _run_lk_pytest() -> PytestResult:
         "TimeoutException",
         "--only-rerun",
         "HttpStatusError",
+        "--only-rerun",
+        "SessionNotCreatedException",
         f"--alluredir={allure_dir}",
     ]
     env = os.environ.copy()

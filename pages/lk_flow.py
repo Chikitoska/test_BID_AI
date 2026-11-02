@@ -13,6 +13,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from config.lk_settings import (
+    BID_EXPECTED_COMPANY,
+    BID_EXPECTED_FIO,
     BID_LK_EXPECTED_URL,
     BID_PASSWORD,
     BID_PROCESSOR_URL,
@@ -432,29 +434,53 @@ class LkFlow:
     def _read_processor_user_field(self, *, css_child: str, label: str) -> str:
         """Читает поле в шапке Processor с повтором (модалки / медленный SPA)."""
         wait_sec = max(self.wait_sec, LK_UI_WAIT_SEC)
+        child_token = css_child.lstrip(".")
         selectors = (
             f".User-Block {css_child}",
             f"[class='User-Block'] {css_child}",
+            f"[class*='User-Block'] {css_child}",
+            f"[class*='UserBlock'] {css_child}",
+            f"[class*='{child_token}']",
+            f"[data-testid*='user'] {css_child}",
         )
+        expected = BID_EXPECTED_FIO if "ФИО" in label else BID_EXPECTED_COMPANY
         attempts = max(1, LK_PROCESSOR_HEADER_ATTEMPTS)
         last_error: Exception | None = None
 
         for attempt in range(1, attempts + 1):
+            try:
+                self.driver.switch_to.default_content()
+            except Exception:
+                pass
             accept_processor_consent_modals(self.driver, timeout=3)
-            for selector in selectors:
+            found = self._read_processor_field_in_context(selectors, min(12, wait_sec))
+            if found:
+                return found
+            for frame in self.driver.find_elements(By.TAG_NAME, "iframe"):
                 try:
-                    element = WebDriverWait(self.driver, wait_sec).until(
-                        EC.visibility_of_element_located((By.CSS_SELECTOR, selector))
-                    )
-                    text = (element.text or "").strip()
-                    if text:
-                        return text
-                    last_error = TimeoutException(
-                        f"Processor: «{label}» пустой ({selector}). URL={self.driver.current_url}"
-                    )
-                except TimeoutException as exc:
-                    last_error = exc
+                    self.driver.switch_to.frame(frame)
+                    found = self._read_processor_field_in_context(selectors, 3)
+                    if found:
+                        return found
+                except Exception:
+                    continue
+                finally:
+                    try:
+                        self.driver.switch_to.default_content()
+                    except Exception:
+                        pass
+            if expected:
+                body = ""
+                try:
+                    body = self.driver.find_element(By.TAG_NAME, "body").text or ""
+                except Exception:
+                    body = ""
+                if expected in body:
+                    return expected
 
+            last_error = TimeoutException(
+                f"Processor: «{label}» не найдено в шапке/iframe. URL={self.driver.current_url}"
+            )
             self._log(
                 f"Processor: «{label}» не готово "
                 f"({attempt}/{attempts}), повтор через {LK_PROCESSOR_HEADER_RETRY_DELAY_SEC}s"
@@ -467,6 +493,22 @@ class LkFlow:
             f"Processor: не видно «{label}» ({css_child}) после {attempts} попыток "
             f"по {wait_sec}s. URL={self.driver.current_url}. {detail}"
         )
+
+    def _read_processor_field_in_context(self, selectors: tuple[str, ...], wait_sec: float) -> str:
+        deadline = time.time() + max(0.5, float(wait_sec))
+        while time.time() < deadline:
+            for selector in selectors:
+                try:
+                    for element in self.driver.find_elements(By.CSS_SELECTOR, selector):
+                        if not element.is_displayed():
+                            continue
+                        text = (element.text or "").strip()
+                        if text:
+                            return text
+                except Exception:
+                    continue
+            time.sleep(0.4)
+        return ""
 
     def read_fio_in_processor(self) -> str:
         return self._read_processor_user_field(css_child=".User-Name", label="ФИО")

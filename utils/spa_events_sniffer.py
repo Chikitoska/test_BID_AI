@@ -36,12 +36,52 @@ def drain_performance_log(driver) -> None:
         pass
 
 
+def collect_hooked_event_bodies(driver) -> list[str]:
+    """Тела POST /events, которые патч fetch/XHR/sendBeacon сложил в window."""
+    try:
+        raw = driver.execute_script(
+            "return Array.isArray(window.__BID_MONITOR_EVENTS) "
+            "? window.__BID_MONITOR_EVENTS.slice() : [];"
+        )
+    except Exception:
+        return []
+    bodies: list[str] = []
+    for item in raw or []:
+        if item is None:
+            continue
+        text = item if isinstance(item, str) else str(item)
+        bodies.append(text)
+    return bodies
+
+
+def _post_from_body(body: str) -> SpaEventPost:
+    text = body or ""
+    return SpaEventPost(
+        body=text,
+        uids=extract_uids_from_events_body(text),
+        event_names=extract_event_names_from_events_body(text),
+    )
+
+
 def collect_events_posts(driver) -> list[SpaEventPost]:
     posts: list[SpaEventPost] = []
+    seen: set[str] = set()
+
+    def add(body: str) -> None:
+        text = body or ""
+        key = text or f"empty:{len(posts)}"
+        if key in seen:
+            return
+        seen.add(key)
+        posts.append(_post_from_body(text))
+
+    for body in collect_hooked_event_bodies(driver):
+        add(body)
+
     try:
         entries = driver.get_log("performance")
     except Exception:
-        return posts
+        entries = []
 
     for entry in entries:
         try:
@@ -66,13 +106,7 @@ def collect_events_posts(driver) -> list[SpaEventPost]:
                     body = data.get("postData") or ""
                 except Exception:
                     body = ""
-        posts.append(
-            SpaEventPost(
-                body=body,
-                uids=extract_uids_from_events_body(body),
-                event_names=extract_event_names_from_events_body(body),
-            )
-        )
+        add(body)
     return posts
 
 

@@ -103,3 +103,4 @@ def test_events_uid_rewrite_js_embeds_monitor_uid_and_keys():
     assert "window.fetch" in js
     assert "XMLHttpRequest" in js
     assert "sendBeacon" in js
+    assert "__BID_MONITOR_EVENTS" in js

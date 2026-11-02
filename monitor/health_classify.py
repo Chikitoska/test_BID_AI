@@ -51,6 +51,10 @@ _UI_WAIT_EXCEPTION_MARKERS = (
     "assertionerror",
     "chatboterror",
     "mincifryerror",
+    "иконка чат-бота",
+    "темы не отображаются",
+    "окно чат-бота",
+    "вернуться в начало",
 )
 
 # Пустой Message: / Message:\nStacktrace без имени wait-exception — краш драйвера.

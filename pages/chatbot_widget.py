@@ -55,31 +55,38 @@ return nodes.find((el) => {
 
 _PANEL_JS = r"""
 function openPanel() {
-  const panels = Array.from(document.querySelectorAll('[class*="_chatWrapper_"]'));
-  const hit = panels.find((el) => {
-    if (/__closed/.test((el.className || '').toString())) return false;
+  const skipText = /подтвердите роль|куратор|добавить документ|политик|cookie|соглас/i;
+  const chatHint = /ассистент|помощник|тем[аы]|задать вопрос|написать|чат/i;
+  function visBig(el) {
     const r = el.getBoundingClientRect();
     const st = window.getComputedStyle(el);
     return r.width > 160 && r.height > 120 && r.bottom > 0
       && st.visibility !== 'hidden' && st.display !== 'none';
+  }
+  const panels = Array.from(document.querySelectorAll('[class*="_chatWrapper_"]'));
+  const hit = panels.find((el) => {
+    if (/__closed/.test((el.className || '').toString())) return false;
+    if (skipText.test(el.innerText || '')) return false;
+    return visBig(el);
   });
   if (hit) return hit;
   const sels = [
-    '[role="dialog"]',
     '[class*="chat-window"]',
     '[class*="ChatWindow"]',
     '[class*="chat-panel"]',
     '[class*="ChatPanel"]',
     '[class*="assistant-window"]',
     '[data-testid*="chat"]',
+    '[role="dialog"]',
   ];
   const nodes = [];
   sels.forEach((s) => document.querySelectorAll(s).forEach((el) => nodes.push(el)));
   return nodes.find((el) => {
-    const r = el.getBoundingClientRect();
-    const st = window.getComputedStyle(el);
-    return r.width > 160 && r.height > 120 && r.bottom > 0
-      && st.visibility !== 'hidden' && st.display !== 'none';
+    const text = el.innerText || '';
+    if (skipText.test(text)) return false;
+    const cls = ((el.className || '') + ' ' + (el.id || '')).toString();
+    if (!chatHint.test(text) && !/chat|assistant/i.test(cls)) return false;
+    return visBig(el);
   }) || null;
 }
 return openPanel();
@@ -334,7 +341,14 @@ class ChatbotWidget:
             time.sleep(0.3)
         return False
 
+    def _dismiss_page_overlays(self) -> None:
+        from utils.lk_modals import accept_lk_consent_modals, dismiss_blocking_lk_modals
+
+        accept_lk_consent_modals(self.driver, timeout=4)
+        dismiss_blocking_lk_modals(self.driver, timeout=4)
+
     def step_icon_visible(self, context: str) -> None:
+        self._dismiss_page_overlays()
         if self._wait_until(self._launcher_visible):
             return
         raise ChatbotError(f"{context}: иконка чат-бота не отображается")

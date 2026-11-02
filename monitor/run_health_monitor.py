@@ -80,7 +80,7 @@ def main() -> int:
         print("SKIP UI: лендинг недоступен (чат-бот и ЛК не проверяем)")
         lk_ok = False
     else:
-        lk_wait = float(os.getenv("CHROME_LOCK_WAIT_HEALTH_SEC", "120"))
+        lk_wait = float(os.getenv("CHROME_LOCK_WAIT_HEALTH_SEC", "600"))
         try:
             with chrome_run_lock(owner="health", wait_sec=lk_wait):
                 lk_results = run_lk_monitor_checks(include_lk=LK_MONITOR_ENABLED)

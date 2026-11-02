@@ -70,6 +70,19 @@ def test_timeout_exception_is_autotest_not_chrome_only() -> None:
     assert health_run_status(overall_ok=False, failure_kind="autotest") == "autotest"
 
 
+def test_classify_chatbot_topic_fail_is_autotest_not_prod() -> None:
+    results = [
+        _http("main_page", code=200, success=True),
+        _ui(
+            "lk_chatbot_topics",
+            "ЛК: после открытия чата темы не отображаются. Текст: "
+            "'Витрина\\nПодтвердите роль куратора'",
+        ),
+    ]
+    assert is_autotest_error(results[1].error) is True
+    assert classify_health_failure(results) == "autotest"
+
+
 def test_classify_autotest_when_all_ui_chrome() -> None:
     results = [
         _http("main_page", code=200, success=True),

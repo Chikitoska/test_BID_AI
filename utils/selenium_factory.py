@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import tempfile
 import time
 
 from selenium import webdriver
@@ -38,6 +39,23 @@ _CHROMEDRIVER_CANDIDATES = (
     "/usr/bin/chromedriver",
     "/snap/bin/chromium.chromedriver",
 )
+
+
+def _alloc_user_data_dir() -> str:
+    """Свой профиль на каждый старт: иначе второй Chrome в combat pytest падает.
+
+    Общий CHROME_USER_DATA_DIR не переиспользуем — SingletonLock / «already in use».
+    GOST живёт в бинарнике (CHROME_BINARY), не в профиле.
+    """
+    explicit = os.getenv("CHROME_USER_DATA_DIR", "").strip()
+    if explicit and os.getenv("CHROME_REUSE_USER_DATA_DIR", "").lower() in (
+        "1",
+        "true",
+        "yes",
+    ):
+        return explicit
+    parent = explicit if explicit and os.path.isdir(explicit) else None
+    return tempfile.mkdtemp(prefix="bid-chrome-", dir=parent)
 
 
 def _chromedriver_ok(path: str) -> bool:
@@ -218,16 +236,16 @@ def create_chrome_driver(
     if sys.platform == "darwin" and use_headless and os.getenv("MONITOR_FORCE_HEADLESS") != "true":
         use_headless = False
 
-    options = _build_chrome_options(use_headless)
-    if enable_performance_log:
-        from utils.spa_events_sniffer import enable_performance_log as _enable_perf
-
-        _enable_perf(options)
     retries = int(os.getenv("CHROME_START_RETRIES", "3"))
     delay = float(os.getenv("CHROME_START_RETRY_DELAY_SEC", "3"))
     last_error: Exception | None = None
 
     for attempt in range(1, retries + 1):
+        options = _build_chrome_options(use_headless)
+        if enable_performance_log:
+            from utils.spa_events_sniffer import enable_performance_log as _enable_perf
+
+            _enable_perf(options)
         try:
             chromedriver_path = _resolve_chromedriver_path()
             service = Service(executable_path=chromedriver_path) if chromedriver_path else Service()
@@ -275,6 +293,7 @@ def _build_chrome_options(use_headless: bool) -> Options:
     options.add_argument("--no-first-run")
     options.add_argument("--mute-audio")
     options.add_argument("--disable-software-rasterizer")
+    options.add_argument(f"--user-data-dir={_alloc_user_data_dir()}")
     options.add_argument(
         "--disable-features=PasswordManager,PasswordCheck,PasswordLeakDetection,"
         "AutofillServerCommunication,TranslateUI"

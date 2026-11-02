@@ -1,35 +1,25 @@
-"""Fixtures Selenium UI-тестов."""
+"""Fixtures Selenium UI-тестов.
+
+На VPS (combat pytest) тот же Chrome, что и у монитора: CHROME_BINARY / GOST,
+а не ChromeDriverManager (из‑за него SessionNotCreated: Chrome instance exited).
+"""
+
+from __future__ import annotations
 
 import pytest
+from selenium.common.exceptions import WebDriverException
+
+from utils.selenium_factory import create_chrome_driver
 
 
 @pytest.fixture(scope="function")
 def driver():
-    from selenium import webdriver
-    from selenium.webdriver.chrome.options import Options
-    from selenium.webdriver.chrome.service import Service as ChromeService
-    from webdriver_manager.chrome import ChromeDriverManager
-
-    from config.settings import IMPLICIT_WAIT, PAGE_LOAD_TIMEOUT
-
-    options = Options()
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--window-size=1920,1080")
-    options.set_capability("goog:loggingPrefs", {"performance": "ALL", "browser": "ALL"})
-
-    service = ChromeService(ChromeDriverManager().install())
-    browser = webdriver.Chrome(service=service, options=options)
-    browser.set_page_load_timeout(PAGE_LOAD_TIMEOUT)
-    browser.implicitly_wait(IMPLICIT_WAIT)
-    browser.maximize_window()
-    browser.execute_cdp_cmd("Network.enable", {})
-    browser.execute_cdp_cmd("Performance.enable", {})
-
+    browser = create_chrome_driver(enable_performance_log=True)
     yield browser
-
-    browser.quit()
+    try:
+        browser.quit()
+    except WebDriverException:
+        pass
 
 
 @pytest.fixture(scope="function")

@@ -64,3 +64,13 @@ def test_assert_only_monitor_uid_fails_when_no_posts():
 def test_assert_only_monitor_uid_accepts_raw_bodies():
     body = '[{"event":"page_view","uid":"%s"}]' % EXPECTED
     assert_only_monitor_uid([body], expected=EXPECTED)
+
+
+def test_hooked_empty_and_uid_body_count_as_posts():
+    from utils.spa_events_sniffer import _post_from_body
+
+    empty = _post_from_body("")
+    filled = _post_from_body('[{"event":"page_view","uid":"%s"}]' % EXPECTED)
+    assert empty.uids == []
+    assert filled.uids == [EXPECTED]
+    assert_only_monitor_uid([filled], expected=EXPECTED)

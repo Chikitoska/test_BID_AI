@@ -18,12 +18,11 @@ from pages.chatbot_widget import ChatbotWidget
 from pages.lk_flow import LkAuthError, LkFlow
 from pages.lk_page import LkPage
 from pages.mincifry_page import MincifryPage
-from utils.lk_modals import accept_lk_consent_modals
+from utils.lk_modals import accept_lk_consent_modals, dismiss_blocking_lk_modals
 from utils.selenium_factory import create_chrome_driver
 from utils.spa_events_sniffer import (
     assert_only_monitor_uid,
     collect_events_posts,
-    drain_performance_log,
     event_names_from_posts,
     uids_from_posts,
 )
@@ -49,8 +48,13 @@ def _result(
 
 
 def _assert_chatbot_events(driver, *, prefix: str) -> None:
-    time.sleep(2.5)
-    posts = collect_events_posts(driver)
+    deadline = time.time() + 12
+    posts = []
+    while time.time() < deadline:
+        posts = collect_events_posts(driver)
+        if any(item.body for item in posts) or any(item.uids for item in posts):
+            break
+        time.sleep(0.5)
     names = event_names_from_posts(posts)
     uids = uids_from_posts(posts)
     print(
@@ -61,7 +65,6 @@ def _assert_chatbot_events(driver, *, prefix: str) -> None:
 
 
 def _run_chatbot_steps(driver, *, prefix: str, url: str) -> list[CheckResult]:
-    drain_performance_log(driver)
     bot = ChatbotWidget(driver)
     results: list[CheckResult] = []
     try:
@@ -158,6 +161,7 @@ def _run_lk_monitor_checks_once(*, include_lk: bool = True) -> list[CheckResult]
             return results
 
         accept_lk_consent_modals(driver)
+        dismiss_blocking_lk_modals(driver)
         page = LkPage(driver)
 
         results.append(_run_step("lk_user_fio", lambda: _check_fio(page)))

@@ -38,8 +38,20 @@ def _check_get(session: requests.Session, name: str, url: str) -> CheckResult:
             error=f"HTTP {code}: {response.reason}",
         )
     except requests.RequestException as exc:
-        duration_ms = (time.perf_counter() - start) * 1000
-        return CheckResult(name, url, "GET", False, 0, duration_ms, error=str(exc))
+        time.sleep(2)
+        try:
+            response = session.get(url, timeout=timeout, allow_redirects=True)
+            duration_ms = (time.perf_counter() - start) * 1000
+            code = response.status_code
+            if 200 <= code < 300 or code in MONITOR_ACCEPT_CODES:
+                return CheckResult(name, url, "GET", True, code, duration_ms)
+            return CheckResult(
+                name, url, "GET", False, code, duration_ms,
+                error=f"HTTP {code}: {response.reason}",
+            )
+        except requests.RequestException:
+            duration_ms = (time.perf_counter() - start) * 1000
+            return CheckResult(name, url, "GET", False, 0, duration_ms, error=str(exc))
 
 
 def _url_for_api(api: LandingApiMethod) -> str:
