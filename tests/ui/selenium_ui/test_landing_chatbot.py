@@ -18,7 +18,7 @@ FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures"
 def test_landing_chatbot_skips_login_and_registration(driver):
     """Иконка ассистента рядом с «Войти» / «Получить ID» — клик только в виджет."""
     driver.get((FIXTURE_DIR / "chatbot_landing.html").as_uri())
-    ChatbotWidget(driver, timeout=10).assert_interactive(context="Лендинг")
+    ChatbotWidget(driver).assert_interactive(context="Лендинг")
     url = (driver.current_url or "").lower()
     assert "openid-connect" not in url
     assert "self-authentication" not in url

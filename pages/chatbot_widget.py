@@ -15,8 +15,10 @@ class ChatbotError(Exception):
     """Шаг проверки чат-бота не прошёл."""
 
 
-# Прод: Consta-виджет без iframe. Иконка — _iconWrapper_*, панель — _chatWrapper_*.
-# Ищем глубоко (shadow) и не режем видимый FAB из‑за r.bottom / «строго 20–120px».
+# Ждём иконку до ICON_WAIT_SEC: present + displayed = успех. Без эвристик размера/fold.
+ICON_WAIT_SEC = 15
+
+# Прод: Consta-виджет. Иконка — _iconWrapper_*; ищем в iframe и open shadow.
 _LAUNCHER_JS = r"""
 const skip = /войти|логин|cookie|соглас|покупател|поставщик|получить id|получить идентификатор|сертификат/i;
 function allDeep(sel) {
@@ -31,21 +33,16 @@ function allDeep(sel) {
   walk(document);
   return out;
 }
-function vis(el) {
-  if (!el || !el.getBoundingClientRect) return null;
-  try { el.scrollIntoView({block: 'nearest', inline: 'nearest'}); } catch (e) {}
-  const r = el.getBoundingClientRect();
+function displayed(el) {
+  if (!el) return false;
   const st = window.getComputedStyle(el);
-  if (st.visibility === 'hidden' || st.display === 'none') return null;
-  if (parseFloat(st.opacity || '1') === 0) return null;
-  if (r.width < 16 || r.height < 16) return null;
-  return r;
+  return st.visibility !== 'hidden' && st.display !== 'none';
 }
 function labelOf(el) {
   return ((el.getAttribute('aria-label') || el.getAttribute('title') || el.innerText || '') + '').trim();
 }
 const icons = allDeep('[class*="_iconWrapper_"], [class*="iconWrapper"], [class*="IconWrapper"], #chat-fab');
-const iconHit = icons.find((el) => vis(el));
+const iconHit = icons.find((el) => displayed(el));
 if (iconHit) return iconHit;
 
 const re = /ассистент|помощник|чат[-\s]?бот|задать вопрос|написать (нам|в чат)/i;
@@ -60,18 +57,14 @@ return nodes.find((el) => {
   if (skip.test(label)) return false;
   const cls = ((el.className || '') + ' ' + (el.id || '')).toString();
   if (!re.test(label) && !clsOk.test(cls)) return false;
-  const r = vis(el);
-  return r && r.width <= 320 && r.height <= 240;
+  return displayed(el);
 }) || null;
 """
 
 def is_displayed_launcher(element) -> bool:
-    """Видимый launcher: displayed + ненулевой размер (не «сразу нет»)."""
+    """Успех: элемент есть и displayed. Без порога размера."""
     try:
-        if not element.is_displayed():
-            return False
-        size = element.size or {}
-        return float(size.get("width") or 0) >= 16 and float(size.get("height") or 0) >= 16
+        return bool(element.is_displayed())
     except WebDriverException:
         return False
 
@@ -189,7 +182,7 @@ _SKIP_TOPIC = _NAV_RE + _CLOSE_RE + (
 
 
 class ChatbotWidget:
-    def __init__(self, driver: WebDriver, *, timeout: int = 20):
+    def __init__(self, driver: WebDriver, *, timeout: int = ICON_WAIT_SEC):
         self.driver = driver
         self.timeout = timeout
         self._opened = False
@@ -399,10 +392,10 @@ class ChatbotWidget:
         dismiss_blocking_lk_modals(self.driver, timeout=4)
 
     def step_icon_visible(self, context: str) -> None:
-        """Ждём, пока иконка появится и станет displayed — не падаем на первом кадре SPA."""
+        """До 15 с: displayed = успех; нет элемента = обычный fail (не autotest)."""
         self._dismiss_page_overlays()
         try:
-            WebDriverWait(self.driver, self.timeout).until(lambda _d: self._launcher_visible())
+            WebDriverWait(self.driver, ICON_WAIT_SEC).until(lambda _d: self._launcher_visible())
             return
         except TimeoutException:
             raise ChatbotError(f"{context}: иконка чат-бота не отображается") from None

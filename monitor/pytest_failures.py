@@ -45,6 +45,7 @@ _PROD_MARKERS = (
     "SpaEventsNetworkError",
     "spa-back HTTP 5",
     "spa-back timeout",
+    "иконка чат-бота не отображается",
 )
 
 # Типичный хрупкий UI-автотест — в Grafana оранжевый, в TG/email не спамим.

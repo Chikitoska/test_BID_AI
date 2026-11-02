@@ -67,7 +67,6 @@ _UI_WAIT_EXCEPTION_MARKERS = (
     "assertionerror",
     "chatboterror",
     "mincifryerror",
-    "иконка чат-бота",
     "темы не отображаются",
     "окно чат-бота",
     "вернуться в начало",
@@ -101,10 +100,17 @@ def is_chrome_infra_error(error: str) -> bool:
     return False
 
 
+def is_widget_icon_miss(error: str) -> bool:
+    """Иконка чат-бота не появилась за 15 с — боевой fail виджета, не harness."""
+    return "иконка чат-бота не отображается" in (error or "").lower()
+
+
 def is_ui_autotest_error(error: str) -> bool:
     """True для Selenium wait/assert/селектор — флак автотеста, не HTTP/сеть."""
     lower = (error or "").lower()
     if not lower.strip():
+        return False
+    if is_widget_icon_miss(error):
         return False
     return any(marker in lower for marker in _UI_WAIT_EXCEPTION_MARKERS)
 
@@ -133,7 +139,7 @@ def is_events_harness_miss(error: str) -> bool:
 
 def is_autotest_error(error: str) -> bool:
     """Chrome/WebDriver или UI wait/assert — оранжевый (autotest)."""
-    if is_spa_back_network_error(error):
+    if is_widget_icon_miss(error) or is_spa_back_network_error(error):
         return False
     return (
         is_chrome_infra_error(error)
@@ -167,7 +173,7 @@ def classify_health_failure(results: list[CheckResult]) -> FailureKind:
         # HTTP-проверка (лендинг / spa-back / ЛК) — сеть, не harness.
         if (item.method or "").upper() in ("GET", "POST", "HEAD"):
             return "prod"
-        if is_spa_back_network_error(item.error):
+        if is_spa_back_network_error(item.error) or is_widget_icon_miss(item.error):
             return "prod"
         if not is_autotest_error(item.error):
             return "prod"
