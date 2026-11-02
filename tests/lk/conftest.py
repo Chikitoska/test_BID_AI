@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import time
 from pathlib import Path
 
@@ -21,7 +22,7 @@ except ImportError:
 from config.lk_settings import BID_LK_EXPECTED_URL, LK_CREDENTIALS_SET, MONITOR_HEADLESS
 from pages.lk_flow import LkAuthError, LkFlow
 from pages.lk_page import LkPage
-from utils.selenium_factory import create_chrome_driver
+from utils.selenium_factory import create_chrome_driver, quit_chrome_driver
 
 pytestmark = pytest.mark.skipif(
     not LK_CREDENTIALS_SET,
@@ -38,7 +39,7 @@ def _login_with_retries(*, headless: bool):
     for attempt in range(1, LK_LOGIN_ATTEMPTS + 1):
         if driver is not None:
             try:
-                driver.quit()
+                quit_chrome_driver(driver)
             except WebDriverException:
                 pass
         driver = create_chrome_driver(headless=headless)
@@ -62,12 +63,18 @@ def _login_with_retries(*, headless: bool):
 
 @pytest.fixture(scope="session")
 def lk_driver():
-    driver = _login_with_retries(headless=MONITOR_HEADLESS)
-    yield driver
+    os.environ["BID_LK_SESSION_ALIVE"] = "1"
+    driver = None
     try:
-        driver.quit()
-    except WebDriverException:
-        pass
+        driver = _login_with_retries(headless=MONITOR_HEADLESS)
+        yield driver
+    finally:
+        os.environ.pop("BID_LK_SESSION_ALIVE", None)
+        if driver is not None:
+            try:
+                quit_chrome_driver(driver)
+            except WebDriverException:
+                pass
 
 
 @pytest.fixture(scope="function")

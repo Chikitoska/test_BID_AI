@@ -37,6 +37,7 @@ def failures_from_checks(results: list[CheckResult]) -> list[FailureEvent]:
                 test_name=item.name,
                 detail=detail,
                 url=url if url and not url.startswith("about:") else None,
+                http_code=item.http_code or None,
             )
         else:
             error = detail
@@ -182,7 +183,8 @@ def write_lk_run(
 
     run_status: ok | fail | skipped_busy | autotest
     (legacy tag value infra ≡ autotest — читается Grafana как оранжевый)
-    skipped=1 — ЛК не проверяли (Chrome занят); success при этом 0 (не зелёный).
+    skipped=1 — UI/ЛК не проверяли (Chrome занят). Если HTTP лендинга ок,
+    run_status=ok и success=1 — весь health не красим в skipped_busy.
     """
     if not INFLUXDB_TOKEN:
         return

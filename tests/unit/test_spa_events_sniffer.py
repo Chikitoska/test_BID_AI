@@ -3,6 +3,8 @@ import pytest
 from utils.spa_analytics import DEFAULT_MONITOR_ANALYTICS_UID
 from utils.spa_events_sniffer import (
     SpaEventPost,
+    SpaEventsHarnessError,
+    SpaEventsNetworkError,
     SpaEventsUidError,
     assert_only_monitor_uid,
 )
@@ -57,8 +59,35 @@ def test_assert_only_monitor_uid_fails_when_missing_uid():
 
 
 def test_assert_only_monitor_uid_fails_when_no_posts():
-    with pytest.raises(SpaEventsUidError, match="не обнаружен"):
+    with pytest.raises(SpaEventsHarnessError, match="сниффер пуст"):
         assert_only_monitor_uid([], expected=EXPECTED, require_posts=True)
+
+
+def test_assert_empty_posts_page_200_is_harness():
+    with pytest.raises(SpaEventsHarnessError, match="harness"):
+        assert_only_monitor_uid([], expected=EXPECTED, require_posts=True, page_status=200)
+
+
+def test_assert_empty_posts_spa_back_5xx_is_network():
+    with pytest.raises(SpaEventsNetworkError, match="spa-back HTTP 502"):
+        assert_only_monitor_uid(
+            [],
+            expected=EXPECTED,
+            require_posts=True,
+            page_status=200,
+            spa_statuses=[502],
+        )
+
+
+def test_assert_empty_posts_spa_back_timeout_is_network():
+    with pytest.raises(SpaEventsNetworkError, match="spa-back timeout"):
+        assert_only_monitor_uid(
+            [],
+            expected=EXPECTED,
+            require_posts=True,
+            page_status=200,
+            spa_errors=["net::ERR_TIMED_OUT"],
+        )
 
 
 def test_assert_only_monitor_uid_accepts_raw_bodies():

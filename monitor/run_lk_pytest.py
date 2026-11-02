@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
-Боевой UI-прогон (~каждые 2 ч): ЛК + чат-бот (лендинг/ЛК) + Минцифр + Allure.
+Боевой UI-прогон (~каждые 2 ч): только ЛК + Allure.
 
+Чат-бот лендинга и Минцифр уже в health / daily — здесь не дублируем
+(второй Chrome при живой сессии ЛК даёт SessionNotCreated).
 Не prod-пульс (это health каждые 5 мин). Результаты: allure-results/lk-YYYYMMDD-HHMM/
 """
 
@@ -57,8 +59,6 @@ def _run_lk_pytest() -> PytestResult:
     cmd = [
         str(CFG_ROOT / ".venv" / "bin" / "pytest"),
         "tests/lk/",
-        "tests/ui/selenium_ui/test_landing_chatbot.py",
-        "tests/ui/selenium_ui/test_mincifry.py",
         "--ignore=tests/lk/test_lk_smoke.py",
         "-v",
         "--tb=short",
@@ -113,8 +113,9 @@ def main() -> int:
     try:
         with chrome_run_lock(owner="lk_pytest", wait_sec=lk_wait):
             print(
-                "Запуск боевого pytest: tests/lk + чат-бот лендинга + Минцифр "
-                "(ignore leftover test_lk_smoke.py) … обычно 5–8 мин",
+                "Запуск боевого pytest: только tests/lk "
+                "(ignore leftover test_lk_smoke.py; лендинг chatbot/mincifry — в health/daily) "
+                "… обычно 5–8 мин",
                 flush=True,
             )
             result = _run_lk_pytest()

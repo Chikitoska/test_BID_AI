@@ -21,7 +21,7 @@ CHECK_LABELS: dict[str, str] = {
     "service_providers": "Список сервисов на главной",
     "legal_documents_bulk": "Юридические документы (оферты, cookie)",
     "version": "Версия фронтенда",
-    "spa_counter_js": "Скрипт веб-аналитики",
+    "spa_counter_js": "spa-back: скрипт веб-аналитики",
     "external_counter.js": "Внешний счётчик посещений",
     "landing_chatbot": "Лендинг: чат-бот ассистент",
     "landing_chatbot_icon": "Лендинг: иконка чат-бота",

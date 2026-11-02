@@ -9,6 +9,7 @@ from config.api_catalog import EXTERNAL_LANDING_API_METHODS, LANDING_API_METHODS
 from config.settings import AUTH_URL_PATTERNS, BASE_URL, PUBLIC_EXTERNAL_URLS
 from monitor.check_catalog import get_check_label
 from monitor.config import MONITOR_ACCEPT_CODES, MONITOR_HTTP_CONNECT_TIMEOUT, MONITOR_HTTP_TIMEOUT
+from monitor.host_classify import classify_bid_host, format_host_error
 from utils.auth_filter import is_auth_url
 
 
@@ -33,9 +34,10 @@ def _check_get(session: requests.Session, name: str, url: str) -> CheckResult:
         code = response.status_code
         if 200 <= code < 300 or code in MONITOR_ACCEPT_CODES:
             return CheckResult(name, url, "GET", True, code, duration_ms)
+        host_kind = classify_bid_host(url)
         return CheckResult(
             name, url, "GET", False, code, duration_ms,
-            error=f"HTTP {code}: {response.reason}",
+            error=f"{host_kind} HTTP {code}: {response.reason} ({url})",
         )
     except requests.RequestException as exc:
         time.sleep(2)
@@ -45,13 +47,17 @@ def _check_get(session: requests.Session, name: str, url: str) -> CheckResult:
             code = response.status_code
             if 200 <= code < 300 or code in MONITOR_ACCEPT_CODES:
                 return CheckResult(name, url, "GET", True, code, duration_ms)
+            host_kind = classify_bid_host(url)
             return CheckResult(
                 name, url, "GET", False, code, duration_ms,
-                error=f"HTTP {code}: {response.reason}",
+                error=f"{host_kind} HTTP {code}: {response.reason} ({url})",
             )
-        except requests.RequestException:
+        except requests.RequestException as retry_exc:
             duration_ms = (time.perf_counter() - start) * 1000
-            return CheckResult(name, url, "GET", False, 0, duration_ms, error=str(exc))
+            return CheckResult(
+                name, url, "GET", False, 0, duration_ms,
+                error=format_host_error(url=url, error=str(retry_exc or exc)),
+            )
 
 
 def _url_for_api(api: LandingApiMethod) -> str:

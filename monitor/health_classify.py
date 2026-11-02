@@ -39,6 +39,22 @@ _CHROME_INFRA_MARKERS = (
     "user data directory is already in use",
 )
 
+# Сниффер пуст при живой странице — harness, не «лендинг/spa-back лежит».
+_HARNESS_EVENTS_MARKERS = (
+    "post /events не обнаружен",
+    "сниффер пуст",
+    "harness:",
+    "spaeventsharnesserror",
+)
+
+# spa-back 5xx/timeout — красный network, не harness.
+_SPA_BACK_NETWORK_MARKERS = (
+    "spaeventsnetworkerror",
+    "spa-back http 5",
+    "spa-back timeout",
+    "spa-back dns",
+)
+
 # UI-ожидания/селекторы — проблема автотеста (оранжевый), не сеть/4xx/5xx.
 _UI_WAIT_EXCEPTION_MARKERS = (
     "timeoutexception",
@@ -51,10 +67,13 @@ _UI_WAIT_EXCEPTION_MARKERS = (
     "assertionerror",
     "chatboterror",
     "mincifryerror",
-    "иконка чат-бота",
     "темы не отображаются",
     "окно чат-бота",
     "вернуться в начало",
+    "post /events не обнаружен",
+    "сниффер пуст",
+    "harness:",
+    "spaeventsharnesserror",
 )
 
 # Пустой Message: / Message:\nStacktrace без имени wait-exception — краш драйвера.
@@ -81,17 +100,52 @@ def is_chrome_infra_error(error: str) -> bool:
     return False
 
 
+def is_widget_icon_miss(error: str) -> bool:
+    """Иконка чат-бота не появилась за 15 с — боевой fail виджета, не harness."""
+    return "иконка чат-бота не отображается" in (error or "").lower()
+
+
 def is_ui_autotest_error(error: str) -> bool:
     """True для Selenium wait/assert/селектор — флак автотеста, не HTTP/сеть."""
     lower = (error or "").lower()
     if not lower.strip():
         return False
+    if is_widget_icon_miss(error):
+        return False
     return any(marker in lower for marker in _UI_WAIT_EXCEPTION_MARKERS)
+
+
+def is_spa_back_network_error(error: str) -> bool:
+    """spa-back 5xx/timeout — боевая сеть, не harness."""
+    lower = (error or "").lower()
+    if not lower.strip():
+        return False
+    if any(marker in lower for marker in _SPA_BACK_NETWORK_MARKERS):
+        return True
+    if "spa-back" in lower and (
+        is_http_4xx_or_5xx(error=error) or "timeout" in lower or "timed out" in lower
+    ):
+        return True
+    return False
+
+
+def is_events_harness_miss(error: str) -> bool:
+    """POST /events не пойман сниффером при живой странице — оранжевый harness."""
+    lower = (error or "").lower()
+    if is_spa_back_network_error(error):
+        return False
+    return any(marker in lower for marker in _HARNESS_EVENTS_MARKERS)
 
 
 def is_autotest_error(error: str) -> bool:
     """Chrome/WebDriver или UI wait/assert — оранжевый (autotest)."""
-    return is_chrome_infra_error(error) or is_ui_autotest_error(error)
+    if is_widget_icon_miss(error) or is_spa_back_network_error(error):
+        return False
+    return (
+        is_chrome_infra_error(error)
+        or is_ui_autotest_error(error)
+        or is_events_harness_miss(error)
+    )
 
 
 def is_autotest_failure_kind(kind: str | None) -> bool:
@@ -116,8 +170,10 @@ def classify_health_failure(results: list[CheckResult]) -> FailureKind:
     for item in failed:
         if is_http_4xx_or_5xx(http_code=item.http_code, error=item.error):
             return "prod"
-        # HTTP-проверка лендинга (не UI) — всегда prod/сеть.
+        # HTTP-проверка (лендинг / spa-back / ЛК) — сеть, не harness.
         if (item.method or "").upper() in ("GET", "POST", "HEAD"):
+            return "prod"
+        if is_spa_back_network_error(item.error) or is_widget_icon_miss(item.error):
             return "prod"
         if not is_autotest_error(item.error):
             return "prod"
@@ -130,9 +186,15 @@ def health_run_status(
     overall_ok: bool,
     lk_skipped_busy: bool = False,
     failure_kind: HealthFailureKind | None = None,
+    http_ok: bool = False,
 ) -> HealthRunStatus:
-    """Статус прогона для логов / Influx tag run_status."""
-    if lk_skipped_busy and not overall_ok:
+    """Статус прогона для логов / Influx tag run_status.
+
+    Chrome busy при успешном HTTP лендинга — не красим весь health в skipped_busy.
+    """
+    if lk_skipped_busy:
+        if http_ok or overall_ok:
+            return "ok"
         return "skipped_busy"
     if overall_ok:
         return "ok"
