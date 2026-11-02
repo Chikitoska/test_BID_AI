@@ -1,121 +1,98 @@
 # BID monitor digest
 
-- Generated: `2026-11-02T08:50:03.866046+03:00` (Europe/Moscow)
+- Generated: `2026-11-02T20:50:04.032152+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
-- Git HEAD: `82a09f8 fix(monitor): stop combat Chrome mismatch and health /events sniffer misses.`
+- Git HEAD: `829102f chore(monitor): one-shot rewrite of 13:26/13:31 health bars to ok.`
 
 ## Influx volume
 
-- `bid_failure`: 103 точек (~1д)
-- `bid_lk_pytest`: 60 точек (~1д)
-- `bid_lk_run`: 1152 точек (~1д)
-- `bid_run`: 10 точек (~1д)
+- `bid_failure`: 27 точек (~1д)
+- `bid_lk_pytest`: 50 точек (~1д)
+- `bid_lk_run`: 1064 точек (~1д)
+- `bid_run`: 5 точек (~1д)
 
 ## Failures (bid_failure)
 
-- `2026-11-02 03:22:57.295608+00:00` | Боевой прогон ЛК (2 ч) | `test_landing_chatbot_full_flow` | tests/ui/selenium_ui/test_landing_chatbot.py::test_landing_chatbot_full_flow | test_landing_chatbot_full_flow | SessionNotCreatedException: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-- `2026-11-02 01:22:58.203219+00:00` | Боевой прогон ЛК (2 ч) | `test_landing_chatbot_full_flow` | tests/ui/selenium_ui/test_landing_chatbot.py::test_landing_chatbot_full_flow | test_landing_chatbot_full_flow | SessionNotCreatedException: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-- `2026-11-01 23:25:05.612162+00:00` | Боевой прогон ЛК (2 ч) | `test_landing_chatbot_full_flow` | tests/ui/selenium_ui/test_landing_chatbot.py::test_landing_chatbot_full_flow | test_landing_chatbot_full_flow | SessionNotCreatedException: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-- `2026-11-01 21:25:08.047450+00:00` | Боевой прогон ЛК (2 ч) | `test_landing_chatbot_full_flow` | tests/ui/selenium_ui/test_landing_chatbot.py::test_landing_chatbot_full_flow | test_landing_chatbot_full_flow | SessionNotCreatedException: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-- `2026-11-01 19:27:50.938339+00:00` | Боевой прогон ЛК (2 ч) | `test_landing_chatbot_full_flow` | tests/ui/selenium_ui/test_landing_chatbot.py::test_landing_chatbot_full_flow | test_landing_chatbot_full_flow | SessionNotCreatedException: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-- `2026-11-02 05:23:55.000803+00:00` | Боевой прогон ЛК (2 ч) | `test_landing_chatbot_skips_login_and_registration` | tests/ui/selenium_ui/test_landing_chatbot.py::test_landing_chatbot_skips_login_and_registration | test_landing_chatbot_skips_login_and_registration | ChatbotError: Лендинг: иконка чат-бота не отображается
-- `2026-11-02 03:22:57.295608+00:00` | Боевой прогон ЛК (2 ч) | `test_landing_chatbot_skips_login_and_registration` | tests/ui/selenium_ui/test_landing_chatbot.py::test_landing_chatbot_skips_login_and_registration | test_landing_chatbot_skips_login_and_registration | SessionNotCreatedException: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-- `2026-11-02 01:22:58.203219+00:00` | Боевой прогон ЛК (2 ч) | `test_landing_chatbot_skips_login_and_registration` | tests/ui/selenium_ui/test_landing_chatbot.py::test_landing_chatbot_skips_login_and_registration | test_landing_chatbot_skips_login_and_registration | SessionNotCreatedException: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-- `2026-11-01 23:25:05.612162+00:00` | Боевой прогон ЛК (2 ч) | `test_landing_chatbot_skips_login_and_registration` | tests/ui/selenium_ui/test_landing_chatbot.py::test_landing_chatbot_skips_login_and_registration | test_landing_chatbot_skips_login_and_registration | SessionNotCreatedException: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-- `2026-11-01 21:25:08.047450+00:00` | Боевой прогон ЛК (2 ч) | `test_landing_chatbot_skips_login_and_registration` | tests/ui/selenium_ui/test_landing_chatbot.py::test_landing_chatbot_skips_login_and_registration | test_landing_chatbot_skips_login_and_registration | SessionNotCreatedException: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-- `2026-11-01 19:27:50.938339+00:00` | Боевой прогон ЛК (2 ч) | `test_landing_chatbot_skips_login_and_registration` | tests/ui/selenium_ui/test_landing_chatbot.py::test_landing_chatbot_skips_login_and_registration | test_landing_chatbot_skips_login_and_registration | SessionNotCreatedException: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-- `2026-11-02 03:22:57.295608+00:00` | Боевой прогон ЛК (2 ч) | `test_landing_mincifry_full_flow` | tests/ui/selenium_ui/test_mincifry.py::test_landing_mincifry_full_flow | test_landing_mincifry_full_flow | SessionNotCreatedException: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-- `2026-11-02 01:22:58.203219+00:00` | Боевой прогон ЛК (2 ч) | `test_landing_mincifry_full_flow` | tests/ui/selenium_ui/test_mincifry.py::test_landing_mincifry_full_flow | test_landing_mincifry_full_flow | SessionNotCreatedException: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-- `2026-11-01 23:25:05.612162+00:00` | Боевой прогон ЛК (2 ч) | `test_landing_mincifry_full_flow` | tests/ui/selenium_ui/test_mincifry.py::test_landing_mincifry_full_flow | test_landing_mincifry_full_flow | SessionNotCreatedException: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-- `2026-11-01 21:25:08.047450+00:00` | Боевой прогон ЛК (2 ч) | `test_landing_mincifry_full_flow` | tests/ui/selenium_ui/test_mincifry.py::test_landing_mincifry_full_flow | test_landing_mincifry_full_flow | SessionNotCreatedException: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-- `2026-11-01 19:27:50.938339+00:00` | Боевой прогон ЛК (2 ч) | `test_landing_mincifry_full_flow` | tests/ui/selenium_ui/test_mincifry.py::test_landing_mincifry_full_flow | test_landing_mincifry_full_flow | SessionNotCreatedException: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-- `2026-11-02 05:23:55.000803+00:00` | Боевой прогон ЛК (2 ч) | `test_mincifry_card_click_skips_login_and_registration` | tests/ui/selenium_ui/test_mincifry.py::test_mincifry_card_click_skips_login_and_registration | test_mincifry_card_click_skips_login_and_registration | MincifryError: На лендинге не отображается блок «Установите российские сертификаты, чтобы не терять доступ к сервисам»
-- `2026-11-02 03:22:57.295608+00:00` | Боевой прогон ЛК (2 ч) | `test_mincifry_card_click_skips_login_and_registration` | tests/ui/selenium_ui/test_mincifry.py::test_mincifry_card_click_skips_login_and_registration | test_mincifry_card_click_skips_login_and_registration | SessionNotCreatedException: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-- `2026-11-02 01:22:58.203219+00:00` | Боевой прогон ЛК (2 ч) | `test_mincifry_card_click_skips_login_and_registration` | tests/ui/selenium_ui/test_mincifry.py::test_mincifry_card_click_skips_login_and_registration | test_mincifry_card_click_skips_login_and_registration | SessionNotCreatedException: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-- `2026-11-01 23:25:05.612162+00:00` | Боевой прогон ЛК (2 ч) | `test_mincifry_card_click_skips_login_and_registration` | tests/ui/selenium_ui/test_mincifry.py::test_mincifry_card_click_skips_login_and_registration | test_mincifry_card_click_skips_login_and_registration | SessionNotCreatedException: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-- `2026-11-01 21:25:08.047450+00:00` | Боевой прогон ЛК (2 ч) | `test_mincifry_card_click_skips_login_and_registration` | tests/ui/selenium_ui/test_mincifry.py::test_mincifry_card_click_skips_login_and_registration | test_mincifry_card_click_skips_login_and_registration | SessionNotCreatedException: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-- `2026-11-01 19:27:50.938339+00:00` | Боевой прогон ЛК (2 ч) | `test_mincifry_card_click_skips_login_and_registration` | tests/ui/selenium_ui/test_mincifry.py::test_mincifry_card_click_skips_login_and_registration | test_mincifry_card_click_skips_login_and_registration | SessionNotCreatedException: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
+- `2026-11-02 11:28:29.468275+00:00` | Лендинг + мин ЛК (5 мин) | `landing_chatbot_icon` | Лендинг: иконка чат-бота | landing_chatbot_icon | landing | https://bid.gazprom-neft.ru/ | Лендинг: иконка чат-бота не отображается
+- `2026-11-02 10:51:02.093134+00:00` | Лендинг + мин ЛК (5 мин) | `landing_chatbot_icon` | Лендинг: иконка чат-бота | landing_chatbot_icon | landing | https://bid.gazprom-neft.ru/ | Лендинг: иконка чат-бота не отображается
+- `2026-11-02 10:31:56.900730+00:00` | Лендинг + мин ЛК (5 мин) | `landing_chatbot_icon` | Лендинг: иконка чат-бота | landing_chatbot_icon | landing | https://bid.gazprom-neft.ru/ | Лендинг: иконка чат-бота не отображается
+- `2026-11-02 10:26:31.003011+00:00` | Лендинг + мин ЛК (5 мин) | `landing_chatbot_icon` | Лендинг: иконка чат-бота | landing_chatbot_icon | landing | https://bid.gazprom-neft.ru/ | Лендинг: иконка чат-бота не отображается
+- `2026-11-02 11:28:29.468275+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/service-providers | ЛК не загрузился после входа (нет бейджа пользователя), URL: https://lk.bid.gazprom-neft.ru/service-providers
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-[FAIL] landing_chatbot_events 2998ms landing_chatbot: POST /events не обнаружен
-[FAIL] lk_chatbot_events 2504ms lk_chatbot: POST /events не обнаружен
-Metrics sent to InfluxDB (run_status=fail)
-Alert suppressed: health fail streak 20/2
-Health monitor finished in 34.5s — FAIL (run_status=fail)
-[FAIL] landing_chatbot_events 2996ms landing_chatbot: POST /events не обнаружен
-[FAIL] lk_chatbot_events 2504ms lk_chatbot: POST /events не обнаружен
-Metrics sent to InfluxDB (run_status=fail)
-Alert suppressed: health fail streak 21/2
-Health monitor finished in 37.2s — FAIL (run_status=fail)
-[FAIL] landing_chatbot_events 2985ms landing_chatbot: POST /events не обнаружен
-[FAIL] lk_chatbot_events 2505ms lk_chatbot: POST /events не обнаружен
-Metrics sent to InfluxDB (run_status=fail)
-Alert suppressed: health fail streak 22/2
-Health monitor finished in 35.7s — FAIL (run_status=fail)
-[FAIL] landing_chatbot_events 3007ms landing_chatbot: POST /events не обнаружен
-[FAIL] lk_chatbot_events 2503ms lk_chatbot: POST /events не обнаружен
-Metrics sent to InfluxDB (run_status=fail)
-Alert suppressed: health fail streak 23/2
-Health monitor finished in 34.9s — FAIL (run_status=fail)
-[FAIL] landing_chatbot_events 3003ms landing_chatbot: POST /events не обнаружен
-[FAIL] lk_chatbot_events 2503ms lk_chatbot: POST /events не обнаружен
-Metrics sent to InfluxDB (run_status=fail)
-Alert suppressed: health fail streak 24/2
-Health monitor finished in 34.6s — FAIL (run_status=fail)
-[FAIL] landing_chatbot_events 2993ms landing_chatbot: POST /events не обнаружен
-[FAIL] lk_chatbot_events 2507ms lk_chatbot: POST /events не обнаружен
-Metrics sent to InfluxDB (run_status=fail)
-Alert suppressed: health fail streak 25/2
-Health monitor finished in 32.8s — FAIL (run_status=fail)
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Mon, 02 Nov 2026 17:30:49 GMT', 'Content-Length': '434'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: manifest write failed for \"/var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST\": failed writing temporary manifest file \"/var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST786485473\": write /var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST786485473: no space left on device"}
+WARN: InfluxDB write checks failed: (500)
+Reason: Internal Server Error
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Mon, 02 Nov 2026 17:30:49 GMT', 'Content-Length': '432'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: manifest write failed for \"/var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST\": failed writing temporary manifest file \"/var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST99846058\": write /var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST99846058: no space left on device"}
+WARN: InfluxDB write_lk_run failed: (500)
+Reason: Internal Server Error
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Mon, 02 Nov 2026 17:35:55 GMT', 'Content-Length': '436'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: manifest write failed for \"/var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST\": failed writing temporary manifest file \"/var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST3201908114\": write /var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST3201908114: no space left on device"}
+WARN: InfluxDB write checks failed: (500)
+Reason: Internal Server Error
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Mon, 02 Nov 2026 17:35:55 GMT', 'Content-Length': '436'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: manifest write failed for \"/var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST\": failed writing temporary manifest file \"/var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST2327689636\": write /var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST2327689636: no space left on device"}
+WARN: InfluxDB write_lk_run failed: (500)
+Reason: Internal Server Error
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Mon, 02 Nov 2026 17:40:50 GMT', 'Content-Length': '434'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: manifest write failed for \"/var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST\": failed writing temporary manifest file \"/var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST480614714\": write /var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST480614714: no space left on device"}
+WARN: InfluxDB write checks failed: (500)
+Reason: Internal Server Error
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Mon, 02 Nov 2026 17:40:50 GMT', 'Content-Length': '436'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: manifest write failed for \"/var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST\": failed writing temporary manifest file \"/var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST3351751695\": write /var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST3351751695: no space left on device"}
+WARN: InfluxDB write_lk_run failed: (500)
+Reason: Internal Server Error
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Mon, 02 Nov 2026 17:45:51 GMT', 'Content-Length': '436'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: manifest write failed for \"/var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST\": failed writing temporary manifest file \"/var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST2731366068\": write /var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST2731366068: no space left on device"}
+WARN: InfluxDB write checks failed: (500)
+Reason: Internal Server Error
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Mon, 02 Nov 2026 17:45:51 GMT', 'Content-Length': '436'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: manifest write failed for \"/var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST\": failed writing temporary manifest file \"/var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST1187396019\": write /var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST1187396019: no space left on device"}
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-LK pytest: 10/14 passed, failed=0, errors=4, skipped=0 in 304.6s
 Failure events sent to InfluxDB (таблица Grafana)
 Alert suppressed: lk_pytest failures look like autotest/UI flake (TimeoutException/assert/selector) — Grafana only; prod pulse is health every 5 min
-ERROR tests/ui/selenium_ui/test_landing_chatbot.py::test_landing_chatbot_full_flow - selenium.common.exceptions.SessionNotCreatedException: Message: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-ERROR tests/ui/selenium_ui/test_mincifry.py::test_mincifry_card_click_skips_login_and_registration - selenium.common.exceptions.SessionNotCreatedException: Message: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-ERROR tests/ui/selenium_ui/test_mincifry.py::test_landing_mincifry_full_flow - selenium.common.exceptions.SessionNotCreatedException: Message: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-============= 10 passed, 2 warnings, 4 errors in 172.80s (0:02:52) =============
-LK pytest: 10/14 passed, failed=0, errors=4, skipped=0 in 173.9s
-Failure events sent to InfluxDB (таблица Grafana)
-Alert suppressed: lk_pytest failures look like autotest/UI flake (TimeoutException/assert/selector) — Grafana only; prod pulse is health every 5 min
-ERROR tests/ui/selenium_ui/test_landing_chatbot.py::test_landing_chatbot_full_flow - selenium.common.exceptions.SessionNotCreatedException: Message: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-ERROR tests/ui/selenium_ui/test_mincifry.py::test_mincifry_card_click_skips_login_and_registration - selenium.common.exceptions.SessionNotCreatedException: Message: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-ERROR tests/ui/selenium_ui/test_mincifry.py::test_landing_mincifry_full_flow - selenium.common.exceptions.SessionNotCreatedException: Message: session not created: Chrome instance exited. Examine ChromeDriver verbose log to determine the cause.; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#sessionnotcreatedexception
-============= 10 passed, 2 warnings, 4 errors in 172.03s (0:02:52) =============
-LK pytest: 10/14 passed, failed=0, errors=4, skipped=0 in 173.1s
-Failure events sent to InfluxDB (таблица Grafana)
-Alert suppressed: lk_pytest failures look like autotest/UI flake (TimeoutException/assert/selector) — Grafana only; prod pulse is health every 5 min
-tests/ui/selenium_ui/test_landing_chatbot.py::test_landing_chatbot_skips_login_and_registration FAILED
-tests/ui/selenium_ui/test_mincifry.py::test_mincifry_card_click_skips_login_and_registration FAILED
-=================================== FAILURES ===================================
-    raise ChatbotError(f"{context}: иконка чат-бота не отображается")
-E   pages.chatbot_widget.ChatbotError: Лендинг: иконка чат-бота не отображается
-    raise MincifryError(
-E   pages.mincifry_page.MincifryError: На лендинге не отображается блок «Установите российские сертификаты, чтобы не терять доступ к сервисам»
-FAILED tests/ui/selenium_ui/test_landing_chatbot.py::test_landing_chatbot_skips_login_and_registration - pages.chatbot_widget.ChatbotError: Лендинг: иконка чат-бота не отображается
-FAILED tests/ui/selenium_ui/test_mincifry.py::test_mincifry_card_click_skips_login_and_registration - pages.mincifry_page.MincifryError: На лендинге не отображается блок «Установите российские сертификаты, чтобы не терять доступ к сервисам»
-============= 2 failed, 12 passed, 2 warnings in 229.45s (0:03:49) =============
-LK pytest: 12/14 passed, failed=2, errors=0, skipped=0 in 230.7s
-Failure events sent to InfluxDB (таблица Grafana)
-Alert suppressed: lk_pytest failures look like autotest/UI flake (TimeoutException/assert/selector) — Grafana only; prod pulse is health every 5 min
+plugins: rerunfailures-16.5, allure-pytest-2.16.0, playwright-0.8.0, base-url-2.1.0, xdist-3.8.0
+LK pytest: 10/10 passed, failed=0, errors=0, skipped=0 in 184.1s
+plugins: rerunfailures-16.5, allure-pytest-2.16.0, playwright-0.8.0, base-url-2.1.0, xdist-3.8.0
+LK pytest: 10/10 passed, failed=0, errors=0, skipped=0 in 179.8s
+plugins: rerunfailures-16.5, allure-pytest-2.16.0, playwright-0.8.0, base-url-2.1.0, xdist-3.8.0
+LK pytest: 10/10 passed, failed=0, errors=0, skipped=0 in 204.7s
+WARN: InfluxDB write failed: (500)
+Reason: Internal Server Error
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Mon, 02 Nov 2026 11:23:29 GMT', 'Content-Length': '161'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: mkdir /var/lib/influxdb2/engine/data/9d50e68af0e6d497: no space left on device"}
+plugins: rerunfailures-16.5, allure-pytest-2.16.0, playwright-0.8.0, base-url-2.1.0, xdist-3.8.0
+LK pytest: 10/10 passed, failed=0, errors=0, skipped=0 in 186.4s
+WARN: InfluxDB write failed: (500)
+Reason: Internal Server Error
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Mon, 02 Nov 2026 13:23:10 GMT', 'Content-Length': '215'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/14/_00001.wal: no space left on device"}
+plugins: rerunfailures-16.5, allure-pytest-2.16.0, playwright-0.8.0, base-url-2.1.0, xdist-3.8.0
+LK pytest: 10/10 passed, failed=0, errors=0, skipped=0 in 177.6s
+WARN: InfluxDB write failed: (500)
+Reason: Internal Server Error
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Mon, 02 Nov 2026 15:23:01 GMT', 'Content-Length': '215'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/14/_00001.wal: no space left on device"}
+plugins: rerunfailures-16.5, allure-pytest-2.16.0, playwright-0.8.0, base-url-2.1.0, xdist-3.8.0
+LK pytest: 10/10 passed, failed=0, errors=0, skipped=0 in 187.5s
+WARN: InfluxDB write failed: (500)
+Reason: Internal Server Error
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Mon, 02 Nov 2026 17:23:12 GMT', 'Content-Length': '434'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: manifest write failed for \"/var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST\": failed writing temporary manifest file \"/var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST581542791\": write /var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/MANIFEST581542791: no space left on device"}
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-Metrics sent to InfluxDB (run_status=ok)
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 6.9s
-Metrics sent to InfluxDB (run_status=ok)
-=== BID Daily Monitor ===
-Pytest: 38/39 passed, failed=1, errors=0 in 7.1s
 Metrics sent to InfluxDB (run_status=autotest)
 === BID Daily Monitor ===
 Pytest: 38/39 passed, failed=1, errors=0 in 6.4s
@@ -140,6 +117,12 @@ Metrics sent to InfluxDB (run_status=fail)
 === BID Daily Monitor ===
 Pytest: 39/39 passed, failed=0, errors=0 in 6.1s
 Metrics sent to InfluxDB (run_status=ok)
+=== BID Daily Monitor ===
+Pytest: 39/39 passed, failed=0, errors=0 in 10.6s
+WARN: InfluxDB write failed: (500)
+Reason: Internal Server Error
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Mon, 02 Nov 2026 14:01:36 GMT', 'Content-Length': '215'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/14/_00001.wal: no space left on device"}
 ```
 
 ## Agent instructions (read by Cursor Automation)
