@@ -133,7 +133,7 @@ def _alloc_user_data_dir() -> str:
     """Свой профиль на каждый старт: иначе второй Chrome в combat pytest падает.
 
     Общий CHROME_USER_DATA_DIR не переиспользуем — SingletonLock / «already in use».
-    GOST живёт в бинарнике (CHROME_BINARY), не в профиле.
+    Профиль обычного Chrome/Chromium, не Chromium-GOST.
     """
     explicit = os.getenv("CHROME_USER_DATA_DIR", "").strip()
     if explicit and os.getenv("CHROME_REUSE_USER_DATA_DIR", "").lower() in (
@@ -161,11 +161,26 @@ def _chromedriver_ok(path: str) -> bool:
         return False
 
 
+def _is_gost_chrome_path(path: str) -> bool:
+    """Chromium-GOST больше не используем в мониторе и автотестах."""
+    low = (path or "").lower()
+    return "chromium-gost" in low or "chrome-gost" in low or "/gost/" in low
+
+
 def _resolve_chrome_binary() -> str:
     explicit = os.getenv("CHROME_BINARY", "").strip()
-    if explicit and os.path.isfile(explicit) and os.access(explicit, os.X_OK):
-        return explicit
+    if explicit:
+        if _is_gost_chrome_path(explicit):
+            print(
+                f"[chrome] CHROME_BINARY={explicit} — Chromium-GOST игнорируем, "
+                "берём обычный Chrome/Chromium",
+                flush=True,
+            )
+        elif os.path.isfile(explicit) and os.access(explicit, os.X_OK):
+            return explicit
     for path in _CHROME_CANDIDATES:
+        if _is_gost_chrome_path(path):
+            continue
         if os.path.isfile(path) and os.access(path, os.X_OK):
             return path
     return ""

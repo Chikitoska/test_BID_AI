@@ -1,7 +1,8 @@
 """Fixtures Selenium UI-тестов.
 
-На VPS (combat pytest) тот же Chrome, что и у монитора: CHROME_BINARY / GOST,
-а не ChromeDriverManager (из‑за него SessionNotCreated: Chrome instance exited).
+На VPS (combat pytest) тот же обычный Chrome/Chromium, что и у монитора:
+CHROME_BINARY (не Chromium-GOST), не ChromeDriverManager
+(из‑за него SessionNotCreated: Chrome instance exited).
 
 Пока жива сессия ЛК (session-scoped lk_driver) второй Chrome не стартуем:
 чат-бот/Минцифр лендинга уже в health/daily; повторный браузер в combat
