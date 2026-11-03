@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -51,10 +52,36 @@ class PytestResult:
         return self.failed + self.errors
 
 
+def _prune_allure_results(*, keep: int = 1) -> None:
+    """Allure каждого боя занимает диск 15 ГБ; храним только последний каталог."""
+    root = PROJECT_ROOT / "allure-results"
+    if not root.is_dir():
+        return
+    dirs = sorted((p for p in root.iterdir() if p.is_dir()), key=lambda p: p.name)
+    for old in dirs[:-keep] if keep > 0 else dirs:
+        shutil.rmtree(old, ignore_errors=True)
+
+
+def _disk_free_bytes(path: Path) -> int:
+    try:
+        return int(shutil.disk_usage(path).free)
+    except OSError:
+        return 0
+
+
 def _run_lk_pytest() -> PytestResult:
     stamp = datetime.now().strftime("%Y%m%d-%H%M")
+    _prune_allure_results(keep=1)
     allure_dir = PROJECT_ROOT / "allure-results" / f"lk-{stamp}"
-    allure_dir.mkdir(parents=True, exist_ok=True)
+    use_allure = _disk_free_bytes(PROJECT_ROOT) >= 200 * 1024 * 1024
+    if use_allure:
+        try:
+            allure_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            print(f"WARN: allure dir: {exc} — pytest без Allure", flush=True)
+            use_allure = False
+    else:
+        print("WARN: мало места на диске — pytest без Allure", flush=True)
 
     cmd = [
         str(CFG_ROOT / ".venv" / "bin" / "pytest"),
@@ -76,8 +103,9 @@ def _run_lk_pytest() -> PytestResult:
         "HttpStatusError",
         "--only-rerun",
         "SessionNotCreatedException",
-        f"--alluredir={allure_dir}",
     ]
+    if use_allure:
+        cmd.append(f"--alluredir={allure_dir}")
     env = os.environ.copy()
     env["MONITOR_REQUIRE_LIVE"] = "1"
     start = time.perf_counter()

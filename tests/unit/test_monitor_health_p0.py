@@ -10,7 +10,7 @@ from monitor.health_classify import (
     is_chrome_infra_error,
     pytest_run_status,
 )
-from monitor.probe_alert import should_send_lk_telegram
+from monitor.probe_alert import should_send_lk_pytest_telegram, should_send_lk_telegram
 from monitor.pytest_failures import classify_lk_pytest_failure
 
 
@@ -200,6 +200,26 @@ def test_should_send_prod_confirmed_http(monkeypatch, tmp_path) -> None:
     monkeypatch.setattr(cfg, "MONITOR_ALERT_AFTER_FAILURES", 2)
 
     assert should_send_lk_telegram(overall_ok=False, confirmed_http_error=True) is True
+
+
+def test_classify_lk_pytest_enospc_is_autotest_not_prod(monkeypatch, tmp_path) -> None:
+    out = (
+        "Pytest не запустился:\n"
+        'File "/opt/test_BID_AI/.venv/lib/python3.12/site-packages/'
+        'allure_commons/logger.py", line 25, in _report_item\n'
+        'OSError: [Errno 28] No space left on device\n'
+    )
+    assert classify_lk_pytest_failure(out, failed=1, total=0) == "autotest"
+    assert classify_lk_pytest_failure(out, failed=1, total=10) == "autotest"
+    import monitor.config as cfg
+    import monitor.state as st
+
+    monkeypatch.setattr(cfg, "ALERT_STATE_FILE", tmp_path / "alert_state.json")
+    monkeypatch.setattr(st, "ALERT_STATE_FILE", tmp_path / "alert_state.json")
+    assert (
+        should_send_lk_pytest_telegram(overall_ok=False, pytest_output=out, failed=1, total=0)
+        is False
+    )
 
 
 def test_classify_lk_pytest_timeout_autotest() -> None:

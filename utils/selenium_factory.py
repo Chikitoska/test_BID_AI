@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import signal
 import subprocess
 import sys
@@ -40,6 +41,9 @@ _CHROMEDRIVER_CANDIDATES = (
     "/usr/bin/chromedriver",
     "/snap/bin/chromium.chromedriver",
 )
+
+# Snap Chromium: реальный профиль в snap-private-tmp, /tmp/<name> часто 4KB-заглушка.
+SNAP_CHROMIUM_PRIVATE_TMP = "/tmp/snap-private-tmp/snap.chromium/tmp"
 
 
 def user_data_dir_from_options(options) -> str:
@@ -107,8 +111,35 @@ def kill_orphans_for_user_data_dir(user_data_dir: str) -> int:
     return killed
 
 
+def _bid_chrome_profile_name(user_data_dir: str) -> str:
+    """Имя temp-профиля этого запуска (bid-chrome-*); чужие каталоги не трогаем."""
+    name = os.path.basename(os.path.normpath(user_data_dir or ""))
+    if not name.startswith("bid-chrome-") or name in (".", ".."):
+        return ""
+    return name
+
+
+def snap_private_twin_dir(user_data_dir: str) -> str:
+    """/tmp/snap-private-tmp/snap.chromium/tmp/<basename> — только этот профиль."""
+    name = _bid_chrome_profile_name(user_data_dir)
+    if not name:
+        return ""
+    return os.path.join(SNAP_CHROMIUM_PRIVATE_TMP, name)
+
+
+def remove_chrome_user_data_dir(user_data_dir: str) -> None:
+    """Удалить temp-профиль этого запуска и snap-private близнеца, если есть."""
+    name = _bid_chrome_profile_name(user_data_dir)
+    if not name:
+        return
+    shutil.rmtree(user_data_dir, ignore_errors=True)
+    twin = snap_private_twin_dir(user_data_dir)
+    if twin:
+        shutil.rmtree(twin, ignore_errors=True)
+
+
 def quit_chrome_driver(driver) -> None:
-    """quit + убрать сирот этого user-data-dir (не чужой Chrome)."""
+    """quit, сироты этого профиля, затем rmtree user-data-dir и snap-private twin."""
     user_dir = getattr(driver, "_bid_user_data_dir", "") or ""
     if not user_dir:
         try:
@@ -125,8 +156,10 @@ def quit_chrome_driver(driver) -> None:
         driver.quit()
     except Exception:
         pass
-    if user_dir:
-        kill_orphans_for_user_data_dir(user_dir)
+    finally:
+        if user_dir:
+            kill_orphans_for_user_data_dir(user_dir)
+            remove_chrome_user_data_dir(user_dir)
 
 
 def _alloc_user_data_dir() -> str:
@@ -370,6 +403,7 @@ def create_chrome_driver(
             last_error = exc
             if user_dir:
                 kill_orphans_for_user_data_dir(user_dir)
+                remove_chrome_user_data_dir(user_dir)
             if attempt >= retries:
                 break
             print(

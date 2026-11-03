@@ -20,7 +20,10 @@ done
 rm -rf \
   "$PROJECT_DIR/artifacts"/* \
   "$PROJECT_DIR/.selenium_cache" \
+  "$PROJECT_DIR/allure-results"/* \
   /tmp/chrome-* /tmp/.com.google.Chrome* /tmp/chromedriver* \
+  /tmp/bid-chrome-* \
+  /tmp/snap-private-tmp/snap.chromium/tmp/bid-chrome-* \
   2>/dev/null || true
 
 find /var/lib/docker/containers -name '*-json.log' -size +5M -exec truncate -s 0 {} \; 2>/dev/null || true
@@ -35,8 +38,5 @@ du -xh --max-depth=1 /opt /var/lib /var/log 2>/dev/null | sort -h | tail -15
 echo
 docker system df 2>/dev/null || true
 echo
-echo "Нужно свободно ≥1 ГБ на /. Потом:"
-echo "  docker restart bid-influxdb"
-echo "  cd $PROJECT_DIR && git checkout -- monitor/reports/latest.md && git pull"
-echo "  .venv/bin/python monitor/rewrite_health_ok.py --apply"
-echo "  .venv/bin/python monitor/rewrite_missing_daily.py --apply"
+echo "Нужно свободно ≥1 ГБ на /. Grafana/Influx volumes не трогать."
+echo "Influx не рестартить, пока Avail=0 — сгорит WAL."

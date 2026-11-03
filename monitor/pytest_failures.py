@@ -11,6 +11,14 @@ from monitor.metrics import FailureEvent
 
 FailureKind = Literal["prod", "autotest"]
 
+
+def _is_monitor_disk_full(lower: str) -> bool:
+    return (
+        "no space left on device" in lower
+        or "errno 28" in lower
+        or "enospc" in lower
+    )
+
 # Сеть / HTTP 4xx/5xx — алертим сразу (красный в Grafana).
 # Chrome/WebDriver — НЕ сюда: это autotest (оранжевый), см. health_classify.
 # Не ставить короткие/шумные подстроки вроде "dns" или просто "chromedriver":
@@ -102,11 +110,10 @@ def classify_lk_pytest_failure(output: str, *, failed: int = 0, total: int = 0) 
     text = output or ""
     lower = text.lower()
 
-    if total == 0 and failed > 0:
-        # Pytest не стартовал / chrome busy — harness, не пейдж «PROD лежит».
-        if is_chrome_infra_error(text) or "chrome занят" in lower or "chrome_lock" in lower:
-            return "autotest"
-        return "prod"
+    if total == 0:
+        # Pytest не стартовал — harness монитора, не «PROD лежит» (пульс = health 5 мин).
+        # Иначе ENOSPC/Allure на VPS уходит письмом, хотя BID жив.
+        return "autotest"
 
     prod_hit = any(marker.lower() in lower for marker in _PROD_MARKERS)
     # Chrome crash / UI wait — через общие хелперы (не дублировать маркеры).
@@ -118,6 +125,9 @@ def classify_lk_pytest_failure(output: str, *, failed: int = 0, total: int = 0) 
     # Явная сеть/4xx/5xx — всегда prod (даже если в логе есть UI-слова).
     if prod_hit:
         return "prod"
+
+    if _is_monitor_disk_full(lower):
+        return "autotest"
 
     # Массовый провал без сети/HTTP — всё же prod (стенд/логин), кроме чистого Chrome.
     if mass_fail:
