@@ -182,7 +182,6 @@ def main() -> int:
 
     if INFLUX_ENABLED:
         try:
-            write_check_results(http_results + mincifry_results)
             write_pytest_run(
                 total=pytest_result.total,
                 passed=pytest_result.passed,
@@ -192,7 +191,11 @@ def main() -> int:
             )
             print(f"Metrics sent to InfluxDB (run_status={run_status})")
         except Exception as exc:
-            print(f"WARN: InfluxDB write failed: {exc}")
+            print(f"WARN: InfluxDB write_pytest_run failed: {exc}")
+        try:
+            write_check_results(http_results + mincifry_results)
+        except Exception as exc:
+            print(f"WARN: InfluxDB write_check_results failed: {exc}")
 
     failure_events = failures_from_checks(http_failed + mincifry_failed)
     if pytest_result.pytest_failed:

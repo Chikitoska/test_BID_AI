@@ -7,6 +7,10 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
 cd "$PROJECT_DIR"
 
+# shellcheck source=/dev/null
+. "$SCRIPT_DIR/rotate_logs.sh"
+rotate_monitor_log "$PROJECT_DIR/monitor/lk-pytest.log"
+
 if [ -f monitor/.env ]; then
   set -a
   # shellcheck disable=SC1091
