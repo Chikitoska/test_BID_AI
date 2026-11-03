@@ -32,6 +32,8 @@ TARGETS = (
     datetime.fromisoformat("2026-11-02T10:31:56.892+00:00"),
 )
 WINDOW = timedelta(seconds=2)
+if WINDOW > timedelta(seconds=10):
+    raise RuntimeError("delete window too wide")
 
 
 def _query_lk_run(client: InfluxDBClient, start: datetime, stop: datetime) -> list[dict]:
