@@ -1,124 +1,102 @@
 # BID monitor digest
 
-- Generated: `2026-11-03T08:50:01.600893+03:00` (Europe/Moscow)
+- Generated: `2026-11-03T20:50:22.683840+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
-- Git HEAD: `652f0a8 fix(monitor): restore overnight combat bars that Influx dropped on full disk.`
+- Git HEAD: `fc32efd fix(monitor): keep health 5xx red and alert even if retry later returns 200.`
 
 ## Influx volume
 
-- `bid_failure`: 1 точек (~1д)
-- `bid_lk_pytest`: 55 точек (~1д)
-- `bid_lk_run`: 1064 точек (~1д)
-- `bid_run`: 10 точек (~1д)
+- `bid_lk_pytest`: 5 точек (~1д)
+- `bid_lk_run`: 96 точек (~1д)
 
 ## Failures (bid_failure)
 
-- `2026-11-03 05:26:31.330429+00:00` | Лендинг + мин ЛК (5 мин) | `landing_chatbot_topics` | Лендинг: темы чат-бота | landing_chatbot_topics | landing | https://bid.gazprom-neft.ru/ | Лендинг: после открытия чата темы не отображаются. Текст: 'Ассистент\nНеизвестная ошибка\n\nСейчас ассистент недоступен — попробуйте вернуться позже или обратитесь в поддержку'
+(ошибок bid_failure за период нет)
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 03:21:36 GMT', 'Content-Length': '171'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: mkdir /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15: no space left on device"}
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 15:40:46 GMT', 'Content-Length': '215'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
 WARN: InfluxDB write_lk_run failed: (500)
 Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 03:25:49 GMT', 'Content-Length': '171'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: mkdir /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15: no space left on device"}
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 15:45:49 GMT', 'Content-Length': '215'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
 WARN: InfluxDB write checks failed: (500)
 Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 03:25:49 GMT', 'Content-Length': '171'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: mkdir /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15: no space left on device"}
-WARN: InfluxDB write_lk_run failed: (500)
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 15:45:49 GMT', 'Content-Length': '215'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
+WARN: InfluxDB write_lk_run failed (attempt 1/3): (500)
 Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 03:30:42 GMT', 'Content-Length': '171'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: mkdir /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15: no space left on device"}
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 15:50:46 GMT', 'Content-Length': '215'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
+WARN: InfluxDB write_lk_run failed (attempt 2/3): (500)
+Reason: Internal Server Error
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 15:50:46 GMT', 'Content-Length': '215'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
+WARN: InfluxDB write_lk_run failed (attempt 3/3): (500)
+Reason: Internal Server Error
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 15:50:46 GMT', 'Content-Length': '215'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
+WARN: InfluxDB write_lk_run gave up: (500)
+Reason: Internal Server Error
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 15:50:46 GMT', 'Content-Length': '215'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
 WARN: InfluxDB write checks failed: (500)
 Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 03:30:42 GMT', 'Content-Length': '171'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: mkdir /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15: no space left on device"}
-WARN: InfluxDB write_lk_run failed: (500)
-Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 03:35:50 GMT', 'Content-Length': '171'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: mkdir /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15: no space left on device"}
-WARN: InfluxDB write checks failed: (500)
-Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 03:35:50 GMT', 'Content-Length': '171'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: mkdir /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15: no space left on device"}
-[FAIL] landing_chatbot_topics 30078ms Лендинг: после открытия чата темы не отображаются. Текст: 'Ассистент\nНеизвестная ошибка\n\nСейчас ассистент недоступен — попробуйте вернуться позже или обратитесь в поддержку'
-Alert suppressed: health failure classified as autotest (UI flake / Chrome/WebDriver) — Grafana orange; not paging as LK/PROD down
-Health monitor finished in 89.1s — FAIL_AUTOTEST (run_status=autotest)
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 15:50:46 GMT', 'Content-Length': '215'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
+    | OSError: [Errno 28] No space left on device
+LK pytest: 0/0 passed, failed=0, errors=0, skipped=0 in 368.7s
 WARN: InfluxDB write failed: (500)
 Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Mon, 02 Nov 2026 19:23:05 GMT', 'Content-Length': '195'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: open /var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/L0-00000100.tsl: no space left on device"}
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 09:26:13 GMT', 'Content-Length': '215'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
+WARN: InfluxDB failure events: (500)
+Reason: Internal Server Error
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 09:26:13 GMT', 'Content-Length': '215'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
 plugins: rerunfailures-16.5, allure-pytest-2.16.0, playwright-0.8.0, base-url-2.1.0, xdist-3.8.0
-LK pytest: 10/10 passed, failed=0, errors=0, skipped=0 in 171.2s
+LK pytest: 10/10 passed, failed=0, errors=0, skipped=0 in 175.0s
 WARN: InfluxDB write failed: (500)
 Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Mon, 02 Nov 2026 21:22:55 GMT', 'Content-Length': '195'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: open /var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/L0-00000151.tsl: no space left on device"}
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 11:22:59 GMT', 'Content-Length': '215'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
 plugins: rerunfailures-16.5, allure-pytest-2.16.0, playwright-0.8.0, base-url-2.1.0, xdist-3.8.0
-LK pytest: 10/10 passed, failed=0, errors=0, skipped=0 in 179.4s
+LK pytest: 10/10 passed, failed=0, errors=0, skipped=0 in 184.0s
 WARN: InfluxDB write failed: (500)
 Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Mon, 02 Nov 2026 23:23:03 GMT', 'Content-Length': '195'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: open /var/lib/influxdb2/engine/data/9d50e68af0e6d497/autogen/14/index/7/L0-00000202.tsl: no space left on device"}
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 13:23:08 GMT', 'Content-Length': '215'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
 plugins: rerunfailures-16.5, allure-pytest-2.16.0, playwright-0.8.0, base-url-2.1.0, xdist-3.8.0
-LK pytest: 10/10 passed, failed=0, errors=0, skipped=0 in 165.3s
+LK pytest: 10/10 passed, failed=0, errors=0, skipped=0 in 169.6s
 WARN: InfluxDB write failed: (500)
 Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 01:22:49 GMT', 'Content-Length': '171'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: mkdir /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15: no space left on device"}
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 15:22:53 GMT', 'Content-Length': '215'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
 plugins: rerunfailures-16.5, allure-pytest-2.16.0, playwright-0.8.0, base-url-2.1.0, xdist-3.8.0
-LK pytest: 10/10 passed, failed=0, errors=0, skipped=0 in 170.5s
-WARN: InfluxDB write failed: (500)
-Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 03:22:54 GMT', 'Content-Length': '171'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: mkdir /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15: no space left on device"}
-plugins: rerunfailures-16.5, allure-pytest-2.16.0, playwright-0.8.0, base-url-2.1.0, xdist-3.8.0
-LK pytest: 10/10 passed, failed=0, errors=0, skipped=0 in 193.0s
+LK pytest: 10/10 passed, failed=0, errors=0, skipped=0 in 167.9s
 ```
 
 ## cron.log (daily) tail markers
 
 ```
-Metrics sent to InfluxDB (run_status=ok)
 === BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 7.1s
-Metrics sent to InfluxDB (run_status=ok)
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 7.3s
-Metrics sent to InfluxDB (run_status=ok)
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 6.3s
-Metrics sent to InfluxDB (run_status=ok)
-=== BID Daily Monitor ===
-[FAIL] spa_counter_js 0 26210ms HTTPSConnectionPool(host='spa-back.gazprom-neft.ru', port=443): Read timed out. (read timeout=25)
-[FAIL] external_counter.js 0 25137ms HTTPSConnectionPool(host='spa-back.gazprom-neft.ru', port=443): Read timed out. (read timeout=25)
-Pytest: 34/39 passed, failed=5, errors=0 in 162.7s
-Metrics sent to InfluxDB (run_status=fail)
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 6.1s
-Metrics sent to InfluxDB (run_status=ok)
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 10.6s
-WARN: InfluxDB write failed: (500)
+Pytest: 39/39 passed, failed=0, errors=0 in 6.6s
+WARN: InfluxDB write_pytest_run failed: (500)
 Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Mon, 02 Nov 2026 14:01:36 GMT', 'Content-Length': '215'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/14/_00001.wal: no space left on device"}
-=== BID Daily Monitor ===
-Pytest: 39/39 passed, failed=0, errors=0 in 6.7s
-WARN: InfluxDB write failed: (500)
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 14:01:24 GMT', 'Content-Length': '215'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
+WARN: InfluxDB write_check_results failed: (500)
 Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 02:01:16 GMT', 'Content-Length': '171'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: mkdir /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15: no space left on device"}
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 14:01:24 GMT', 'Content-Length': '215'})
+HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
 ```
 
 ## Agent instructions (read by Cursor Automation)
