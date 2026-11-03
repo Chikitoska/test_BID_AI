@@ -440,14 +440,17 @@ class ChatbotWidget:
     def step_topics_displayed(self, context: str) -> None:
         deadline = time.time() + self.timeout
         topics: list[tuple[object, str]] = []
+        preview = ""
         while time.time() < deadline:
             topics = self._collect_topics()
             opened_panel = self._panel_present()
             appeared = len(topics) > self._topics_before_open
             if topics and (opened_panel or appeared):
                 return
+            preview = self._all_text()[:240]
+            if "ассистент недоступен" in preview.lower():
+                break
             time.sleep(0.4)
-        preview = self._all_text()[:240]
         raise ChatbotError(
             f"{context}: после открытия чата темы не отображаются. Текст: {preview!r}"
         )

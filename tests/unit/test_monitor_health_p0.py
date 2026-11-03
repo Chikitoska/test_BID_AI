@@ -83,6 +83,21 @@ def test_classify_chatbot_topic_fail_is_autotest_not_prod() -> None:
     assert classify_health_failure(results) == "autotest"
 
 
+def test_classify_assistant_unavailable_is_prod_not_autotest() -> None:
+    err = (
+        "Лендинг: после открытия чата темы не отображаются. Текст: "
+        "'Ассистент\\nНеизвестная ошибка\\n\\n"
+        "Сейчас ассистент недоступен — попробуйте вернуться позже или обратитесь в поддержку'"
+    )
+    results = [
+        _http("main_page", code=200, success=True),
+        _ui("landing_chatbot_topics", err),
+    ]
+    assert is_autotest_error(err) is False
+    assert classify_health_failure(results) == "prod"
+    assert health_run_status(overall_ok=False, failure_kind="prod") == "fail"
+
+
 def test_classify_autotest_when_all_ui_chrome() -> None:
     results = [
         _http("main_page", code=200, success=True),

@@ -63,3 +63,15 @@ def test_missing_icon_pytest_is_prod_not_autotest():
         "1 failed"
     )
     assert classify_lk_pytest_failure(out, failed=1, total=5) == "prod"
+
+
+def test_assistant_unavailable_pytest_is_prod_not_autotest():
+    out = (
+        "FAILED tests/ui/selenium_ui/test_landing_chatbot.py::"
+        "test_landing_chatbot_full_flow - "
+        "ChatbotError: Лендинг: после открытия чата темы не отображаются. "
+        "Текст: 'Ассистент\\nНеизвестная ошибка\\n\\n"
+        "Сейчас ассистент недоступен — попробуйте вернуться позже'\n"
+        "1 failed"
+    )
+    assert classify_lk_pytest_failure(out, failed=1, total=5) == "prod"
