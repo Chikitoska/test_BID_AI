@@ -12,7 +12,8 @@ from config.lk_settings import (
 )
 from monitor.checks import CheckResult
 from monitor.config import MONITOR_HTTP_ERROR_RETRIES, MONITOR_HTTP_ERROR_RETRY_DELAY_SEC
-from monitor.http_status import results_have_http_4xx_or_5xx
+from monitor.host_classify import extract_http_code
+from monitor.http_status import prefer_http_error_results, results_have_http_4xx_or_5xx
 from monitor.secrets_redact import redact_secrets
 from pages.chatbot_widget import ChatbotWidget
 from pages.lk_flow import LkAuthError, LkFlow
@@ -27,6 +28,10 @@ from utils.spa_events_sniffer import (
     uids_from_posts,
 )
 
+# Слот health 220 с. Пауза 90 с на retry 5xx съедала слот — bid_lk_run и email
+# не успевали (13:02 MSK 2026-11-03: 500 в bid_failure, бар зелёный).
+HTTP_ERROR_RETRY_DELAY_CAP_SEC = 10
+
 
 def _result(
     name: str,
@@ -35,13 +40,16 @@ def _result(
     duration_ms: float,
     error: str = "",
     url: str = "",
+    http_code: int | None = None,
 ) -> CheckResult:
+    if http_code is None:
+        http_code = 200 if success else 0
     return CheckResult(
         name=name,
         url=url or BID_LK_EXPECTED_URL,
         method="UI",
         success=success,
-        http_code=200 if success else 0,
+        http_code=http_code,
         duration_ms=duration_ms,
         error=error,
     )
@@ -104,11 +112,13 @@ def _run_step(name: str, action) -> CheckResult:
         action()
         return _result(name, success=True, duration_ms=(time.perf_counter() - start) * 1000)
     except Exception as exc:
+        error = redact_secrets(str(exc))
         return _result(
             name,
             success=False,
             duration_ms=(time.perf_counter() - start) * 1000,
-            error=redact_secrets(str(exc)),
+            error=error,
+            http_code=extract_http_code(error) or 0,
         )
 
 
@@ -126,30 +136,32 @@ def _should_retry_lk(results: list[CheckResult], *, attempt: int, max_attempts: 
 def run_lk_monitor_checks(*, include_lk: bool = True) -> list[CheckResult]:
     """Health UI: чат-бот лендинга всегда; ЛК (вход/ФИО/компания/чат-бот) опционально.
 
-    При 4xx/5xx (например /error/500) повторяет сценарий в том же прогоне
-    с паузой ~90 с — алерт только если ошибка подтвердилась.
+    При 4xx/5xx повторяет сценарий коротко (не 90 с). Любой 5xx в слоте
+    остаётся FAIL: retry HTTP 200 не затирает красный бар и не отменяет алерт.
     """
     max_attempts = 1 + max(1, MONITOR_HTTP_ERROR_RETRIES)
-    last_results: list[CheckResult] = []
+    attempts: list[list[CheckResult]] = []
 
     for attempt in range(1, max_attempts + 1):
         last_results = _run_lk_monitor_checks_once(include_lk=include_lk)
+        attempts.append(last_results)
         if not _should_retry_lk(last_results, attempt=attempt, max_attempts=max_attempts):
-            return last_results
+            return prefer_http_error_results(attempts)
 
         http_err = results_have_http_4xx_or_5xx(last_results)
-        delay = MONITOR_HTTP_ERROR_RETRY_DELAY_SEC if http_err else 3
+        raw_delay = MONITOR_HTTP_ERROR_RETRY_DELAY_SEC if http_err else 3
+        delay = min(HTTP_ERROR_RETRY_DELAY_CAP_SEC, raw_delay) if http_err else raw_delay
         kind = "4xx/5xx" if http_err else "auth"
         failed = next((r for r in last_results if not r.success), None)
         detail = (failed.error if failed else "")[:160]
         print(
             f"[lk] {kind} на попытке {attempt}/{max_attempts}: {detail}. "
-            f"Повтор через {delay} с…",
+            f"Повтор через {delay} с (слот 5xx не greening)…",
             flush=True,
         )
         time.sleep(delay)
 
-    return last_results
+    return prefer_http_error_results(attempts)
 
 
 def _run_lk_monitor_checks_once(*, include_lk: bool = True) -> list[CheckResult]:

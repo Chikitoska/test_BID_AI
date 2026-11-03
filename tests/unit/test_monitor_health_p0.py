@@ -10,6 +10,8 @@ from monitor.health_classify import (
     is_chrome_infra_error,
     pytest_run_status,
 )
+from monitor.http_status import prefer_http_error, prefer_http_error_results, results_have_http_4xx_or_5xx
+from monitor.metrics import failures_from_checks
 from monitor.probe_alert import should_send_lk_pytest_telegram, should_send_lk_telegram
 from monitor.pytest_failures import classify_lk_pytest_failure
 
@@ -270,3 +272,84 @@ def test_classify_lk_pytest_dns_prod() -> None:
         "NameResolutionError: Temporary failure in name resolution\n1 failed"
     )
     assert classify_lk_pytest_failure(out, failed=1, total=5) == "prod"
+
+
+def test_get_500_then_retry_200_stays_fail_and_alerts(monkeypatch, tmp_path) -> None:
+    """Первый GET 500 в слоте не затирается retry 200: red + bid_failure + email."""
+    first = _http("main_page", code=500, error="landing HTTP 500: Internal Server Error", success=False)
+    retry = _http("main_page", code=200, success=True)
+    kept = prefer_http_error(first, retry)
+    assert kept.success is False
+    assert kept.http_code == 500
+    assert classify_health_failure([kept]) == "prod"
+    assert health_run_status(overall_ok=False, failure_kind="prod") == "fail"
+    events = failures_from_checks([kept])
+    assert events
+    assert events[0].check == "main_page"
+    assert "500" in events[0].error
+    import monitor.config as cfg
+    import monitor.state as st
+
+    monkeypatch.setattr(cfg, "ALERT_STATE_FILE", tmp_path / "alert_state.json")
+    monkeypatch.setattr(st, "ALERT_STATE_FILE", tmp_path / "alert_state.json")
+    monkeypatch.setattr(cfg, "MONITOR_ALERT_AFTER_FAILURES", 2)
+    assert should_send_lk_telegram(overall_ok=False, confirmed_http_error=True) is True
+
+
+def test_main_page_retry_keeps_first_500(monkeypatch) -> None:
+    from monitor import run_health_monitor as rhm
+
+    seq = [
+        _http("main_page", code=500, error="HTTP 500", success=False),
+        _http("main_page", code=200, success=True),
+    ]
+    monkeypatch.setattr(rhm, "_check_get", lambda *_a, **_k: seq.pop(0))
+    monkeypatch.setattr(rhm, "MONITOR_PROBE_RETRIES", 1)
+    monkeypatch.setattr(rhm.time, "sleep", lambda _s: None)
+    result = rhm._check_main_page_with_retry(session=None)
+    assert result.success is False
+    assert result.http_code == 500
+
+
+def test_lk_retry_200_does_not_erase_500(monkeypatch) -> None:
+    import monitor.lk_checks as lk_checks
+
+    fail = [
+        CheckResult(
+            name="lk_auth_login",
+            url="https://lk.bid.gazprom-neft.ru/error/500",
+            method="UI",
+            success=False,
+            http_code=500,
+            duration_ms=100.0,
+            error=(
+                "lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | "
+                "HTTP 500 | ЛК вернул HTTP error page после входа"
+            ),
+        )
+    ]
+    ok = [
+        CheckResult(
+            name="lk_auth_login",
+            url="https://lk.bid.gazprom-neft.ru/",
+            method="UI",
+            success=True,
+            http_code=200,
+            duration_ms=80.0,
+            error="",
+        )
+    ]
+    calls = {"n": 0}
+
+    def _once(*, include_lk: bool = True):
+        calls["n"] += 1
+        return fail if calls["n"] == 1 else ok
+
+    monkeypatch.setattr(lk_checks, "_run_lk_monitor_checks_once", _once)
+    monkeypatch.setattr(lk_checks.time, "sleep", lambda _s: None)
+    results = lk_checks.run_lk_monitor_checks()
+    assert calls["n"] == 2
+    assert results_have_http_4xx_or_5xx(results)
+    assert results[0].success is False
+    assert results[0].http_code == 500
+    assert prefer_http_error_results([fail, ok]) == fail

@@ -18,10 +18,13 @@ def test_health_lock_wait_caps_600_to_90():
 def test_health_writes_lk_run_before_check_results():
     source = (ROOT / "monitor" / "run_health_monitor.py").read_text(encoding="utf-8")
     run_at = source.index("write_lk_run(")
+    fail_at = source.index("write_failure_events(")
     checks_at = source.index("write_check_results(")
-    assert run_at < checks_at
+    assert run_at < fail_at < checks_at
     assert "write_lk_run failed" in source
     assert "HEALTH_SLOT_SEC" in source
+    assert "SIG_IGN" in source
+    assert "prefer_http_error" in source
     assert 'CHROME_LOCK_WAIT_HEALTH_SEC", "90"' in source
     assert 'CHROME_LOCK_WAIT_HEALTH_SEC", "600"' not in source
 

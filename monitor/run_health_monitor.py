@@ -35,7 +35,11 @@ from monitor.health_classify import (
     is_autotest_failure_kind,
 )
 from monitor.http_session import create_monitor_session
-from monitor.http_status import is_http_4xx_or_5xx, results_have_http_4xx_or_5xx
+from monitor.http_status import (
+    is_http_4xx_or_5xx,
+    prefer_http_error,
+    results_have_http_4xx_or_5xx,
+)
 from monitor.lk_checks import run_lk_monitor_checks
 from monitor.metrics import (
     failures_from_checks,
@@ -49,6 +53,7 @@ from monitor.probe_alert import should_send_lk_telegram
 # Слот cron = 5 мин. Ждать lock 600 с = два пропущенных столбца и риск зависания.
 HEALTH_LOCK_WAIT_CAP_SEC = 90.0
 HEALTH_SLOT_SEC_DEFAULT = 220.0
+INFLUX_WRITE_ATTEMPTS = 3
 
 
 class HealthSlotTimeout(Exception):
@@ -65,7 +70,11 @@ def _slot_handler(signum, frame) -> None:
 
 
 def _check_main_page_with_retry(session) -> CheckResult:
-    """GET с повтором при timeout/4xx/5xx — снижает ложные алерты на флапах."""
+    """GET с повтором при timeout/4xx/5xx.
+
+    Retry остаётся (подтверждение), но первый 4xx/5xx в слоте не затирается
+    успешным 200 — иначе бар зелёный и письма нет при реальном 500.
+    """
     landing = _check_get(session, "main_page", BASE_URL)
     if landing.success or MONITOR_PROBE_RETRIES <= 0:
         return landing
@@ -78,7 +87,56 @@ def _check_main_page_with_retry(session) -> CheckResult:
         flush=True,
     )
     time.sleep(MONITOR_HEALTH_RETRY_DELAY_SEC)
-    return _check_get(session, "main_page", BASE_URL)
+    retry = _check_get(session, "main_page", BASE_URL)
+    kept = prefer_http_error(landing, retry)
+    if kept is landing and retry.success:
+        print(
+            f"main_page: retry HTTP {retry.http_code}, но первая выборка была "
+            f"{landing.http_code} — слот остаётся FAIL (5xx не глотаем)",
+            flush=True,
+        )
+    return kept
+
+
+def _write_lk_run_retry(
+    *,
+    overall_ok: bool,
+    all_results: list[CheckResult],
+    lk_skipped_busy: bool,
+    run_status: str,
+    duration_sec: float,
+    http_ok: bool,
+) -> None:
+    """Красный/зелёный бар: несколько попыток. TERM во время write не должен съесть слот."""
+    last_exc: Exception | None = None
+    for attempt in range(1, INFLUX_WRITE_ATTEMPTS + 1):
+        try:
+            write_lk_run(
+                success=overall_ok,
+                failed_count=sum(1 for r in all_results if not r.success),
+                duration_sec=duration_sec,
+                skipped=lk_skipped_busy,
+                run_status=run_status,
+            )
+            if lk_skipped_busy and http_ok:
+                print(
+                    f"Metrics sent to InfluxDB (run_status={run_status}, "
+                    "HTTP лендинга записан, UI skipped из‑за Chrome busy)"
+                )
+            elif lk_skipped_busy:
+                print("Metrics sent to InfluxDB (run_status=skipped_busy, skipped=1, success=0)")
+            else:
+                print(f"Metrics sent to InfluxDB (run_status={run_status})")
+            return
+        except Exception as exc:
+            last_exc = exc
+            print(
+                f"WARN: InfluxDB write_lk_run failed "
+                f"(attempt {attempt}/{INFLUX_WRITE_ATTEMPTS}): {exc}",
+                flush=True,
+            )
+    if last_exc is not None:
+        print(f"WARN: InfluxDB write_lk_run gave up: {last_exc}", flush=True)
 
 
 def _flush_health_influx(
@@ -90,29 +148,32 @@ def _flush_health_influx(
     run_status: str,
     duration_sec: float,
     http_ok: bool,
+    after_run=None,
 ) -> None:
-    """bid_lk_run пишем отдельно: пульс не должен пропадать, если упал write_check_results."""
+    """Сначала бар bid_lk_run, затем after_run (email), затем failures, затем детали.
+
+    13:02 MSK 2026-11-03: bid_failure записался, bid_lk_run нет — бар остался зелёным.
+    write_check_results не должен стоять между баром и таблицей ошибок.
+    """
+    if INFLUX_ENABLED:
+        _write_lk_run_retry(
+            overall_ok=overall_ok,
+            all_results=all_results,
+            lk_skipped_busy=lk_skipped_busy,
+            run_status=run_status,
+            duration_sec=duration_sec,
+            http_ok=http_ok,
+        )
+    if after_run is not None:
+        after_run()
     if not INFLUX_ENABLED:
         return
-    try:
-        write_lk_run(
-            success=overall_ok,
-            failed_count=sum(1 for r in all_results if not r.success),
-            duration_sec=duration_sec,
-            skipped=lk_skipped_busy,
-            run_status=run_status,
-        )
-        if lk_skipped_busy and http_ok:
-            print(
-                f"Metrics sent to InfluxDB (run_status={run_status}, "
-                "HTTP лендинга записан, UI skipped из‑за Chrome busy)"
-            )
-        elif lk_skipped_busy:
-            print("Metrics sent to InfluxDB (run_status=skipped_busy, skipped=1, success=0)")
-        else:
-            print(f"Metrics sent to InfluxDB (run_status={run_status})")
-    except Exception as exc:
-        print(f"WARN: InfluxDB write_lk_run failed: {exc}")
+    failed_results = [r for r in all_results if not r.success]
+    if failed_results:
+        try:
+            write_failure_events(run_type="health", failures=failures_from_checks(failed_results))
+        except Exception as exc:
+            print(f"WARN: InfluxDB failure events: {exc}")
     try:
         write_check_results(
             [landing]
@@ -124,12 +185,6 @@ def _flush_health_influx(
                 write_lk_check_results(lk_only)
     except Exception as exc:
         print(f"WARN: InfluxDB write checks failed: {exc}")
-    failed_results = [r for r in all_results if not r.success]
-    if failed_results:
-        try:
-            write_failure_events(run_type="health", failures=failures_from_checks(failed_results))
-        except Exception as exc:
-            print(f"WARN: InfluxDB failure events: {exc}")
 
 
 def main() -> int:
@@ -250,6 +305,22 @@ def main() -> int:
                 flush=True,
             )
 
+    has_http_error = results_have_http_4xx_or_5xx(all_results) or is_http_4xx_or_5xx(
+        http_code=landing.http_code, error=landing.error
+    )
+    # Любой 4xx/5xx в слоте — prod red + immediate page. Retry-200 не greening.
+    if has_http_error and not lk_skipped_busy:
+        overall_ok = False
+        failure_kind = "prod"
+        confirmed_http_error = True
+        print(
+            "CLASSIFIED=prod — HTTP 4xx/5xx in slot; "
+            "retry 200 does not green this bar",
+            flush=True,
+        )
+    else:
+        confirmed_http_error = False
+
     run_status = health_run_status(
         overall_ok=overall_ok,
         lk_skipped_busy=lk_skipped_busy,
@@ -257,41 +328,46 @@ def main() -> int:
         http_ok=http_ok,
     )
 
-    _flush_health_influx(
-        landing=landing,
-        all_results=all_results,
-        overall_ok=overall_ok,
-        lk_skipped_busy=lk_skipped_busy,
-        run_status=run_status,
-        duration_sec=duration_sec,
-        http_ok=http_ok,
-    )
-
-    # 4xx/5xx уже перепроверены в этом же прогоне → алертим сразу, не ждём следующий cron.
-    # Autotest/busy — не confirmed prod.
-    confirmed_http_error = (
-        (not overall_ok)
-        and (not lk_skipped_busy)
-        and (not is_autotest_failure_kind(failure_kind))
-        and (
-            results_have_http_4xx_or_5xx(all_results)
-            or is_http_4xx_or_5xx(http_code=landing.http_code, error=landing.error)
-        )
-    )
     send_alert = should_send_lk_telegram(
         overall_ok=overall_ok,
         confirmed_http_error=confirmed_http_error,
         failure_kind=failure_kind,
         lk_skipped_busy=lk_skipped_busy,
     )
-    # TG/email только при prod (не autotest, не busy).
-    if not overall_ok and send_alert and not is_autotest_failure_kind(failure_kind) and not lk_skipped_busy:
-        notify_github_on_failure(
-            run_type="health",
-            http_results=all_results,
-            failed_count=sum(1 for r in all_results if not r.success),
+
+    def _notify_prod() -> None:
+        if (
+            not overall_ok
+            and send_alert
+            and not is_autotest_failure_kind(failure_kind)
+            and not lk_skipped_busy
+        ):
+            notify_github_on_failure(
+                run_type="health",
+                http_results=all_results,
+                failed_count=sum(1 for r in all_results if not r.success),
+                duration_sec=duration_sec,
+            )
+
+    # timeout(1) шлёт TERM на 220 с; kill-after=15. Игнор TERM на flush+email,
+    # иначе HealthSlotTimeout глотает write_lk_run (бар зелёный, 500 только в таблице).
+    prev_term = None
+    if hasattr(signal, "SIGTERM"):
+        prev_term = signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    try:
+        _flush_health_influx(
+            landing=landing,
+            all_results=all_results,
+            overall_ok=overall_ok,
+            lk_skipped_busy=lk_skipped_busy,
+            run_status=run_status,
             duration_sec=duration_sec,
+            http_ok=http_ok,
+            after_run=_notify_prod,
         )
+    finally:
+        if prev_term is not None:
+            signal.signal(signal.SIGTERM, prev_term)
 
     if lk_skipped_busy and http_ok:
         outcome = "OK_HTTP_UI_SKIPPED"

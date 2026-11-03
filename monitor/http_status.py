@@ -43,3 +43,25 @@ def results_have_http_4xx_or_5xx(results) -> bool:
         ):
             return True
     return False
+
+
+def prefer_http_error(first, retry):
+    """4xx/5xx первой попытки в слоте не затирается retry HTTP 200."""
+    if first is None:
+        return retry
+    if is_http_4xx_or_5xx(
+        http_code=int(getattr(first, "http_code", 0) or 0),
+        error=str(getattr(first, "error", "") or ""),
+    ):
+        return first
+    return retry
+
+
+def prefer_http_error_results(attempts: list) -> list:
+    """Первая попытка с 4xx/5xx задаёт слот; поздний 200 не красит бар в зелёный."""
+    if not attempts:
+        return []
+    for results in attempts:
+        if results_have_http_4xx_or_5xx(results):
+            return list(results)
+    return list(attempts[-1])
