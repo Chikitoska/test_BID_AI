@@ -1,15 +1,15 @@
 # BID monitor digest
 
-- Generated: `2026-11-04T08:50:03.870993+03:00` (Europe/Moscow)
+- Generated: `2026-11-04T20:50:02.157517+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
-- Git HEAD: `fc32efd fix(monitor): keep health 5xx red and alert even if retry later returns 200.`
+- Git HEAD: `54066b4 fix(monitor): restore Influx graphs WRITE-only and stop ENOSPC false alerts.`
 
 ## Influx volume
 
-- `bid_lk_pytest`: 35 точек (~1д)
-- `bid_lk_run`: 672 точек (~1д)
-- `bid_run`: 5 точек (~1д)
+- `bid_lk_pytest`: 60 точек (~1д)
+- `bid_lk_run`: 1152 точек (~1д)
+- `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
@@ -18,45 +18,12 @@
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 15:40:46 GMT', 'Content-Length': '215'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
-WARN: InfluxDB write_lk_run failed: (500)
-Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 15:45:49 GMT', 'Content-Length': '215'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
-WARN: InfluxDB write checks failed: (500)
-Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 15:45:49 GMT', 'Content-Length': '215'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
-WARN: InfluxDB write_lk_run failed (attempt 1/3): (500)
-Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 15:50:46 GMT', 'Content-Length': '215'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
-WARN: InfluxDB write_lk_run failed (attempt 2/3): (500)
-Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 15:50:46 GMT', 'Content-Length': '215'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
-WARN: InfluxDB write_lk_run failed (attempt 3/3): (500)
-Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 15:50:46 GMT', 'Content-Length': '215'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
-WARN: InfluxDB write_lk_run gave up: (500)
-Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 15:50:46 GMT', 'Content-Length': '215'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
-WARN: InfluxDB write checks failed: (500)
-Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 15:50:46 GMT', 'Content-Length': '215'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
+(совпадений нет)
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
 
 ```
-WARN: InfluxDB write failed: (500)
-Reason: Internal Server Error
-HTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json; charset=utf-8', 'X-Influxdb-Build': 'OSS', 'X-Influxdb-Version': 'v2.7.12', 'X-Platform-Error-Code': 'internal error', 'Date': 'Tue, 03 Nov 2026 11:22:59 GMT', 'Content-Length': '215'})
-HTTP response body: {"code":"internal error","message":"unexpected error writing points to database: engine: error writing WAL entry: write /var/lib/influxdb2/engine/wal/9d50e68af0e6d497/autogen/15/_00001.wal: no space left on device"}
 plugins: rerunfailures-16.5, allure-pytest-2.16.0, playwright-0.8.0, base-url-2.1.0, xdist-3.8.0
 LK pytest: 10/10 passed, failed=0, errors=0, skipped=0 in 184.0s
 WARN: InfluxDB write failed: (500)
@@ -83,6 +50,10 @@ plugins: rerunfailures-16.5, allure-pytest-2.16.0, playwright-0.8.0, base-url-2.
 LK pytest: 10/10 passed, failed=0, errors=0, skipped=0 in 172.3s
 plugins: rerunfailures-16.5, allure-pytest-2.16.0, playwright-0.8.0, base-url-2.1.0, xdist-3.8.0
 LK pytest: 10/10 passed, failed=0, errors=0, skipped=0 in 159.6s
+plugins: rerunfailures-16.5, allure-pytest-2.16.0, playwright-0.8.0, base-url-2.1.0, xdist-3.8.0
+LK pytest: 10/10 passed, failed=0, errors=0, skipped=0 in 161.0s
+plugins: rerunfailures-16.5, allure-pytest-2.16.0, playwright-0.8.0, base-url-2.1.0, xdist-3.8.0
+LK pytest: 10/10 passed, failed=0, errors=0, skipped=0 in 164.8s
 ```
 
 ## cron.log (daily) tail markers
