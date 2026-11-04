@@ -16,15 +16,31 @@ from monitor.config import INFLUX_ENABLED
 from monitor.github_dispatch import notify_github_on_failure
 from monitor.lk_checks import run_mincifry_checks
 from monitor.metrics import failures_from_checks, write_check_results, write_failure_events
+from utils.selenium_factory import (
+    ChromeDiskFullError,
+    assert_disk_for_chrome,
+    chrome_profile_lifecycle,
+    install_chrome_crash_cleanup,
+)
 
 
 def main() -> int:
     print("=== BID Минцифр (ручной прогон) ===")
+    with chrome_profile_lifecycle():
+        return _run_mincifry_body()
+
+
+def _run_mincifry_body() -> int:
+    install_chrome_crash_cleanup()
     start = time.perf_counter()
     wait_sec = float(os.getenv("CHROME_LOCK_WAIT_MINCIFRY_SEC") or os.getenv("CHROME_LOCK_WAIT_HEALTH_SEC", "600"))
     try:
+        assert_disk_for_chrome()
         with chrome_run_lock(owner="mincifry", wait_sec=wait_sec):
             results = run_mincifry_checks()
+    except ChromeDiskFullError as exc:
+        print(f"SKIP Минцифр (disk full): {exc}")
+        return 1
     except ChromeBusyError as exc:
         print(f"SKIP Минцифр (chrome busy): {exc}")
         return 0

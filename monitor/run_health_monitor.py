@@ -49,6 +49,12 @@ from monitor.metrics import (
     write_lk_run,
 )
 from monitor.probe_alert import should_send_lk_telegram
+from utils.selenium_factory import (
+    ChromeDiskFullError,
+    assert_disk_for_chrome,
+    chrome_profile_lifecycle,
+    install_chrome_crash_cleanup,
+)
 
 # Слот cron = 5 мин. Ждать lock 600 с = два пропущенных столбца и риск зависания.
 HEALTH_LOCK_WAIT_CAP_SEC = 90.0
@@ -165,7 +171,10 @@ def _flush_health_influx(
             http_ok=http_ok,
         )
     if after_run is not None:
-        after_run()
+        try:
+            after_run()
+        except Exception as exc:
+            print(f"WARN: health after_run (email) failed: {exc}", flush=True)
     if not INFLUX_ENABLED:
         return
     failed_results = [r for r in all_results if not r.success]
@@ -189,6 +198,11 @@ def _flush_health_influx(
 
 def main() -> int:
     print("=== BID Health Monitor (landing + LK) ===")
+    with chrome_profile_lifecycle():
+        return _run_health_body()
+
+
+def _run_health_body() -> int:
     start = time.perf_counter()
     all_results: list[CheckResult] = []
     slot_sec = float(os.getenv("HEALTH_SLOT_SEC", str(HEALTH_SLOT_SEC_DEFAULT)))
@@ -197,6 +211,7 @@ def main() -> int:
         signal.alarm(max(1, int(slot_sec)))
     if hasattr(signal, "SIGTERM"):
         signal.signal(signal.SIGTERM, _slot_handler)
+    install_chrome_crash_cleanup()
 
     landing = CheckResult(
         name="main_page",
@@ -230,8 +245,23 @@ def main() -> int:
                     flush=True,
                 )
             try:
+                assert_disk_for_chrome()
                 with chrome_run_lock(owner="health", wait_sec=lk_wait):
                     lk_results = run_lk_monitor_checks(include_lk=LK_MONITOR_ENABLED)
+            except ChromeDiskFullError as exc:
+                print(f"SKIP UI (disk full): {exc}", flush=True)
+                lk_ok = False
+                all_results.append(
+                    CheckResult(
+                        name="chrome_disk",
+                        url=BASE_URL,
+                        method="UI",
+                        success=False,
+                        http_code=0,
+                        duration_ms=(time.perf_counter() - start) * 1000,
+                        error=str(exc),
+                    )
+                )
             except ChromeBusyError as exc:
                 lk_skipped_busy = True
                 print(f"SKIP UI (chrome busy): {exc}")
@@ -252,6 +282,20 @@ def main() -> int:
                         http_code=0,
                         duration_ms=(time.perf_counter() - start) * 1000,
                         error="TimeoutException: health UI exceeded 5-min slot (Chrome hang)",
+                    )
+                )
+            except Exception as exc:
+                print(f"SKIP UI (unexpected): {exc}", flush=True)
+                lk_ok = False
+                all_results.append(
+                    CheckResult(
+                        name="health_ui",
+                        url=BASE_URL,
+                        method="UI",
+                        success=False,
+                        http_code=0,
+                        duration_ms=(time.perf_counter() - start) * 1000,
+                        error=str(exc),
                     )
                 )
             for item in lk_results:

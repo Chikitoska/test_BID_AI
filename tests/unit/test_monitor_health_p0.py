@@ -204,6 +204,25 @@ def test_should_send_prod_confirmed_http(monkeypatch, tmp_path) -> None:
     assert should_send_lk_telegram(overall_ok=False, confirmed_http_error=True) is True
 
 
+def test_classify_health_enospc_is_autotest_not_prod(monkeypatch, tmp_path) -> None:
+    results = [
+        _http("main_page", code=200, success=True),
+        _ui(
+            "chrome_disk",
+            "ENOSPC: Avail=12MB < 500MB — Chrome not launched (no space left on device)",
+        ),
+    ]
+    assert is_autotest_error(results[1].error) is True
+    assert classify_health_failure(results) == "autotest"
+    assert health_run_status(overall_ok=False, failure_kind="autotest") == "autotest"
+    import monitor.config as cfg
+    import monitor.state as st
+
+    monkeypatch.setattr(cfg, "ALERT_STATE_FILE", tmp_path / "alert_state.json")
+    monkeypatch.setattr(st, "ALERT_STATE_FILE", tmp_path / "alert_state.json")
+    assert should_send_lk_telegram(overall_ok=False, failure_kind="autotest") is False
+
+
 def test_classify_lk_pytest_enospc_is_autotest_not_prod(monkeypatch, tmp_path) -> None:
     out = (
         "Pytest не запустился:\n"

@@ -1,0 +1,11 @@
+# Фрагмент crontab для VPS /opt/test_BID_AI
+# Grafana :3000 и Influx volumes НЕ трогать. НЕ docker volume prune. Influx НЕ рестартить.
+#
+# Проверка: crontab -l
+# Health / daily / combat уже должны быть. Если нет — не затирая диск:
+# */5 * * * * /opt/test_BID_AI/monitor/run_health_monitor.sh >> /opt/test_BID_AI/monitor/health.log 2>&1
+# 0 5,17 * * * /opt/test_BID_AI/monitor/run_daily.sh >> /opt/test_BID_AI/monitor/cron.log 2>&1
+# 23 */2 * * * /opt/test_BID_AI/monitor/run_lk_pytest.sh >> /opt/test_BID_AI/monitor/lk-pytest.log 2>&1
+#
+# Диск: leftover Chrome / journal / apt / allure. Каждые 20 мин.
+*/20 * * * * /bin/bash /opt/test_BID_AI/monitor/vps_free_disk.sh >> /opt/test_BID_AI/monitor/disk.log 2>&1

@@ -22,7 +22,12 @@ except ImportError:
 from config.lk_settings import BID_LK_EXPECTED_URL, LK_CREDENTIALS_SET, MONITOR_HEADLESS
 from pages.lk_flow import LkAuthError, LkFlow
 from pages.lk_page import LkPage
-from utils.selenium_factory import create_chrome_driver, quit_chrome_driver
+from utils.selenium_factory import (
+    create_chrome_driver,
+    install_chrome_crash_cleanup,
+    quit_chrome_driver,
+    sweep_stale_bid_chrome_profiles,
+)
 
 pytestmark = pytest.mark.skipif(
     not LK_CREDENTIALS_SET,
@@ -63,6 +68,8 @@ def _login_with_retries(*, headless: bool):
 
 @pytest.fixture(scope="session")
 def lk_driver():
+    sweep_stale_bid_chrome_profiles()
+    install_chrome_crash_cleanup()
     os.environ["BID_LK_SESSION_ALIVE"] = "1"
     driver = None
     try:
@@ -75,6 +82,7 @@ def lk_driver():
                 quit_chrome_driver(driver)
             except WebDriverException:
                 pass
+        sweep_stale_bid_chrome_profiles()
 
 
 @pytest.fixture(scope="function")

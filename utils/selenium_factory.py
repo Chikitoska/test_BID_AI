@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import atexit
 import os
 import shutil
 import signal
@@ -9,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from contextlib import contextmanager
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -44,6 +46,17 @@ _CHROMEDRIVER_CANDIDATES = (
 
 # Snap Chromium: реальный профиль в snap-private-tmp, /tmp/<name> часто 4KB-заглушка.
 SNAP_CHROMIUM_PRIVATE_TMP = "/tmp/snap-private-tmp/snap.chromium/tmp"
+
+# Ниже этого Chrome не стартуем: 15Г VPS, Influx WAL падает раньше Allure.
+CHROME_MIN_FREE_MB_DEFAULT = 500
+
+_LIVE_USER_DATA_DIRS: set[str] = set()
+_ATEXIT_REGISTERED = False
+_PREV_SIGTERM = None
+
+
+class ChromeDiskFullError(RuntimeError):
+    """Avail < CHROME_MIN_FREE_MB — не стартуем Chrome, чтобы не убить Influx WAL."""
 
 
 def user_data_dir_from_options(options) -> str:
@@ -127,6 +140,174 @@ def snap_private_twin_dir(user_data_dir: str) -> str:
     return os.path.join(SNAP_CHROMIUM_PRIVATE_TMP, name)
 
 
+def chrome_min_free_bytes() -> int:
+    try:
+        mb = int(os.getenv("CHROME_MIN_FREE_MB", str(CHROME_MIN_FREE_MB_DEFAULT)))
+    except ValueError:
+        mb = CHROME_MIN_FREE_MB_DEFAULT
+    return max(0, mb) * 1024 * 1024
+
+
+def disk_free_bytes(path: str = "/") -> int:
+    try:
+        return int(shutil.disk_usage(path).free)
+    except OSError:
+        return 0
+
+
+def assert_disk_for_chrome(*, path: str = "/") -> None:
+    """Hard preflight: нет 500 МБ — Chrome/Allure не пишем, Influx WAL важнее."""
+    free = disk_free_bytes(path)
+    need = chrome_min_free_bytes()
+    if free < need:
+        free_mb = free / (1024 * 1024)
+        need_mb = need / (1024 * 1024)
+        raise ChromeDiskFullError(
+            f"ENOSPC: Avail={free_mb:.0f}MB < {need_mb:.0f}MB — Chrome not launched "
+            f"(no space left on device)"
+        )
+
+
+def _bid_chrome_search_roots() -> list[str]:
+    roots: list[str] = []
+    for item in (SNAP_CHROMIUM_PRIVATE_TMP, "/tmp", tempfile.gettempdir()):
+        if item and item not in roots:
+            roots.append(item)
+    return roots
+
+
+def _user_data_dirs_from_running_chrome() -> list[str]:
+    """--user-data-dir живого chrome/chromedriver (health vs combat)."""
+    try:
+        proc = subprocess.run(
+            ["ps", "-ax", "-o", "pid=,command="],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return []
+    found: list[str] = []
+    for line in (proc.stdout or "").splitlines():
+        low = line.lower()
+        if not any(
+            token in low for token in ("chromedriver", "google chrome", "chromium", "/chrome")
+        ):
+            continue
+        for part in line.split():
+            if part.startswith("--user-data-dir="):
+                path = part.split("=", 1)[1].strip()
+                if _bid_chrome_profile_name(path):
+                    found.append(path)
+    return found
+
+
+def live_bid_chrome_names() -> set[str]:
+    """Имена профилей, которые сейчас locked/живые — sweep их не трогает."""
+    names: set[str] = set()
+    for path in list(_LIVE_USER_DATA_DIRS) + _user_data_dirs_from_running_chrome():
+        name = _bid_chrome_profile_name(path)
+        if name:
+            names.add(name)
+    return names
+
+
+def sweep_stale_bid_chrome_profiles() -> int:
+    """Удалить leftover bid-chrome-* в /tmp и snap-private, кроме живого профиля.
+
+    SIGTERM/cron убивает Chrome без rmtree — каталоги остаются и забивают 15Г.
+    """
+    live = live_bid_chrome_names()
+    removed = 0
+    for root in _bid_chrome_search_roots():
+        try:
+            entries = os.listdir(root)
+        except OSError:
+            continue
+        for name in entries:
+            if not name.startswith("bid-chrome-") or name in (".", ".."):
+                continue
+            if name in live:
+                continue
+            path = os.path.join(root, name)
+            try:
+                if not os.path.isdir(path):
+                    continue
+            except OSError:
+                continue
+            shutil.rmtree(path, ignore_errors=True)
+            removed += 1
+    if removed:
+        print(f"[chrome] sweep stale bid-chrome profiles: {removed}", flush=True)
+    return removed
+
+
+def _register_live_user_data_dir(path: str) -> None:
+    normalized = os.path.normpath(path or "")
+    if normalized:
+        _LIVE_USER_DATA_DIRS.add(normalized)
+    install_chrome_crash_cleanup()
+
+
+def _cleanup_live_profiles() -> None:
+    for path in list(_LIVE_USER_DATA_DIRS):
+        try:
+            kill_orphans_for_user_data_dir(path)
+        except Exception:
+            pass
+        remove_chrome_user_data_dir(path)
+
+
+def _atexit_chrome_cleanup() -> None:
+    _cleanup_live_profiles()
+
+
+def _sigterm_chrome_cleanup(signum, frame) -> None:
+    """Слот health 220с шлёт TERM — профиль надо снести до SIGKILL+15с."""
+    _cleanup_live_profiles()
+    prev = _PREV_SIGTERM
+    if callable(prev) and prev is not _sigterm_chrome_cleanup:
+        prev(signum, frame)
+    elif prev in (None, signal.SIG_DFL) and hasattr(signal, "SIGTERM"):
+        try:
+            signal.signal(signum, signal.SIG_DFL)
+            os.kill(os.getpid(), signum)
+        except OSError:
+            pass
+
+
+def install_chrome_crash_cleanup() -> None:
+    """atexit + SIGTERM: удалить live bid-chrome-* даже без quit_chrome_driver."""
+    global _ATEXIT_REGISTERED, _PREV_SIGTERM
+    if not _ATEXIT_REGISTERED:
+        atexit.register(_atexit_chrome_cleanup)
+        _ATEXIT_REGISTERED = True
+    if not hasattr(signal, "SIGTERM"):
+        return
+    try:
+        current = signal.getsignal(signal.SIGTERM)
+    except (ValueError, OSError):
+        return
+    if current is _sigterm_chrome_cleanup:
+        return
+    _PREV_SIGTERM = current
+    try:
+        signal.signal(signal.SIGTERM, _sigterm_chrome_cleanup)
+    except (ValueError, OSError):
+        pass
+
+
+@contextmanager
+def chrome_profile_lifecycle():
+    """Sweep leftover в начале и в конце health/daily/combat."""
+    sweep_stale_bid_chrome_profiles()
+    install_chrome_crash_cleanup()
+    try:
+        yield
+    finally:
+        sweep_stale_bid_chrome_profiles()
+
+
 def remove_chrome_user_data_dir(user_data_dir: str) -> None:
     """Удалить temp-профиль этого запуска и snap-private близнеца, если есть."""
     name = _bid_chrome_profile_name(user_data_dir)
@@ -136,6 +317,7 @@ def remove_chrome_user_data_dir(user_data_dir: str) -> None:
     twin = snap_private_twin_dir(user_data_dir)
     if twin:
         shutil.rmtree(twin, ignore_errors=True)
+    _LIVE_USER_DATA_DIRS.discard(os.path.normpath(user_data_dir))
 
 
 def quit_chrome_driver(driver) -> None:
@@ -176,7 +358,9 @@ def _alloc_user_data_dir() -> str:
     ):
         return explicit
     parent = explicit if explicit and os.path.isdir(explicit) else None
-    return tempfile.mkdtemp(prefix="bid-chrome-", dir=parent)
+    path = tempfile.mkdtemp(prefix="bid-chrome-", dir=parent)
+    _register_live_user_data_dir(path)
+    return path
 
 
 def _chromedriver_ok(path: str) -> bool:
@@ -371,6 +555,10 @@ def create_chrome_driver(
     # На Mac headless=new часто падает на кликах — для локальных тестов лучше окно.
     if sys.platform == "darwin" and use_headless and os.getenv("MONITOR_FORCE_HEADLESS") != "true":
         use_headless = False
+
+    sweep_stale_bid_chrome_profiles()
+    assert_disk_for_chrome()
+    install_chrome_crash_cleanup()
 
     retries = int(os.getenv("CHROME_START_RETRIES", "3"))
     delay = float(os.getenv("CHROME_START_RETRY_DELAY_SEC", "3"))

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import time
 
 from config.lk_settings import (
@@ -31,6 +32,9 @@ from utils.spa_events_sniffer import (
 # Слот health 220 с. Пауза 90 с на retry 5xx съедала слот — bid_lk_run и email
 # не успевали (13:02 MSK 2026-11-03: 500 в bid_failure, бар зелёный).
 HTTP_ERROR_RETRY_DELAY_CAP_SEC = 10
+# Ассистент не должен съесть слот: ядро (HTTP + вход/ФИО) пишется всегда.
+CHATBOT_HEALTH_BUDGET_SEC = float(os.getenv("CHATBOT_HEALTH_BUDGET_SEC", "45"))
+CHATBOT_STEP_TIMEOUT_SEC = 12
 
 
 def _result(
@@ -88,11 +92,21 @@ def _assert_chatbot_events(driver, *, prefix: str) -> None:
     )
 
 
-def _run_chatbot_steps(driver, *, prefix: str, url: str) -> list[CheckResult]:
-    bot = ChatbotWidget(driver)
+def _run_chatbot_steps(
+    driver, *, prefix: str, url: str, deadline: float | None = None
+) -> list[CheckResult]:
+    remaining = (deadline - time.time()) if deadline is not None else CHATBOT_STEP_TIMEOUT_SEC
+    if remaining <= 1:
+        print(f"SKIP {prefix}: chatbot budget, core pulse continues", flush=True)
+        return []
+    step_timeout = max(5, min(int(CHATBOT_STEP_TIMEOUT_SEC), int(remaining)))
+    bot = ChatbotWidget(driver, timeout=step_timeout)
     results: list[CheckResult] = []
     try:
         for name, action in bot.health_steps(prefix):
+            if deadline is not None and time.time() >= deadline:
+                print(f"SKIP {name}: chatbot budget, core pulse continues", flush=True)
+                break
             item = _run_step(name, action)
             item.url = url
             results.append(item)
@@ -100,9 +114,11 @@ def _run_chatbot_steps(driver, *, prefix: str, url: str) -> list[CheckResult]:
                 break
     finally:
         bot.close()
-    events = _run_step(f"{prefix}_events", lambda: _assert_chatbot_events(driver, prefix=prefix))
-    events.url = url
-    results.append(events)
+    finished_close = bool(results) and results[-1].success and results[-1].name.endswith("_close")
+    if finished_close:
+        events = _run_step(f"{prefix}_events", lambda: _assert_chatbot_events(driver, prefix=prefix))
+        events.url = url
+        results.append(events)
     return results
 
 
@@ -134,7 +150,7 @@ def _should_retry_lk(results: list[CheckResult], *, attempt: int, max_attempts: 
 
 
 def run_lk_monitor_checks(*, include_lk: bool = True) -> list[CheckResult]:
-    """Health UI: чат-бот лендинга всегда; ЛК (вход/ФИО/компания/чат-бот) опционально.
+    """Health UI: ассистент с бюджетом 45 с; ядро ЛК (вход/ФИО/компания) не блокируется.
 
     При 4xx/5xx повторяет сценарий коротко (не 90 с). Любой 5xx в слоте
     остаётся FAIL: retry HTTP 200 не затирает красный бар и не отменяет алерт.
@@ -173,7 +189,15 @@ def _run_lk_monitor_checks_once(*, include_lk: bool = True) -> list[CheckResult]
         driver = create_chrome_driver(enable_performance_log=True)
         flow = LkFlow(driver)
         flow.open_landing()
-        results.extend(_run_chatbot_steps(driver, prefix="landing_chatbot", url=LANDING_BASE_URL))
+        landing_deadline = time.time() + CHATBOT_HEALTH_BUDGET_SEC
+        results.extend(
+            _run_chatbot_steps(
+                driver,
+                prefix="landing_chatbot",
+                url=LANDING_BASE_URL,
+                deadline=landing_deadline,
+            )
+        )
 
         if not include_lk:
             return results
@@ -194,7 +218,15 @@ def _run_lk_monitor_checks_once(*, include_lk: bool = True) -> list[CheckResult]
 
         results.append(_run_step("lk_user_fio", lambda: _check_fio(page)))
         results.append(_run_step("lk_company_badge", lambda: _check_company(page)))
-        results.extend(_run_chatbot_steps(driver, prefix="lk_chatbot", url=BID_LK_EXPECTED_URL))
+        lk_deadline = time.time() + CHATBOT_HEALTH_BUDGET_SEC
+        results.extend(
+            _run_chatbot_steps(
+                driver,
+                prefix="lk_chatbot",
+                url=BID_LK_EXPECTED_URL,
+                deadline=lk_deadline,
+            )
+        )
         return results
     finally:
         if driver is not None:

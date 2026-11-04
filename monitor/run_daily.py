@@ -27,7 +27,7 @@ from monitor.checks import CheckResult, run_http_checks
 from monitor.chrome_lock import ChromeBusyError, chrome_run_lock
 from monitor.config import INFLUX_ENABLED, MONITOR_RUN_PYTEST, MONITOR_RUN_UI, PROJECT_ROOT
 from monitor.github_dispatch import notify_github_on_failure
-from monitor.health_classify import pytest_run_status
+from monitor.health_classify import is_monitor_disk_full, pytest_run_status
 from monitor.http_session import create_monitor_session
 from monitor.lk_checks import run_mincifry_checks
 from monitor.metrics import (
@@ -41,6 +41,12 @@ from monitor.pytest_failures import (
     classify_lk_pytest_failure,
     parse_pytest_failures,
     pytest_summary_failure,
+)
+from utils.selenium_factory import (
+    ChromeDiskFullError,
+    assert_disk_for_chrome,
+    chrome_profile_lifecycle,
+    install_chrome_crash_cleanup,
 )
 
 
@@ -103,11 +109,25 @@ def _run_pytest() -> PytestResult:
 
 def _run_daily_mincifry() -> list[CheckResult]:
     """Страница Минцифр — часть дневного прогона (Chrome, lock с health/lk_pytest)."""
-    wait_sec = float(os.getenv("CHROME_LOCK_WAIT_DAILY_SEC", "1200"))
+    wait_sec = float(os.getenv("CHROME_LOCK_WAIT_DAILY_SEC", "90"))
     print("Минцифр: UI-проверка страницы сертификатов…", flush=True)
     try:
+        assert_disk_for_chrome()
         with chrome_run_lock(owner="daily_mincifry", wait_sec=wait_sec):
             return run_mincifry_checks()
+    except ChromeDiskFullError as exc:
+        print(f"SKIP Минцифр (disk full): {exc}", flush=True)
+        return [
+            CheckResult(
+                name="landing_mincifry",
+                url=LANDING_BASE_URL,
+                method="UI",
+                success=False,
+                http_code=0,
+                duration_ms=0,
+                error=str(exc),
+            )
+        ]
     except ChromeBusyError as exc:
         print(f"FAIL Минцифр (chrome busy): {exc}", flush=True)
         return [
@@ -135,7 +155,12 @@ def _pytest_error_snippet(result: PytestResult) -> str:
 
 def main() -> int:
     print("=== BID Daily Monitor ===")
+    with chrome_profile_lifecycle():
+        return _run_daily_body()
 
+
+def _run_daily_body() -> int:
+    install_chrome_crash_cleanup()
     session = create_monitor_session()
     http_results = run_http_checks(session)
     http_failed = [r for r in http_results if not r.success]
@@ -144,12 +169,7 @@ def main() -> int:
         status = "OK" if item.success else "FAIL"
         print(f"[{status}] {item.name} {item.http_code} {item.duration_ms:.0f}ms {item.error}")
 
-    mincifry_results = _run_daily_mincifry()
-    for item in mincifry_results:
-        status = "OK" if item.success else "FAIL"
-        print(f"[{status}] {item.name} {item.duration_ms:.0f}ms {item.error}")
-    mincifry_failed = [r for r in mincifry_results if not r.success]
-
+    # Столбец bid_run — до Минцифр: UI сертификатов не должен блокировать пульс.
     if MONITOR_RUN_PYTEST:
         pytest_result = _run_pytest()
         print(
@@ -164,7 +184,6 @@ def main() -> int:
         pytest_result = PytestResult(0, 0, 0, 0, 0.0, "", False)
         print("Pytest: skipped (MONITOR_RUN_PYTEST=false)")
 
-    overall_ok = not http_failed and not mincifry_failed and pytest_result.pytest_failed == 0
     # Grafana bid_run = только pytest: HTTP-фейлы идут в bid_check/таблицу.
     pytest_metric_ok = pytest_result.pytest_failed == 0 and pytest_result.total > 0
     if pytest_metric_ok:
@@ -192,6 +211,28 @@ def main() -> int:
             print(f"Metrics sent to InfluxDB (run_status={run_status})")
         except Exception as exc:
             print(f"WARN: InfluxDB write_pytest_run failed: {exc}")
+
+    mincifry_results = _run_daily_mincifry()
+    for item in mincifry_results:
+        status = "OK" if item.success else "FAIL"
+        print(f"[{status}] {item.name} {item.duration_ms:.0f}ms {item.error}")
+    mincifry_failed = [r for r in mincifry_results if not r.success]
+
+    overall_ok = not http_failed and not mincifry_failed and pytest_result.pytest_failed == 0
+    disk_only = (
+        not http_failed
+        and pytest_result.pytest_failed == 0
+        and bool(mincifry_failed)
+        and all(is_monitor_disk_full(item.error) for item in mincifry_failed)
+    )
+    if disk_only:
+        print(
+            "CLASSIFIED=autotest — диск полный, Chrome Минцифр не запускали; "
+            "не пейджим как PROD",
+            flush=True,
+        )
+
+    if INFLUX_ENABLED:
         try:
             write_check_results(http_results + mincifry_results)
         except Exception as exc:
@@ -217,16 +258,19 @@ def main() -> int:
             print(f"WARN: InfluxDB failure events: {exc}")
 
     daily_results = http_results + mincifry_results
-    notify_full_run_result(
-        daily_results,
-        overall_ok=overall_ok,
-        passed=pytest_result.passed,
-        total=pytest_result.total,
-        pytest_failed=pytest_result.pytest_failed,
-        pytest_output=pytest_result.output,
-    )
+    if not disk_only:
+        notify_full_run_result(
+            daily_results,
+            overall_ok=overall_ok,
+            passed=pytest_result.passed,
+            total=pytest_result.total,
+            pytest_failed=pytest_result.pytest_failed,
+            pytest_output=pytest_result.output,
+        )
+    else:
+        print("Daily telegram skipped (disk full / Chrome not launched)", flush=True)
 
-    send_alert = should_send_daily_telegram(overall_ok=overall_ok)
+    send_alert = (not disk_only) and should_send_daily_telegram(overall_ok=overall_ok)
     if not overall_ok and send_alert:
         notify_github_on_failure(
             run_type="full",

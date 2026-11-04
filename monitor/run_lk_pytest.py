@@ -34,6 +34,14 @@ from monitor.pytest_failures import (
     pytest_failure_snippet,
     pytest_summary_failure,
 )
+from utils.selenium_factory import (
+    ChromeDiskFullError,
+    assert_disk_for_chrome,
+    chrome_min_free_bytes,
+    chrome_profile_lifecycle,
+    disk_free_bytes,
+    install_chrome_crash_cleanup,
+)
 
 
 @dataclass
@@ -62,18 +70,11 @@ def _prune_allure_results(*, keep: int = 1) -> None:
         shutil.rmtree(old, ignore_errors=True)
 
 
-def _disk_free_bytes(path: Path) -> int:
-    try:
-        return int(shutil.disk_usage(path).free)
-    except OSError:
-        return 0
-
-
 def _run_lk_pytest() -> PytestResult:
     stamp = datetime.now().strftime("%Y%m%d-%H%M")
     _prune_allure_results(keep=1)
     allure_dir = PROJECT_ROOT / "allure-results" / f"lk-{stamp}"
-    use_allure = _disk_free_bytes(PROJECT_ROOT) >= 200 * 1024 * 1024
+    use_allure = disk_free_bytes(str(PROJECT_ROOT)) >= chrome_min_free_bytes()
     if use_allure:
         try:
             allure_dir.mkdir(parents=True, exist_ok=True)
@@ -135,10 +136,34 @@ def _run_lk_pytest() -> PytestResult:
     )
 
 
+def _disk_full_pytest_result(exc: ChromeDiskFullError) -> PytestResult:
+    return PytestResult(
+        total=0,
+        passed=0,
+        failed=0,
+        skipped=0,
+        errors=1,
+        duration_sec=0.0,
+        output=(
+            "Pytest не запустился:\n"
+            f"{exc}\n"
+            "OSError: [Errno 28] No space left on device\n"
+        ),
+        allure_dir=PROJECT_ROOT / "allure-results" / "skipped-disk",
+    )
+
+
 def main() -> int:
     print("=== BID LK Full Pytest (Allure) ===", flush=True)
+    with chrome_profile_lifecycle():
+        return _run_lk_pytest_body()
+
+
+def _run_lk_pytest_body() -> int:
+    install_chrome_crash_cleanup()
     lk_wait = float(os.getenv("CHROME_LOCK_WAIT_LK_PYTEST_SEC", "1800"))
     try:
+        assert_disk_for_chrome()
         with chrome_run_lock(owner="lk_pytest", wait_sec=lk_wait):
             print(
                 "Запуск боевого pytest: только tests/lk "
@@ -147,6 +172,9 @@ def main() -> int:
                 flush=True,
             )
             result = _run_lk_pytest()
+    except ChromeDiskFullError as exc:
+        print(f"SKIP combat pytest (disk full): {exc}", flush=True)
+        result = _disk_full_pytest_result(exc)
     except ChromeBusyError as exc:
         print(f"FAIL: {exc}", flush=True)
         if INFLUX_ENABLED:

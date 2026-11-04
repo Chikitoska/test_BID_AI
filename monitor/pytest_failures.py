@@ -5,7 +5,11 @@ from __future__ import annotations
 import re
 from typing import Literal
 
-from monitor.health_classify import is_autotest_error, is_chrome_infra_error
+from monitor.health_classify import (
+    is_autotest_error,
+    is_chrome_infra_error,
+    is_monitor_disk_full,
+)
 from monitor.host_classify import classify_bid_host, extract_http_code, is_timeout_text
 from monitor.metrics import FailureEvent
 
@@ -13,11 +17,7 @@ FailureKind = Literal["prod", "autotest"]
 
 
 def _is_monitor_disk_full(lower: str) -> bool:
-    return (
-        "no space left on device" in lower
-        or "errno 28" in lower
-        or "enospc" in lower
-    )
+    return is_monitor_disk_full(lower)
 
 # Сеть / HTTP 4xx/5xx — алертим сразу (красный в Grafana).
 # Chrome/WebDriver — НЕ сюда: это autotest (оранжевый), см. health_classify.

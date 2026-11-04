@@ -18,4 +18,9 @@ if [ -f monitor/.env ]; then
   set +a
 fi
 
-exec "$PROJECT_DIR/.venv/bin/python" monitor/run_daily.py
+# Минцифр не должен висеть часами: TERM после 10 мин (bid_run уже записан раньше UI).
+PYTHON="$PROJECT_DIR/.venv/bin/python"
+if command -v timeout >/dev/null 2>&1; then
+  exec timeout --signal=TERM --kill-after=15 600 "$PYTHON" monitor/run_daily.py
+fi
+exec "$PYTHON" monitor/run_daily.py

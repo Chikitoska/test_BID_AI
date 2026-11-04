@@ -110,7 +110,7 @@ source .env
 set +a
 $COMPOSE_CMD up -d
 
-chmod +x monitor/run_daily.sh
+chmod +x monitor/run_daily.sh monitor/vps_free_disk.sh
 
 echo ""
 echo "=== Готово ==="
@@ -125,6 +125,9 @@ echo "  cd $PROJECT_DIR && ./monitor/run_daily.sh"
 echo ""
 echo "Cron (ежедневно 08:00):"
 echo "  (crontab -l 2>/dev/null; echo '0 8 * * * $PROJECT_DIR/monitor/run_daily.sh >> $PROJECT_DIR/monitor/cron.log 2>&1') | crontab -"
+echo ""
+echo "Cron (диск каждые 20 мин — НЕ volume prune, НЕ influx/grafana):"
+echo "  (crontab -l 2>/dev/null; echo '*/20 * * * * /bin/bash $PROJECT_DIR/monitor/vps_free_disk.sh >> $PROJECT_DIR/monitor/disk.log 2>&1') | crontab -"
 echo ""
 echo "Grafana → Connections → Data sources → InfluxDB-BID:"
 echo "  вставьте INFLUXDB_TOKEN если datasource не подключился автоматически"

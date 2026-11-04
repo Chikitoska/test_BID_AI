@@ -51,21 +51,21 @@ def notify_github_on_failure(
     pytest_total: int = 0,
     pytest_error: str = "",
 ) -> bool:
-    """Шлёт dispatch в GitHub только при неуспехе → Telegram relay."""
-    if not GITHUB_DISPATCH_ENABLED:
-        print("GitHub dispatch skipped (add GITHUB_PAT to monitor/.env)")
-        return False
-
+    """Email с VPS сразу; GitHub dispatch → Telegram отдельно (PAT может отсутствовать)."""
     failed_checks = [item for item in http_results if not item.success]
-    failures_json = json.dumps(failures_for_relay(failed_checks), ensure_ascii=False)
-
-    send_vps_email_on_failure(
+    email_ok = send_vps_email_on_failure(
         run_type=run_type,
         failed_checks=failed_checks,
         pytest_failed=pytest_failed,
         pytest_total=pytest_total,
         pytest_error=pytest_error,
     )
+
+    if not GITHUB_DISPATCH_ENABLED:
+        print("GitHub dispatch skipped (add GITHUB_PAT to monitor/.env)")
+        return email_ok
+
+    failures_json = json.dumps(failures_for_relay(failed_checks), ensure_ascii=False)
 
     url = f"https://api.github.com/repos/{GITHUB_REPO}/dispatches"
     payload = {

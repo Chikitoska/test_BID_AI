@@ -143,6 +143,16 @@ def is_events_harness_miss(error: str) -> bool:
     return any(marker in lower for marker in _HARNESS_EVENTS_MARKERS)
 
 
+def is_monitor_disk_full(error: str) -> bool:
+    """ENOSPC на VPS — harness монитора, не «PROD лежит»."""
+    lower = (error or "").lower()
+    return (
+        "no space left on device" in lower
+        or "errno 28" in lower
+        or "enospc" in lower
+    )
+
+
 def is_autotest_error(error: str) -> bool:
     """Chrome/WebDriver или UI wait/assert — оранжевый (autotest)."""
     if (
@@ -151,6 +161,8 @@ def is_autotest_error(error: str) -> bool:
         or is_spa_back_network_error(error)
     ):
         return False
+    if is_monitor_disk_full(error):
+        return True
     return (
         is_chrome_infra_error(error)
         or is_ui_autotest_error(error)

@@ -27,6 +27,17 @@ def test_health_writes_lk_run_before_check_results():
     assert "prefer_http_error" in source
     assert 'CHROME_LOCK_WAIT_HEALTH_SEC", "90"' in source
     assert 'CHROME_LOCK_WAIT_HEALTH_SEC", "600"' not in source
+    assert "chrome_profile_lifecycle" in source
+    assert "ChromeDiskFullError" in source
+    assert "assert_disk_for_chrome" in source
+    assert "SKIP UI (unexpected)" in source
+    assert "after_run (email)" in source
+    assert source.index("_write_lk_run_retry(") < source.index("after_run()")
+    lk = (ROOT / "monitor" / "lk_checks.py").read_text(encoding="utf-8")
+    assert "CHATBOT_HEALTH_BUDGET_SEC" in lk
+    assert "core pulse continues" in lk
+    once = lk[lk.index("def _run_lk_monitor_checks_once") :]
+    assert once.index("landing_chatbot") < once.index("lk_auth_login") < once.index("lk_chatbot")
 
 
 def test_health_shell_has_slot_timeout():
