@@ -1,6 +1,6 @@
 # BID monitor digest
 
-- Generated: `2026-11-05T20:50:03.871527+03:00` (Europe/Moscow)
+- Generated: `2026-11-06T08:50:21.548247+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `54066b4 fix(monitor): restore Influx graphs WRITE-only and stop ENOSPC false alerts.`
@@ -14,11 +14,7 @@
 
 ## Failures (bid_failure)
 
-- `2026-11-05 13:01:24.114508+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-- `2026-11-05 06:56:14.645012+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-- `2026-11-05 06:51:38.527188+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-- `2026-11-05 06:46:18.386970+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-- `2026-11-05 05:56:36.933875+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+(ошибок bid_failure за период нет)
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
