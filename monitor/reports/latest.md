@@ -1,6 +1,6 @@
 # BID monitor digest
 
-- Generated: `2026-11-07T20:50:02.967945+03:00` (Europe/Moscow)
+- Generated: `2026-11-08T08:50:05.605240+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `54066b4 fix(monitor): restore Influx graphs WRITE-only and stop ENOSPC false alerts.`
@@ -14,13 +14,7 @@
 
 ## Failures (bid_failure)
 
-- `2026-11-07 09:36:34.523694+00:00` | Боевой прогон ЛК (2 ч) | `test_company_in_service_provider` | tests/lk/test_lk_auth.py::test_company_in_service_provider | test_company_in_service_provider | TimeoutException: element not found / wait timed out
-- `2026-11-07 09:36:34.523694+00:00` | Боевой прогон ЛК (2 ч) | `test_company_name_in_lk` | tests/lk/test_lk_auth.py::test_company_name_in_lk | test_company_name_in_lk | TimeoutException: element not found / wait timed out
-- `2026-11-07 09:36:34.523694+00:00` | Боевой прогон ЛК (2 ч) | `test_fio_in_service_provider` | tests/lk/test_lk_auth.py::test_fio_in_service_provider | test_fio_in_service_provider | TimeoutException: element not found / wait timed out
-- `2026-11-07 09:36:34.523694+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_accreditation_apply_button_without_submit` | tests/lk/test_lk_accreditation.py::test_lk_accreditation_apply_button_without_submit | test_lk_accreditation_apply_button_without_submit | Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
-- `2026-11-07 09:36:34.523694+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_accreditation_current_level_displayed` | tests/lk/test_lk_accreditation.py::test_lk_accreditation_current_level_displayed | test_lk_accreditation_current_level_displayed | LkPageError: Не отображается текущий уровень аккредитации
-- `2026-11-07 09:36:34.523694+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_accreditation_level_selection_visible` | tests/lk/test_lk_accreditation.py::test_lk_accreditation_level_selection_visible | test_lk_accreditation_level_selection_visible | Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
-- `2026-11-07 09:36:34.523694+00:00` | Боевой прогон ЛК (2 ч) | `test_service_provider_opens` | tests/lk/test_lk_auth.py::test_service_provider_opens | test_service_provider_opens | TimeoutException: element not found / wait timed out
+(ошибок bid_failure за период нет)
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
