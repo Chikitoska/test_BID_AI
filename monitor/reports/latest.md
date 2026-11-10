@@ -1,29 +1,28 @@
 # BID monitor digest
 
-- Generated: `2026-11-09T20:50:04.680592+03:00` (Europe/Moscow)
+- Generated: `2026-11-10T08:50:02.771039+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `54066b4 fix(monitor): restore Influx graphs WRITE-only and stop ENOSPC false alerts.`
 
 ## Influx volume
 
-- `bid_failure`: 2 точек (~1д)
+- `bid_failure`: 3 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 1152 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-- `2026-11-09 07:57:09.522397+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://id.bid.gazprom-neft.ru/realms/ecoportal/login-actions/authenticate?execution=3ae89bde-8c38-42b7-a53b-feea88b3fe6d&client_id=self-authentication&tab_id=PjWRN6u5brM&cl | Нет поля OTP за 45 с (URL: https://id.bid.gazprom-neft.ru/realms/ecoportal/login-actions/authenticate?execution=3ae89bde-8c38-42b7-a53b-feea88b3fe6d&client_id=self-authentication&tab_id=PjWRN6u5brM&cl
-- `2026-11-09 11:15:50.308114+00:00` | Лендинг + мин ЛК (5 мин) | `lk_chatbot_topics` | ЛК: темы чат-бота | lk_chatbot_topics | lk | https://lk.bid.gazprom-neft.ru/service-providers | ЛК: после открытия чата темы не отображаются. Текст: 'Ассистент\nНеизвестная ошибка\n\nСейчас ассистент недоступен — попробуйте вернуться позже или обратитесь в поддержку\n'
+- `2026-11-10 05:06:09.585334+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-[FAIL] lk_chatbot_topics 5545ms ЛК: после открытия чата темы не отображаются. Текст: 'Ассистент\nНеизвестная ошибка\n\nСейчас ассистент недоступен — попробуйте вернуться позже или обратитесь в поддержку\n'
-Alert suppressed: health fail streak 1/2
+[lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 10 с (слот 5xx не greening)…
+[FAIL] lk_auth_login 13295ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
 Metrics sent to InfluxDB (run_status=fail)
-Health monitor finished in 47.5s — FAIL (run_status=fail)
+Health monitor finished in 65.5s — FAIL (run_status=fail)
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
