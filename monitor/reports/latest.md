@@ -1,42 +1,25 @@
 # BID monitor digest
 
-- Generated: `2026-11-10T20:50:01.564943+03:00` (Europe/Moscow)
+- Generated: `2026-11-11T08:50:03.757093+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `54066b4 fix(monitor): restore Influx graphs WRITE-only and stop ENOSPC false alerts.`
 
 ## Influx volume
 
-- `bid_failure`: 5 точек (~1д)
+- `bid_failure`: 4 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 1152 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-- `2026-11-10 17:16:48.356101+00:00` | Лендинг + мин ЛК (5 мин) | `landing_chatbot_icon` | Лендинг: иконка чат-бота | landing_chatbot_icon | landing | https://bid.gazprom-neft.ru/ | Лендинг: иконка чат-бота не отображается
-- `2026-11-10 17:06:18.706184+00:00` | Лендинг + мин ЛК (5 мин) | `landing_chatbot_icon` | Лендинг: иконка чат-бота | landing_chatbot_icon | landing | https://bid.gazprom-neft.ru/ | Лендинг: иконка чат-бота не отображается
-- `2026-11-10 10:31:13.805878+00:00` | Лендинг + мин ЛК (5 мин) | `landing_chatbot_topics` | Лендинг: темы чат-бота | landing_chatbot_topics | landing | https://bid.gazprom-neft.ru/ | Лендинг: после открытия чата темы не отображаются. Текст: 'Ассистент\nНеизвестная ошибка\n\nСейчас ассистент недоступен — попробуйте вернуться позже или обратитесь в поддержку'
-- `2026-11-10 10:26:48.417758+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+(ошибок bid_failure за период нет)
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-[FAIL] lk_auth_login 15900ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-Metrics sent to InfluxDB (run_status=fail)
-Health monitor finished in 102.4s — FAIL (run_status=fail)
-[FAIL] landing_chatbot_topics 9551ms Лендинг: после открытия чата темы не отображаются. Текст: 'Ассистент\nНеизвестная ошибка\n\nСейчас ассистент недоступен — попробуйте вернуться позже или обратитесь в поддержку'
-Alert suppressed: health fail streak 2/2
-Metrics sent to InfluxDB (run_status=fail)
-Health monitor finished in 69.3s — FAIL (run_status=fail)
-[FAIL] landing_chatbot_icon 32648ms Лендинг: иконка чат-бота не отображается
-Alert suppressed: health fail streak 1/2
-Metrics sent to InfluxDB (run_status=fail)
-Health monitor finished in 77.2s — FAIL (run_status=fail)
-[FAIL] landing_chatbot_icon 31839ms Лендинг: иконка чат-бота не отображается
-Alert suppressed: health fail streak 1/2
-Metrics sent to InfluxDB (run_status=fail)
-Health monitor finished in 105.2s — FAIL (run_status=fail)
+(совпадений нет)
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
