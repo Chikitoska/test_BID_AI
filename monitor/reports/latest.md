@@ -1,25 +1,31 @@
 # BID monitor digest
 
-- Generated: `2026-11-12T08:50:00.169643+03:00` (Europe/Moscow)
+- Generated: `2026-11-12T20:50:00.326294+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `54066b4 fix(monitor): restore Influx graphs WRITE-only and stop ENOSPC false alerts.`
 
 ## Influx volume
 
-- `bid_failure`: 3 точек (~1д)
+- `bid_failure`: 5 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 1152 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-- `2026-11-12 01:31:31.167065+00:00` | Боевой прогон ЛК (2 ч) | `test_fio_in_service_provider` | tests/lk/test_lk_auth.py::test_fio_in_service_provider | test_fio_in_service_provider | lk | https://processor.gazprom-neft.ru/ | TimeoutException: Processor: не видно «ФИО» (.User-Name) после 2 попыток по 45s. URL=https://processor.gazprom-neft.ru/. Message: Processor: «ФИО» не найдено в шапке/iframe. URL=https://processor.gazprom-neft.ru/
+- `2026-11-12 07:01:27.554087+00:00` | Лендинг + мин ЛК (5 мин) | `landing_chatbot_topics` | Лендинг: темы чат-бота | landing_chatbot_topics | landing | https://bid.gazprom-neft.ru/ | Лендинг: после открытия чата темы не отображаются. Текст: 'Ассистент\nНеизвестная ошибка\n\nСейчас ассистент недоступен — попробуйте вернуться позже или обратитесь в поддержку'
+- `2026-11-12 09:57:39.038763+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/service-providers | ЛК не загрузился после входа (нет бейджа пользователя), URL: https://lk.bid.gazprom-neft.ru/service-providers
+- `2026-11-12 07:01:27.554087+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+- `2026-11-12 06:56:09.123896+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-(совпадений нет)
+[FAIL] lk_auth_login 54953ms ЛК не загрузился после входа (нет бейджа пользователя), URL: https://lk.bid.gazprom-neft.ru/service-providers
+Alert suppressed: health fail streak 1/2
+Metrics sent to InfluxDB (run_status=fail)
+Health monitor finished in 154.5s — FAIL (run_status=fail)
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
