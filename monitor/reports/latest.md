@@ -1,28 +1,38 @@
 # BID monitor digest
 
-- Generated: `2026-11-13T08:50:01.216493+03:00` (Europe/Moscow)
+- Generated: `2026-11-13T20:50:15.061038+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `54066b4 fix(monitor): restore Influx graphs WRITE-only and stop ENOSPC false alerts.`
 
 ## Influx volume
 
-- `bid_failure`: 5 точек (~1д)
+- `bid_failure`: 4 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 1152 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-- `2026-11-12 22:55:32.170106+00:00` | Лендинг + мин ЛК (5 мин) | `lk_chatbot_topics` | ЛК: темы чат-бота | lk_chatbot_topics | lk | https://lk.bid.gazprom-neft.ru/service-providers | ЛК: после открытия чата темы не отображаются. Текст: 'Ассистент\nНеизвестная ошибка\n\nСейчас ассистент недоступен — попробуйте вернуться позже или обратитесь в поддержку\n'
+- `2026-11-13 12:16:25.903035+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+- `2026-11-13 12:12:12.295626+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/service-providers | Message:
+- `2026-11-13 09:31:07.565826+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-[FAIL] lk_chatbot_topics 4287ms ЛК: после открытия чата темы не отображаются. Текст: 'Ассистент\nНеизвестная ошибка\n\nСейчас ассистент недоступен — попробуйте вернуться позже или обратитесь в поддержку\n'
-Alert suppressed: health fail streak 1/2
+[lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 10 с (слот 5xx не greening)…
+[FAIL] lk_auth_login 11708ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
 Metrics sent to InfluxDB (run_status=fail)
-Health monitor finished in 30.2s — FAIL (run_status=fail)
+Health monitor finished in 64.6s — FAIL (run_status=fail)
+[FAIL] lk_auth_login 44210ms Message:
+Alert suppressed: health failure classified as autotest (UI flake / Chrome/WebDriver) — Grafana orange; not paging as LK/PROD down
+Health monitor finished in 128.7s — FAIL_AUTOTEST (run_status=autotest)
+[lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 10 с (слот 5xx не greening)…
+[FAIL] lk_auth_login 11212ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+Metrics sent to InfluxDB (run_status=fail)
+WARN: GitHub dispatch failed: HTTPSConnectionPool(host='api.github.com', port=443): Read timed out. (read timeout=15)
+Health monitor finished in 63.0s — FAIL (run_status=fail)
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
