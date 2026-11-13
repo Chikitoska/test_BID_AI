@@ -1,6 +1,6 @@
 # BID monitor digest
 
-- Generated: `2026-11-12T20:50:00.326294+03:00` (Europe/Moscow)
+- Generated: `2026-11-13T08:50:01.216493+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `54066b4 fix(monitor): restore Influx graphs WRITE-only and stop ENOSPC false alerts.`
@@ -14,18 +14,15 @@
 
 ## Failures (bid_failure)
 
-- `2026-11-12 07:01:27.554087+00:00` | Лендинг + мин ЛК (5 мин) | `landing_chatbot_topics` | Лендинг: темы чат-бота | landing_chatbot_topics | landing | https://bid.gazprom-neft.ru/ | Лендинг: после открытия чата темы не отображаются. Текст: 'Ассистент\nНеизвестная ошибка\n\nСейчас ассистент недоступен — попробуйте вернуться позже или обратитесь в поддержку'
-- `2026-11-12 09:57:39.038763+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/service-providers | ЛК не загрузился после входа (нет бейджа пользователя), URL: https://lk.bid.gazprom-neft.ru/service-providers
-- `2026-11-12 07:01:27.554087+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-- `2026-11-12 06:56:09.123896+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+- `2026-11-12 22:55:32.170106+00:00` | Лендинг + мин ЛК (5 мин) | `lk_chatbot_topics` | ЛК: темы чат-бота | lk_chatbot_topics | lk | https://lk.bid.gazprom-neft.ru/service-providers | ЛК: после открытия чата темы не отображаются. Текст: 'Ассистент\nНеизвестная ошибка\n\nСейчас ассистент недоступен — попробуйте вернуться позже или обратитесь в поддержку\n'
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-[FAIL] lk_auth_login 54953ms ЛК не загрузился после входа (нет бейджа пользователя), URL: https://lk.bid.gazprom-neft.ru/service-providers
+[FAIL] lk_chatbot_topics 4287ms ЛК: после открытия чата темы не отображаются. Текст: 'Ассистент\nНеизвестная ошибка\n\nСейчас ассистент недоступен — попробуйте вернуться позже или обратитесь в поддержку\n'
 Alert suppressed: health fail streak 1/2
 Metrics sent to InfluxDB (run_status=fail)
-Health monitor finished in 154.5s — FAIL (run_status=fail)
+Health monitor finished in 30.2s — FAIL (run_status=fail)
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
