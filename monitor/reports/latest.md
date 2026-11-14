@@ -1,13 +1,12 @@
 # BID monitor digest
 
-- Generated: `2026-11-14T08:50:00.706465+03:00` (Europe/Moscow)
+- Generated: `2026-11-14T20:50:03.862562+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `54066b4 fix(monitor): restore Influx graphs WRITE-only and stop ENOSPC false alerts.`
 
 ## Influx volume
 
-- `bid_failure`: 3 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 1152 точек (~1д)
 - `bid_run`: 10 точек (~1д)
