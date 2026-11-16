@@ -25,9 +25,30 @@ done
 rm -rf \
   "$PROJECT_DIR/artifacts"/* \
   "$PROJECT_DIR/.selenium_cache" \
-  "$PROJECT_DIR/allure-results"/* \
   /tmp/chrome-* /tmp/.com.google.Chrome* /tmp/chromedriver* \
   2>/dev/null || true
+
+# allure-results: combat pytest пишет --alluredir=allure-results/lk-*.
+# Cron */20 (:00/:20/:40) vs combat `23 */2`: бой 5–20 мин пересекается с :40,
+# rm -rf allure-results/* сносит live dir → FileNotFoundError в allure logger.
+allure_in_use=0
+if pgrep -f 'monitor/run_lk_pytest' >/dev/null 2>&1 \
+  || pgrep -f 'pytest.*--alluredir=' >/dev/null 2>&1; then
+  allure_in_use=1
+fi
+lock="$PROJECT_DIR/monitor/.chrome.lock"
+if [ -f "$lock" ]; then
+  owner=$(sed -n '1p' "$lock" 2>/dev/null || true)
+  pid=$(sed -n '2p' "$lock" 2>/dev/null || true)
+  if [ "$owner" = "lk_pytest" ] && [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+    allure_in_use=1
+  fi
+fi
+if [ "$allure_in_use" -eq 1 ]; then
+  echo "skip allure-results: combat pytest running"
+else
+  rm -rf "$PROJECT_DIR/allure-results"/* 2>/dev/null || true
+fi
 
 # leftover bid-chrome-* кроме живого профиля (health/combat может идти прямо сейчас)
 swept=0
