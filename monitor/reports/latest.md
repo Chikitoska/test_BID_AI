@@ -1,6 +1,6 @@
 # BID monitor digest
 
-- Generated: `2026-11-17T20:50:13.874250+03:00` (Europe/Moscow)
+- Generated: `2026-11-18T08:50:03.866736+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `54066b4 fix(monitor): restore Influx graphs WRITE-only and stop ENOSPC false alerts.`
@@ -14,17 +14,12 @@
 
 ## Failures (bid_failure)
 
-- `2026-11-17 14:01:18.863565+00:00` | Лендинг + сервисы (2×/день) | `landing_mincifry_banner` | Минцифр: блок на лендинге | landing_mincifry_banner | landing | https://bid.gazprom-neft.ru/ | На лендинге не отображается блок «Установите российские сертификаты, чтобы не терять доступ к сервисам»
-- `2026-11-17 09:06:22.050674+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-- `2026-11-17 06:16:48.523158+00:00` | Лендинг + мин ЛК (5 мин) | `lk_company_badge` | ЛК: компания в шапке | lk_company_badge | lk | https://lk.bid.gazprom-neft.ru/service-providers | Message:
+(ошибок bid_failure за период нет)
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-[lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 10 с (слот 5xx не greening)…
-[FAIL] lk_auth_login 19531ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-Metrics sent to InfluxDB (run_status=fail)
-Health monitor finished in 78.8s — FAIL (run_status=fail)
+(совпадений нет)
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
