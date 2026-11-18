@@ -1,25 +1,28 @@
 # BID monitor digest
 
-- Generated: `2026-11-18T08:50:03.866736+03:00` (Europe/Moscow)
+- Generated: `2026-11-18T20:50:22.693444+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `54066b4 fix(monitor): restore Influx graphs WRITE-only and stop ENOSPC false alerts.`
 
 ## Influx volume
 
-- `bid_failure`: 3 точек (~1д)
+- `bid_failure`: 2 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 1152 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-(ошибок bid_failure за период нет)
+- `2026-11-18 06:32:11.487387+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+- `2026-11-18 09:16:32.581450+00:00` | Лендинг + мин ЛК (5 мин) | `lk_company_badge` | ЛК: компания в шапке | lk_company_badge | lk | https://lk.bid.gazprom-neft.ru/service-providers | Message:
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-(совпадений нет)
+[FAIL] lk_company_badge 45315ms Message:
+Alert suppressed: health failure classified as autotest (UI flake / Chrome/WebDriver) — Grafana orange; not paging as LK/PROD down
+Health monitor finished in 89.2s — FAIL_AUTOTEST (run_status=autotest)
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
