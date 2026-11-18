@@ -72,6 +72,29 @@ def test_timeout_exception_is_autotest_not_chrome_only() -> None:
     assert health_run_status(overall_ok=False, failure_kind="autotest") == "autotest"
 
 
+def test_company_badge_timeout_message_is_autotest() -> None:
+    err = (
+        "TimeoutException: В шапке ЛК нет «компания» "
+        "([data-testid='md-user_badge'] .User-Info)"
+    )
+    assert is_autotest_error(err) is True
+    assert classify_health_failure([_ui("lk_company_badge", err)]) == "autotest"
+
+
+def test_run_step_keeps_timeout_exception_type() -> None:
+    from selenium.common.exceptions import TimeoutException
+
+    from monitor.lk_checks import _run_step
+
+    def boom() -> None:
+        raise TimeoutException("В шапке ЛК нет «компания»")
+
+    result = _run_step("lk_company_badge", boom)
+    assert result.success is False
+    assert "TimeoutException" in result.error
+    assert "компания" in result.error
+
+
 def test_classify_chatbot_topic_fail_is_autotest_not_prod() -> None:
     results = [
         _http("main_page", code=200, success=True),

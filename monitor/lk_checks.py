@@ -128,7 +128,8 @@ def _run_step(name: str, action) -> CheckResult:
         action()
         return _result(name, success=True, duration_ms=(time.perf_counter() - start) * 1000)
     except Exception as exc:
-        error = redact_secrets(str(exc))
+        # str(TimeoutException) = «Message:» без типа — Grafana и классификатор слепнут.
+        error = redact_secrets(f"{type(exc).__name__}: {exc}")
         return _result(
             name,
             success=False,
