@@ -1,25 +1,30 @@
 # BID monitor digest
 
-- Generated: `2026-11-20T08:50:03.867855+03:00` (Europe/Moscow)
+- Generated: `2026-11-20T20:50:04.513776+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `54066b4 fix(monitor): restore Influx graphs WRITE-only and stop ENOSPC false alerts.`
 
 ## Influx volume
 
-- `bid_failure`: 1 точек (~1д)
+- `bid_failure`: 3 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 1152 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-(ошибок bid_failure за период нет)
+- `2026-11-20 12:26:49.194056+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+- `2026-11-20 07:31:20.453805+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+- `2026-11-20 07:29:27.022431+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_accreditation_current_level_displayed` | tests/lk/test_lk_accreditation.py::test_lk_accreditation_current_level_displayed | test_lk_accreditation_current_level_displayed | TimeoutException: element not found / wait timed out
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-(совпадений нет)
+[lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 10 с (слот 5xx не greening)…
+[FAIL] lk_auth_login 11760ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+Metrics sent to InfluxDB (run_status=fail)
+Health monitor finished in 104.2s — FAIL (run_status=fail)
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
