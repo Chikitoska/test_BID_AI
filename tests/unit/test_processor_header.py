@@ -21,3 +21,10 @@ def test_processor_selectors_stay_in_header_context():
     assert "User-Block" in chunk
     assert "header" in chunk
     assert "iframe" in chunk
+    assert "min(12, wait_sec)" not in chunk
+    assert "_read_processor_field_in_context(selectors, wait_sec)" in chunk
+
+
+def test_processor_header_reads_inner_text_fallback():
+    chunk = FLOW.read_text(encoding="utf-8").split("def _read_processor_field_in_context")[1]
+    assert 'get_attribute("innerText")' in chunk

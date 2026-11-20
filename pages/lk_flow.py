@@ -454,7 +454,7 @@ class LkFlow:
             except Exception:
                 pass
             accept_processor_consent_modals(self.driver, timeout=3)
-            found = self._read_processor_field_in_context(selectors, min(12, wait_sec))
+            found = self._read_processor_field_in_context(selectors, wait_sec)
             if found:
                 return found
             for frame in self.driver.find_elements(By.TAG_NAME, "iframe"):
@@ -495,7 +495,11 @@ class LkFlow:
                     for element in self.driver.find_elements(By.CSS_SELECTOR, selector):
                         if not element.is_displayed():
                             continue
-                        text = (element.text or "").strip()
+                        text = (
+                            element.text
+                            or element.get_attribute("innerText")
+                            or ""
+                        ).strip()
                         if text:
                             return text
                 except Exception:
