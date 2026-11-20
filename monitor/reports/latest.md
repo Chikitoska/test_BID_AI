@@ -1,6 +1,6 @@
 # BID monitor digest
 
-- Generated: `2026-11-19T20:50:22.674064+03:00` (Europe/Moscow)
+- Generated: `2026-11-20T08:50:03.867855+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `54066b4 fix(monitor): restore Influx graphs WRITE-only and stop ENOSPC false alerts.`
@@ -14,14 +14,12 @@
 
 ## Failures (bid_failure)
 
-- `2026-11-19 09:11:52.118780+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+(ошибок bid_failure за период нет)
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-[FAIL] lk_auth_login 19139ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
-Metrics sent to InfluxDB (run_status=fail)
-Health monitor finished in 107.7s — FAIL (run_status=fail)
+(совпадений нет)
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
