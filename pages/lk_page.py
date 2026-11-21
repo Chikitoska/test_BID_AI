@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 import re
+import time
 
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from config.lk_settings import LK_UI_WAIT_SEC
-from utils.lk_modals import accept_lk_consent_modals
+from utils.lk_modals import accept_lk_consent_modals, dismiss_blocking_lk_modals
 
 
 class LkPageError(Exception):
@@ -84,8 +85,50 @@ class LkPage:
         return element.text.strip()
 
     def read_user_company(self) -> str:
-        element = self._visible(f"{self.USER_BADGE} .User-Info")
-        return element.text.strip()
+        """Компания в шапке: текст `.User-Info`, даже если Selenium не считает его visible.
+
+        Health часто видит `.User-Name`, а затем 45 с ждёт visibility `.User-Info`
+        и пишет пустой Selenium `Message:` — SPA/модалка/нулевой размер, не 5xx.
+        """
+        return self._read_badge_field(css_child=".User-Info", label="компания")
+
+    def _badge_child_text(self, css_child: str) -> str:
+        badges = self.driver.find_elements(By.CSS_SELECTOR, self.USER_BADGE)
+        for badge in badges:
+            if not badge.is_displayed():
+                continue
+            for child in badge.find_elements(By.CSS_SELECTOR, css_child):
+                text = (child.text or "").strip()
+                if text:
+                    return text
+        selector = f"{self.USER_BADGE} {css_child}"
+        for child in self.driver.find_elements(By.CSS_SELECTOR, selector):
+            text = (child.text or "").strip()
+            if text:
+                return text
+        return ""
+
+    def _read_badge_field(self, *, css_child: str, label: str) -> str:
+        selector = f"{self.USER_BADGE} {css_child}"
+        deadline = time.time() + max(0.5, float(self.wait_sec))
+        dismissed = False
+        saw_stale = False
+        while time.time() < deadline:
+            try:
+                text = self._badge_child_text(css_child)
+            except StaleElementReferenceException:
+                saw_stale = True
+                text = ""
+            if text:
+                return text
+            if not dismissed:
+                dismiss_blocking_lk_modals(self.driver, timeout=2)
+                accept_lk_consent_modals(self.driver, timeout=2)
+                dismissed = True
+                continue
+            time.sleep(0.3)
+        hint = "; stale badge rerender" if saw_stale else ""
+        raise TimeoutException(f"В шапке ЛК нет «{label}» ({selector}){hint}")
 
     def nav_items(self) -> list[str]:
         navbar = self._visible(self.NAVBAR)
