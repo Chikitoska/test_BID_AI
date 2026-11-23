@@ -16,7 +16,10 @@ def test_auth_redirects_to_lk(authenticated_driver):
 
 def test_company_name_in_lk(authenticated_driver):
     company = LkFlow(authenticated_driver).read_company_in_lk()
-    assert company, "В шапке ЛК нет названия компании"
+    assert company, (
+        "Название компании в шапке ЛК не отобразилось — "
+        "микросервис company не ответил (сеть/PROD)"
+    )
     if BID_EXPECTED_COMPANY:
         assert company == BID_EXPECTED_COMPANY
 
@@ -27,13 +30,19 @@ def test_service_provider_opens(processor_driver):
 
 def test_fio_in_service_provider(processor_driver):
     fio = LkFlow(processor_driver).read_fio_in_processor()
-    assert fio, "Processor: ФИО не найдено в шапке/iframe"
+    assert fio, (
+        "Processor: ФИО не найдено в шапке/iframe — "
+        "микросервис user не ответил (сеть/PROD)"
+    )
     if BID_EXPECTED_FIO:
         assert fio == BID_EXPECTED_FIO
 
 
 def test_company_in_service_provider(processor_driver):
     company = LkFlow(processor_driver).read_company_in_processor()
-    assert company, "Processor: компания не найдена в шапке/iframe"
+    assert company, (
+        "Processor: компания не найдена в шапке/iframe — "
+        "микросервис company не ответил (сеть/PROD)"
+    )
     if BID_EXPECTED_COMPANY:
         assert company == BID_EXPECTED_COMPANY

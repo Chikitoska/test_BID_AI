@@ -18,7 +18,7 @@ from monitor.http_status import prefer_http_error_results, results_have_http_4xx
 from monitor.secrets_redact import redact_secrets
 from pages.chatbot_widget import ChatbotWidget
 from pages.lk_flow import LkAuthError, LkFlow
-from pages.lk_page import LkPage
+from pages.lk_page import LkPage, LkPageError
 from pages.mincifry_page import MincifryPage
 from utils.lk_modals import accept_lk_consent_modals, dismiss_blocking_lk_modals
 from utils.selenium_factory import create_chrome_driver, quit_chrome_driver
@@ -128,7 +128,12 @@ def _run_step(name: str, action) -> CheckResult:
         action()
         return _result(name, success=True, duration_ms=(time.perf_counter() - start) * 1000)
     except Exception as exc:
-        error = redact_secrets(str(exc))
+        raw = str(exc).strip()
+        if raw:
+            error = f"{type(exc).__name__}: {raw}"
+        else:
+            error = f"{type(exc).__name__}: Message:"
+        error = redact_secrets(error)
         return _result(
             name,
             success=False,
@@ -274,18 +279,36 @@ def _has_lk_session(flow: LkFlow) -> None:
 
 
 def _check_fio(page: LkPage) -> None:
-    fio = page.read_user_fio()
+    try:
+        fio = page.read_user_fio()
+    except LkPageError:
+        raise
     if not fio:
-        raise LkAuthError("В шапке ЛК нет ФИО")
+        wait_sec = page._ms_data_wait_sec()
+        raise LkAuthError(
+            f"ФИО в шапке ЛК пустое после {wait_sec} с — "
+            "микросервис user не ответил (сеть/PROD)"
+        )
     if BID_EXPECTED_FIO and fio != BID_EXPECTED_FIO:
-        raise LkAuthError("Неверное ФИО в шапке ЛК")
+        raise LkAuthError(
+            f"Неверное ФИО в шапке ЛК: факт={fio!r}, ожидалось={BID_EXPECTED_FIO!r} "
+            "(микросервис user)"
+        )
 
 
 def _check_company(page: LkPage) -> None:
-    company = page.read_user_company()
+    try:
+        company = page.read_user_company()
+    except LkPageError:
+        raise
     if not company:
-        raise LkAuthError("В шапке ЛК нет названия компании")
+        wait_sec = page._ms_data_wait_sec()
+        raise LkAuthError(
+            f"Название компании в шапке ЛК пустое после {wait_sec} с — "
+            "микросервис company не ответил (сеть/PROD)"
+        )
     if BID_EXPECTED_COMPANY and company != BID_EXPECTED_COMPANY:
         raise LkAuthError(
-            f"Неверная компания в шапке ЛК: факт={company!r}, ожидалось={BID_EXPECTED_COMPANY!r}"
+            f"Неверная компания в шапке ЛК: факт={company!r}, "
+            f"ожидалось={BID_EXPECTED_COMPANY!r} (микросервис company)"
         )

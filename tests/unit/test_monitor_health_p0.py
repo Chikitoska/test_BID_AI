@@ -8,6 +8,7 @@ from monitor.health_classify import (
     health_run_status,
     is_autotest_error,
     is_chrome_infra_error,
+    is_lk_ms_data_miss,
     pytest_run_status,
 )
 from monitor.http_status import prefer_http_error, prefer_http_error_results, results_have_http_4xx_or_5xx
@@ -56,8 +57,43 @@ def test_is_chrome_infra_not_auth_or_http() -> None:
     assert is_chrome_infra_error("page /error/500") is False
 
 
+def test_company_badge_empty_message_is_prod_not_autotest() -> None:
+    """Пустой Selenium Message на компании — микросервис company, красный prod."""
+    err = "Message: \nStacktrace:\n#0 0x5ab910d8a86a <unknown>"
+    results = [
+        _http("main_page", code=200, success=True),
+        _ui("lk_company_badge", err),
+    ]
+    assert is_lk_ms_data_miss(error=err, check="lk_company_badge") is True
+    assert classify_health_failure(results) == "prod"
+    assert health_run_status(overall_ok=False, failure_kind="prod") == "fail"
+
+
+def test_fio_timeout_exception_is_prod_not_autotest() -> None:
+    err = (
+        "LkPageError: ФИО в шапке ЛК не отобразилось за 30 с — "
+        "микросервис user не ответил (сеть/PROD)"
+    )
+    results = [
+        _http("main_page", code=200, success=True),
+        _ui("lk_user_fio", err),
+    ]
+    assert is_autotest_error(err) is False
+    assert classify_health_failure(results) == "prod"
+
+
+def test_company_chrome_crash_still_autotest() -> None:
+    err = "chromedriver unexpectedly exited; status=1"
+    results = [
+        _http("main_page", code=200, success=True),
+        _ui("lk_company_badge", err),
+    ]
+    assert is_lk_ms_data_miss(error=err, check="lk_company_badge") is False
+    assert classify_health_failure(results) == "autotest"
+
+
 def test_timeout_exception_is_autotest_not_chrome_only() -> None:
-    """TimeoutException — autotest (оранжевый), не сеть/4xx/5xx."""
+    """TimeoutException на логине — autotest (оранжевый), не сеть/4xx/5xx."""
     err = (
         "selenium.common.exceptions.TimeoutException: Message: \n"
         "Stacktrace:\n#0 0x5ab910d8a86a <unknown>"
@@ -190,6 +226,41 @@ def test_should_send_suppresses_busy(monkeypatch, tmp_path) -> None:
     monkeypatch.setattr(st, "ALERT_STATE_FILE", state_file)
 
     assert should_send_lk_telegram(overall_ok=False, lk_skipped_busy=True) is False
+
+
+def test_should_send_lk_ms_immediate(monkeypatch, tmp_path) -> None:
+    state_file = tmp_path / "alert_state.json"
+    import monitor.config as cfg
+    import monitor.state as st
+
+    monkeypatch.setattr(cfg, "ALERT_STATE_FILE", state_file)
+    monkeypatch.setattr(st, "ALERT_STATE_FILE", state_file)
+    monkeypatch.setattr(cfg, "MONITOR_ALERT_AFTER_FAILURES", 2)
+
+    assert should_send_lk_telegram(
+        overall_ok=False, failure_kind="prod", immediate=True
+    ) is True
+
+
+def test_classify_lk_pytest_company_timeout_is_prod() -> None:
+    out = (
+        "FAILED tests/lk/test_lk_auth.py::test_company_name_in_lk - "
+        "selenium.common.exceptions.TimeoutException: Message:\n"
+        "1 failed"
+    )
+    assert classify_lk_pytest_failure(out, failed=1, total=5) == "prod"
+    assert pytest_run_status(overall_ok=False, failure_kind="prod") == "fail"
+
+
+def test_classify_lk_pytest_accreditation_is_prod() -> None:
+    out = (
+        "FAILED tests/lk/test_lk_accreditation.py::"
+        "test_lk_accreditation_current_level_displayed - "
+        "Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня — "
+        "микросервис accreditation недоступен (сеть/PROD)\n"
+        "1 failed"
+    )
+    assert classify_lk_pytest_failure(out, failed=1, total=8) == "prod"
 
 
 def test_should_send_prod_confirmed_http(monkeypatch, tmp_path) -> None:

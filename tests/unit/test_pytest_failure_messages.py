@@ -12,6 +12,15 @@ from monitor.pytest_failures import (
 )
 
 
+def test_brief_bare_message_is_timeout_fallback() -> None:
+    assert brief_exception_text("Message:") == (
+        "TimeoutException: element not found / wait timed out"
+    )
+    assert brief_exception_text("Message: \nStacktrace:\n#0 dead") == (
+        "TimeoutException: element not found / wait timed out"
+    )
+
+
 def test_brief_empty_timeout_message() -> None:
     detail = "selenium.common.exceptions.TimeoutException: Message:"
     assert brief_exception_text(detail) == (
@@ -41,7 +50,8 @@ def test_format_rich_with_url() -> None:
         "test_lk_accreditation_navigation | "
         "lk | "
         "https://lk.bid.gazprom-neft.ru/accreditation | "
-        "TimeoutException: element not found / wait timed out"
+        "Раздел «Аккредитация» не отобразился — "
+        "микросервис accreditation недоступен (сеть/PROD)"
     )
 
 
@@ -56,6 +66,16 @@ def test_format_rich_without_url() -> None:
     )
 
 
+def test_format_rich_company_badge_empty_message() -> None:
+    err = format_rich_failure_error(
+        test_name="lk_company_badge",
+        detail="Message:",
+        url="https://lk.bid.gazprom-neft.ru/service-providers",
+    )
+    assert "микросервис company" in err
+    assert "Message:" not in err.split("|")[-1]
+
+
 def test_parse_pytest_empty_message_no_url() -> None:
     output = (
         "FAILED tests/lk/test_lk_smoke.py::test_lk_accreditation_fallback - "
@@ -66,7 +86,8 @@ def test_parse_pytest_empty_message_no_url() -> None:
     assert events[0].check == "test_lk_accreditation_fallback"
     assert events[0].error == (
         "test_lk_accreditation_fallback | "
-        "TimeoutException: element not found / wait timed out"
+        "Раздел «Аккредитация» не отобразился — "
+        "микросервис accreditation недоступен (сеть/PROD)"
     )
 
 
@@ -84,7 +105,7 @@ FAILED tests/lk/test_lk_accreditation.py::test_lk_accreditation_navigation - sel
     assert len(events) == 1
     assert "test_lk_accreditation_navigation" in events[0].error
     assert "https://lk.bid.gazprom-neft.ru/service-providers/accreditation" in events[0].error
-    assert "TimeoutException:" in events[0].error
+    assert "микросервис accreditation" in events[0].error
     assert "Message:" not in events[0].error or "Раздел" in events[0].error
 
 
@@ -124,6 +145,24 @@ def test_extract_failure_url_prefers_lk() -> None:
         "and https://lk.bid.gazprom-neft.ru/foo"
     )
     assert extract_failure_url(text) == "https://lk.bid.gazprom-neft.ru/foo"
+
+
+def test_failures_from_checks_company_badge_names_microservice() -> None:
+    results = [
+        CheckResult(
+            name="lk_company_badge",
+            url="https://lk.bid.gazprom-neft.ru/service-providers",
+            method="UI",
+            success=False,
+            http_code=0,
+            duration_ms=30120.0,
+            error="Message: \nStacktrace:\n#0 dead",
+        )
+    ]
+    events = failures_from_checks(results)
+    assert len(events) == 1
+    assert "микросервис company" in events[0].error
+    assert "lk_company_badge" in events[0].error
 
 
 def test_failures_from_checks_enriches_ui_empty_message() -> None:

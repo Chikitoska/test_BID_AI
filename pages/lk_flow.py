@@ -23,6 +23,7 @@ from config.lk_settings import (
     LANDING_BASE_URL,
     LK_AUTH_WAIT_SEC,
     LK_LOGIN_WAIT_SEC,
+    LK_MS_DATA_WAIT_SEC,
     LK_PROCESSOR_HEADER_ATTEMPTS,
     LK_PROCESSOR_HEADER_RETRY_DELAY_SEC,
     LK_SKIP_LANDING,
@@ -376,15 +377,21 @@ class LkFlow:
         return self._ensure_on_lk_page()
 
     def read_company_in_lk(self) -> str:
-        wait_sec = max(self.wait_sec, LK_UI_WAIT_SEC)
+        wait_sec = max(self.wait_sec, LK_UI_WAIT_SEC, LK_MS_DATA_WAIT_SEC)
         if "/service-providers" not in self.driver.current_url:
             self.driver.get(self._lk_target_url())
         accept_lk_consent_modals(self.driver)
-        company_elem = WebDriverWait(self.driver, wait_sec).until(
-            EC.visibility_of_element_located(
-                (By.CSS_SELECTOR, "[data-testid='md-user_badge'] .User-Info")
+        try:
+            company_elem = WebDriverWait(self.driver, wait_sec).until(
+                EC.visibility_of_element_located(
+                    (By.CSS_SELECTOR, "[data-testid='md-user_badge'] .User-Info")
+                )
             )
-        )
+        except TimeoutException as exc:
+            raise TimeoutException(
+                f"Название компании в шапке ЛК не отобразилось за {wait_sec} с — "
+                "микросервис company не ответил (сеть/PROD)"
+            ) from exc
         return company_elem.text.strip()
 
     def open_service_provider(self) -> None:
@@ -482,9 +489,11 @@ class LkFlow:
                 time.sleep(LK_PROCESSOR_HEADER_RETRY_DELAY_SEC)
 
         detail = str(last_error) if last_error else "элемент не найден"
+        ms_name = "user" if label.lower() == "фио" else "company"
         raise TimeoutException(
             f"Processor: не видно «{label}» ({css_child}) после {attempts} попыток "
-            f"по {wait_sec}s. URL={self.driver.current_url}. {detail}"
+            f"по {wait_sec}s — микросервис {ms_name} не ответил (сеть/PROD). "
+            f"URL={self.driver.current_url}. {detail}"
         )
 
     def _read_processor_field_in_context(self, selectors: tuple[str, ...], wait_sec: float) -> str:

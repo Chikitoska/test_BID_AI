@@ -33,6 +33,7 @@ from monitor.health_classify import (
     classify_health_failure,
     health_run_status,
     is_autotest_failure_kind,
+    is_lk_ms_data_miss,
 )
 from monitor.http_session import create_monitor_session
 from monitor.http_status import (
@@ -365,6 +366,20 @@ def _run_health_body() -> int:
     else:
         confirmed_http_error = False
 
+    lk_ms_miss = (not lk_skipped_busy) and any(
+        is_lk_ms_data_miss(error=item.error, check=item.name)
+        for item in all_results
+        if not item.success
+    )
+    if lk_ms_miss:
+        overall_ok = False
+        failure_kind = "prod"
+        print(
+            "CLASSIFIED=prod — ФИО/компания/аккредитация: "
+            "микросервис не отдал данные (сеть/PROD)",
+            flush=True,
+        )
+
     run_status = health_run_status(
         overall_ok=overall_ok,
         lk_skipped_busy=lk_skipped_busy,
@@ -375,6 +390,7 @@ def _run_health_body() -> int:
     send_alert = should_send_lk_telegram(
         overall_ok=overall_ok,
         confirmed_http_error=confirmed_http_error,
+        immediate=lk_ms_miss,
         failure_kind=failure_kind,
         lk_skipped_busy=lk_skipped_busy,
     )

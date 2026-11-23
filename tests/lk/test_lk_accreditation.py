@@ -22,7 +22,10 @@ def test_lk_accreditation_current_level_displayed(lk_page: LkPage):
 def test_lk_accreditation_level_selection_visible(lk_page: LkPage):
     state, current = lk_page.accreditation_upgrade_path_state()
     if state == "page_error":
-        pytest.fail("Раздел «Аккредитация» не загрузился или нет текущего уровня")
+        pytest.fail(
+            "Раздел «Аккредитация» не загрузился или нет текущего уровня — "
+            "микросервис accreditation недоступен (сеть/PROD)"
+        )
     if state == "max_level":
         assert current >= 1, f"Максимальный уровень без номера: {current}"
         return
@@ -36,7 +39,10 @@ def test_lk_accreditation_apply_button_without_submit(lk_page: LkPage):
     """Элемент начала выбора уровня виден, но анкету не отправляем."""
     state, current = lk_page.accreditation_upgrade_path_state()
     if state == "page_error":
-        pytest.fail("Раздел «Аккредитация» не загрузился или нет текущего уровня")
+        pytest.fail(
+            "Раздел «Аккредитация» не загрузился или нет текущего уровня — "
+            "микросервис accreditation недоступен (сеть/PROD)"
+        )
     if state == "max_level":
         assert current >= 1, f"Максимальный уровень без номера: {current}"
         return

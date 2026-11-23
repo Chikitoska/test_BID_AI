@@ -10,7 +10,7 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from config.lk_settings import LK_UI_WAIT_SEC
+from config.lk_settings import LK_MS_DATA_WAIT_SEC, LK_UI_WAIT_SEC
 from utils.lk_modals import accept_lk_consent_modals
 
 
@@ -64,6 +64,19 @@ class LkPage:
     def _visible(self, css: str):
         return self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, css)))
 
+    def _ms_data_wait_sec(self) -> int:
+        return max(int(self.wait_sec), int(LK_MS_DATA_WAIT_SEC))
+
+    def _wait_header_text(self, css: str, *, timeout_error: str) -> str:
+        wait_sec = self._ms_data_wait_sec()
+        try:
+            element = WebDriverWait(self.driver, wait_sec).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, css))
+            )
+        except TimeoutException as exc:
+            raise LkPageError(timeout_error) from exc
+        return (element.text or "").strip()
+
     def dismiss_consent_modals(self) -> bool:
         return accept_lk_consent_modals(self.driver, timeout=self.wait_sec)
 
@@ -80,12 +93,24 @@ class LkPage:
         }
 
     def read_user_fio(self) -> str:
-        element = self._visible(f"{self.USER_BADGE} .User-Name")
-        return element.text.strip()
+        wait_sec = self._ms_data_wait_sec()
+        return self._wait_header_text(
+            f"{self.USER_BADGE} .User-Name",
+            timeout_error=(
+                f"ФИО в шапке ЛК не отобразилось за {wait_sec} с — "
+                "микросервис user не ответил (сеть/PROD)"
+            ),
+        )
 
     def read_user_company(self) -> str:
-        element = self._visible(f"{self.USER_BADGE} .User-Info")
-        return element.text.strip()
+        wait_sec = self._ms_data_wait_sec()
+        return self._wait_header_text(
+            f"{self.USER_BADGE} .User-Info",
+            timeout_error=(
+                f"Название компании в шапке ЛК не отобразилось за {wait_sec} с — "
+                "микросервис company не ответил (сеть/PROD)"
+            ),
+        )
 
     def nav_items(self) -> list[str]:
         navbar = self._visible(self.NAVBAR)
@@ -131,14 +156,28 @@ class LkPage:
         self.open_section("Витрина", self.VITRINA_URL_PART)
 
     def open_accreditation(self) -> None:
-        self.open_section("Аккредитация", self.ACCREDITATION_URL_PART)
+        wait_sec = max(self._ms_data_wait_sec(), 45)
+        try:
+            self.open_section("Аккредитация", self.ACCREDITATION_URL_PART)
+        except TimeoutException as exc:
+            raise LkPageError(
+                f"Раздел «Аккредитация» не открылся за {wait_sec} с — "
+                "микросервис accreditation недоступен (сеть/PROD)"
+            ) from exc
 
     def read_accreditation_content(self) -> str:
         if self._accreditation_content_cache is not None:
             return self._accreditation_content_cache
         self.open_accreditation()
         # Раздел «Аккредитация» на VPS headless грузится дольше после длинной сессии.
-        content = self.content_with_timeout(timeout=max(self.wait_sec, 45))
+        wait_sec = max(self._ms_data_wait_sec(), 45)
+        try:
+            content = self.content_with_timeout(timeout=wait_sec)
+        except TimeoutException as exc:
+            raise LkPageError(
+                f"Раздел «Аккредитация» не отобразился за {wait_sec} с — "
+                "микросервис accreditation недоступен (сеть/PROD)"
+            ) from exc
         self._accreditation_content_cache = content
         return content
 
@@ -181,7 +220,10 @@ class LkPage:
         content = self.read_accreditation_content()
         current = self._parse_accreditation_level(content)
         if current < 1:
-            raise LkPageError("Не отображается текущий уровень аккредитации")
+            raise LkPageError(
+                "Не отображается текущий уровень аккредитации — "
+                "микросервис accreditation недоступен (сеть/PROD)"
+            )
 
         selectable = self._parse_legacy_selectable_levels(content)
         if selectable:
@@ -198,7 +240,10 @@ class LkPage:
         level = self._parse_accreditation_level(content)
         if level >= 1:
             return level
-        raise LkPageError("Не отображается текущий уровень аккредитации")
+        raise LkPageError(
+            "Не отображается текущий уровень аккредитации — "
+            "микросервис accreditation недоступен (сеть/PROD)"
+        )
 
     def read_selectable_accreditation_levels(self) -> list[int]:
         """Уровни, помеченные как «ДОСТУПНО» для выбора (без клика и заполнения)."""

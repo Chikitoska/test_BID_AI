@@ -48,10 +48,11 @@ def should_send_lk_telegram(
     *,
     overall_ok: bool,
     confirmed_http_error: bool = False,
+    immediate: bool = False,
     failure_kind: str | None = None,
     lk_skipped_busy: bool = False,
 ) -> bool:
-    """Health-алерт. При подтверждённом 4xx/5xx после in-run retry — сразу (threshold=1).
+    """Health-алерт. 4xx/5xx и ФИО/компания/аккредитация MS — сразу (threshold=1).
 
     Chrome busy (ЛК не проверяли) и autotest (UI/Chrome) → не пейджим как «ЛК лежит».
     Streak prod-инцидента при этом не трогаем (ни сброс, ни +1).
@@ -73,7 +74,7 @@ def should_send_lk_telegram(
         return False
 
     state = AlertState.load()
-    threshold = 1 if confirmed_http_error else MONITOR_ALERT_AFTER_FAILURES
+    threshold = 1 if confirmed_http_error or immediate else MONITOR_ALERT_AFTER_FAILURES
     send_fail = state.evaluate_lk_alert(
         overall_ok,
         threshold=threshold,
@@ -87,6 +88,8 @@ def should_send_lk_telegram(
         )
     elif not overall_ok and send_fail and confirmed_http_error:
         print("Alert: confirmed HTTP 4xx/5xx after in-run retry — notifying")
+    elif not overall_ok and send_fail and immediate:
+        print("Alert: ЛК микросервис user/company/accreditation — notifying")
 
     return send_fail
 

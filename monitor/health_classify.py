@@ -153,12 +153,104 @@ def is_monitor_disk_full(error: str) -> bool:
     )
 
 
+_LK_USER_COMPANY_CHECKS = frozenset({"lk_user_fio", "lk_company_badge"})
+_LK_USER_COMPANY_TESTS = (
+    "test_company_name_in_lk",
+    "test_fio_in_service_provider",
+    "test_company_in_service_provider",
+)
+_LK_USER_COMPANY_ERROR_MARKERS = (
+    "микросервис user",
+    "микросервис company",
+    "фио в шапке лк не отобразилось",
+    "фио в шапке лк пустое",
+    "в шапке лк нет фио",
+    "название компании в шапке лк не отобразилось",
+    "название компании в шапке лк пустое",
+    "в шапке лк нет названия компании",
+)
+_LK_ACCREDITATION_ERROR_MARKERS = (
+    "микросервис accreditation",
+    "не отображается текущий уровень аккредитации",
+    "раздел «аккредитация» не",
+    'раздел "аккредитация" не',
+)
+
+
+def is_hard_chrome_crash(error: str) -> bool:
+    """Реальный краш Chrome/диск — не пустой Selenium wait на элементе."""
+    lower = (error or "").lower()
+    if is_monitor_disk_full(error):
+        return True
+    return any(marker in lower for marker in _CHROME_INFRA_MARKERS)
+
+
+def is_lk_user_company_miss(*, error: str = "", check: str = "") -> bool:
+    """ФИО/компания в шапке не пришли — микросервис user/company, не harness."""
+    if is_hard_chrome_crash(error):
+        return False
+    name = (check or "").lower()
+    if name in _LK_USER_COMPANY_CHECKS or any(token in name for token in _LK_USER_COMPANY_TESTS):
+        return True
+    lower = (error or "").lower()
+    return any(marker in lower for marker in _LK_USER_COMPANY_ERROR_MARKERS)
+
+
+def is_accreditation_miss(*, error: str = "", check: str = "") -> bool:
+    """Раздел аккредитации пуст — микросервис accreditation, не UI-флак."""
+    if is_hard_chrome_crash(error):
+        return False
+    name = (check or "").lower()
+    if "accreditation" in name:
+        return True
+    lower = (error or "").lower()
+    return any(marker in lower for marker in _LK_ACCREDITATION_ERROR_MARKERS)
+
+
+def is_lk_ms_data_miss(*, error: str = "", check: str = "") -> bool:
+    return is_lk_user_company_miss(error=error, check=check) or is_accreditation_miss(
+        error=error, check=check
+    )
+
+
+def lk_ms_data_message(check: str, error: str = "", *, wait_sec: int = 30) -> str | None:
+    """Человекочитаемый текст для bid_failure: какой микросервис не ответил."""
+    if not is_lk_ms_data_miss(error=error, check=check):
+        return None
+    lower = (error or "").lower()
+    first = (error or "").strip().splitlines()[0].strip() if error else ""
+    if "микросервис" in first.lower():
+        return first[:500]
+    name = (check or "").lower()
+    if (
+        name == "lk_user_fio"
+        or "fio" in name
+        or "фио" in lower
+        or "микросервис user" in lower
+    ):
+        return (
+            f"ФИО в шапке ЛК не отобразилось за {wait_sec} с — "
+            "микросервис user не ответил (сеть/PROD)"
+        )
+    if "accreditation" in name or "аккредит" in lower:
+        return (
+            "Раздел «Аккредитация» не отобразился — "
+            "микросервис accreditation недоступен (сеть/PROD)"
+        )
+    return (
+        f"Название компании в шапке ЛК не отобразилось за {wait_sec} с — "
+        "микросервис company не ответил (сеть/PROD)"
+    )
+
+
 def is_autotest_error(error: str) -> bool:
     """Chrome/WebDriver или UI wait/assert — оранжевый (autotest)."""
     if (
         is_widget_icon_miss(error)
         or is_widget_assistant_down(error)
         or is_spa_back_network_error(error)
+        or is_lk_user_company_miss(error=error)
+        or is_accreditation_miss(error=error)
     ):
         return False
     if is_monitor_disk_full(error):
@@ -199,6 +291,7 @@ def classify_health_failure(results: list[CheckResult]) -> FailureKind:
             is_spa_back_network_error(item.error)
             or is_widget_icon_miss(item.error)
             or is_widget_assistant_down(item.error)
+            or is_lk_ms_data_miss(error=item.error, check=item.name)
         ):
             return "prod"
         if not is_autotest_error(item.error):

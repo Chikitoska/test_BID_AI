@@ -8,7 +8,10 @@ from typing import Literal
 from monitor.health_classify import (
     is_autotest_error,
     is_chrome_infra_error,
+    is_hard_chrome_crash,
+    is_lk_ms_data_miss,
     is_monitor_disk_full,
+    lk_ms_data_message,
 )
 from monitor.host_classify import classify_bid_host, extract_http_code, is_timeout_text
 from monitor.metrics import FailureEvent
@@ -55,6 +58,11 @@ _PROD_MARKERS = (
     "spa-back timeout",
     "иконка чат-бота не отображается",
     "ассистент недоступен",
+    "микросервис user",
+    "микросервис company",
+    "микросервис accreditation",
+    "ФИО в шапке ЛК не отобразилось",
+    "Название компании в шапке ЛК не отобразилось",
 )
 
 # Типичный хрупкий UI-автотест — в Grafana оранжевый, в TG/email не спамим.
@@ -67,9 +75,6 @@ _AUTOTEST_MARKERS = (
     "ElementNotVisibleException",
     "AssertionError",
     "InvalidSelectorException",
-    "Failed: Раздел",
-    "не загрузился или нет текущего уровня",
-    "Аккредитация",
     "page_error",
     "SpaEventsHarnessError",
     "сниффер пуст",
@@ -128,6 +133,13 @@ def classify_lk_pytest_failure(output: str, *, failed: int = 0, total: int = 0) 
 
     if _is_monitor_disk_full(lower):
         return "autotest"
+
+    events = parse_pytest_failures(text)
+    if events and any(
+        is_lk_ms_data_miss(error=item.error, check=item.check) for item in events
+    ):
+        if not is_hard_chrome_crash(text):
+            return "prod"
 
     # Массовый провал без сети/HTTP — всё же prod (стенд/логин), кроме чистого Chrome.
     if mass_fail:
@@ -196,6 +208,9 @@ def brief_exception_text(detail: str) -> str:
     rest = " ".join(ln.strip() for ln in text.splitlines()[1:] if ln.strip())
     compact = f"{first_line} {rest}".strip() if rest and len(first_line) < 80 else first_line
 
+    if re.fullmatch(r"Message:\s*", compact, re.IGNORECASE):
+        return "TimeoutException: element not found / wait timed out"
+
     empty = _EMPTY_MESSAGE_RE.match(compact) or _EMPTY_MESSAGE_RE.match(first_line)
     if empty:
         exc = empty.group("exc")
@@ -249,6 +264,9 @@ def format_rich_failure_error(
 ) -> str:
     """Имя теста [| host] [| URL] [| HTTP N] | краткая ошибка — для bid_failure / Grafana."""
     brief = brief_exception_text(detail)
+    human = lk_ms_data_message(test_name, detail)
+    if human:
+        brief = human
     if brief == "unknown error":
         host_hint = classify_bid_host(url or detail or "")
         code = http_code or extract_http_code(detail or "")

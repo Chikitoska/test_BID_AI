@@ -21,6 +21,8 @@ MONITOR_HEADLESS = os.getenv("MONITOR_HEADLESS", "true").lower() in ("1", "true"
 LK_AUTH_WAIT_SEC = int(os.getenv("LK_AUTH_WAIT_SEC", "12"))
 LK_LOGIN_WAIT_SEC = int(os.getenv("LK_LOGIN_WAIT_SEC", "30"))
 LK_UI_WAIT_SEC = int(os.getenv("LK_UI_WAIT_SEC", os.getenv("LK_LOGIN_WAIT_SEC", "45")))
+# ФИО / компания / аккредитация: данные из соседних MS. Нет текста за это время = PROD.
+LK_MS_DATA_WAIT_SEC = int(os.getenv("LK_MS_DATA_WAIT_SEC", "30"))
 # Мягкие повторы чтения ФИО/компании в шапке Processor (флаки ночных SPA).
 LK_PROCESSOR_HEADER_ATTEMPTS = int(os.getenv("LK_PROCESSOR_HEADER_ATTEMPTS", "2"))
 LK_PROCESSOR_HEADER_RETRY_DELAY_SEC = float(
