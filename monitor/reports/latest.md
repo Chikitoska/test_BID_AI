@@ -1,24 +1,41 @@
 # BID monitor digest
 
-- Generated: `2026-11-23T08:50:03.877880+03:00` (Europe/Moscow)
+- Generated: `2026-11-23T20:50:03.874912+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `54066b4 fix(monitor): restore Influx graphs WRITE-only and stop ENOSPC false alerts.`
 
 ## Influx volume
 
+- `bid_failure`: 7 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 1152 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-(ошибок bid_failure за период нет)
+- `2026-11-23 09:37:52.953231+00:00` | Лендинг + мин ЛК (5 мин) | `landing_chatbot_topics` | Лендинг: темы чат-бота | landing_chatbot_topics | landing | https://bid.gazprom-neft.ru/ | Лендинг: после открытия чата темы не отображаются. Текст: 'Ассистент\nНеизвестная ошибка\n\nСейчас ассистент недоступен — попробуйте вернуться позже или обратитесь в поддержку'
+- `2026-11-23 13:02:16.215744+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://id.bid.gazprom-neft.ru/realms/ecoportal/login-actions/authenticate?execution=3ae89bde-8c38-42b7-a53b-feea88b3fe6d&client_id=self-authentication&tab_id=ZwrgzvN8XSE&cl | Нет поля OTP за 45 с (URL: https://id.bid.gazprom-neft.ru/realms/ecoportal/login-actions/authenticate?execution=3ae89bde-8c38-42b7-a53b-feea88b3fe6d&client_id=self-authentication&tab_id=ZwrgzvN8XSE&cl
+- `2026-11-23 11:02:25.859542+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/service-providers | Message:
+- `2026-11-23 10:06:22.337896+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+- `2026-11-23 09:37:52.953231+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+- `2026-11-23 08:46:46.141207+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+- `2026-11-23 13:38:10.169124+00:00` | Лендинг + мин ЛК (5 мин) | `lk_company_badge` | ЛК: компания в шапке | lk_company_badge | lk | https://lk.bid.gazprom-neft.ru/service-providers | Message:
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-(совпадений нет)
+[FAIL] landing_chatbot_topics 9260ms Лендинг: после открытия чата темы не отображаются. Текст: 'Ассистент\nНеизвестная ошибка\n\nСейчас ассистент недоступен — попробуйте вернуться позже или обратитесь в поддержку'
+[FAIL] lk_auth_login 47654ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+Metrics sent to InfluxDB (run_status=fail)
+Health monitor finished in 167.8s — FAIL (run_status=fail)
+[lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 10 с (слот 5xx не greening)…
+[FAIL] lk_auth_login 14604ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+Metrics sent to InfluxDB (run_status=fail)
+Health monitor finished in 76.2s — FAIL (run_status=fail)
+[FAIL] lk_company_badge 45450ms Message:
+Alert suppressed: health failure classified as autotest (UI flake / Chrome/WebDriver) — Grafana orange; not paging as LK/PROD down
+Health monitor finished in 188.8s — FAIL_AUTOTEST (run_status=autotest)
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
