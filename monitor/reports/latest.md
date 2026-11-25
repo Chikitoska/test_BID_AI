@@ -1,25 +1,41 @@
 # BID monitor digest
 
-- Generated: `2026-11-25T08:50:03.876924+03:00` (Europe/Moscow)
+- Generated: `2026-11-25T20:50:03.880653+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `54066b4 fix(monitor): restore Influx graphs WRITE-only and stop ENOSPC false alerts.`
 
 ## Influx volume
 
-- `bid_failure`: 3 точек (~1д)
+- `bid_failure`: 6 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 1152 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-(ошибок bid_failure за период нет)
+- `2026-11-25 10:35:57.698613+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 22.909 (Session info: chrome=157.0.8103.38)
+- `2026-11-25 11:11:33.471451+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+- `2026-11-25 11:06:55.302249+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+- `2026-11-25 06:51:23.539810+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+- `2026-11-25 06:37:26.412767+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://id.bid.gazprom-neft.ru/realms/ecoportal/login-actions/authenticate?execution=3ae89bde-8c38-42b7-a53b-feea88b3fe6d&client_id=self-authentication&tab_id=g0Ywq97hTOI&cl | Нет поля OTP за 45 с (URL: https://id.bid.gazprom-neft.ru/realms/ecoportal/login-actions/authenticate?execution=3ae89bde-8c38-42b7-a53b-feea88b3fe6d&client_id=self-authentication&tab_id=g0Ywq97hTOI&cl
+- `2026-11-25 14:01:16.453458+00:00` | Лендинг + сервисы (2×/день) | `test_landing_api_method_returns_2xx[legal_documents_bulk]` | tests/api/test_landing_devtools_api.py::test_landing_api_method_returns_2xx[legal_documents_bulk] | test_landing_api_method_returns_2xx[legal_documents_bulk] | unknown error
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-(совпадений нет)
+Alert suppressed: health fail streak 1/2
+Metrics sent to InfluxDB (run_status=fail)
+Health monitor finished in 53.1s — FAIL (run_status=fail)
+[lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 10 с (слот 5xx не greening)…
+[FAIL] lk_auth_login 15682ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+Metrics sent to InfluxDB (run_status=fail)
+Health monitor finished in 109.2s — FAIL (run_status=fail)
+[lk] 4xx/5xx на попытке 1/2: ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500. Повтор через 10 с (слот 5xx не greening)…
+[FAIL] lk_auth_login 16720ms ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
+Alert suppressed: health fail streak 2/1
+Metrics sent to InfluxDB (run_status=fail)
+Health monitor finished in 88.8s — FAIL (run_status=fail)
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
