@@ -27,6 +27,20 @@ def test_vps_free_disk_never_prunes_influx_grafana():
     assert "*/20" in crontab
 
 
+def test_vps_free_disk_skips_allure_results_while_combat_pytest_runs():
+    source = (ROOT / "monitor" / "vps_free_disk.sh").read_text(encoding="utf-8")
+    active = "\n".join(
+        ln for ln in source.splitlines() if ln.strip() and not ln.lstrip().startswith("#")
+    )
+    assert "skip allure-results: combat pytest running" in active
+    assert "run_lk_pytest" in active
+    assert "--alluredir=" in active
+    assert '"$owner" = "lk_pytest"' in active
+    first_rm = active.split("rm -rf", 1)[1].split("if ", 1)[0]
+    assert "allure-results" not in first_rm
+    assert 'rm -rf "$PROJECT_DIR/allure-results"/*' in active
+
+
 def test_daily_shell_has_slot_timeout():
     source = (ROOT / "monitor" / "run_daily.sh").read_text(encoding="utf-8")
     assert "timeout --signal=TERM" in source
