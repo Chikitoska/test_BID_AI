@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import re
+import time
 
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as EC
@@ -68,14 +69,24 @@ class LkPage:
         return max(int(self.wait_sec), int(LK_MS_DATA_WAIT_SEC))
 
     def _wait_header_text(self, css: str, *, timeout_error: str) -> str:
+        """Текст в шапке по CSS: не требуем Selenium visibility (нулевой размер / оверлей).
+
+        Health часто видит `.User-Name`, а затем 45 с ждёт visibility `.User-Info`
+        и пишет пустой Selenium `Message:` — SPA, не 5xx. Настоящий простой MS
+        по-прежнему даёт именованный LkPageError.
+        """
         wait_sec = self._ms_data_wait_sec()
-        try:
-            element = WebDriverWait(self.driver, wait_sec).until(
-                EC.visibility_of_element_located((By.CSS_SELECTOR, css))
-            )
-        except TimeoutException as exc:
-            raise LkPageError(timeout_error) from exc
-        return (element.text or "").strip()
+        deadline = time.time() + max(0.5, float(wait_sec))
+        while time.time() < deadline:
+            try:
+                for element in self.driver.find_elements(By.CSS_SELECTOR, css):
+                    text = (element.text or "").strip()
+                    if text:
+                        return text
+            except StaleElementReferenceException:
+                pass
+            time.sleep(0.3)
+        raise LkPageError(timeout_error)
 
     def dismiss_consent_modals(self) -> bool:
         return accept_lk_consent_modals(self.driver, timeout=self.wait_sec)
