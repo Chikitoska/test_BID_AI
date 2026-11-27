@@ -1,64 +1,25 @@
 # BID monitor digest
 
-- Generated: `2026-11-27T08:50:03.878470+03:00` (Europe/Moscow)
+- Generated: `2026-11-27T20:50:13.883902+03:00` (Europe/Moscow)
 - Window: last **12** hours
 - Host: VPS `/opt/test_BID_AI`
 - Git HEAD: `54066b4 fix(monitor): restore Influx graphs WRITE-only and stop ENOSPC false alerts.`
 
 ## Influx volume
 
-- `bid_failure`: 30 точек (~1д)
+- `bid_failure`: 23 точек (~1д)
 - `bid_lk_pytest`: 60 точек (~1д)
 - `bid_lk_run`: 1152 точек (~1д)
 - `bid_run`: 10 точек (~1д)
 
 ## Failures (bid_failure)
 
-- `2026-11-26 21:15:58.247074+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 28.435 (Session info: chrome=157.0.8103.38)
-- `2026-11-26 21:11:04.031145+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 24.352 (Session info: chrome=157.0.8103.38)
-- `2026-11-26 21:06:04.561154+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 18.584 (Session info: chrome=157.0.8103.38)
-- `2026-11-26 21:00:40.207708+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 26.605 (Session info: chrome=157.0.8103.38)
-- `2026-11-26 20:56:04.858387+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 27.332 (Session info: chrome=157.0.8103.38)
-- `2026-11-26 20:51:01.862969+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 27.798 (Session info: chrome=157.0.8103.38)
-- `2026-11-26 20:45:44.134972+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 28.548 (Session info: chrome=157.0.8103.38)
-- `2026-11-26 20:40:42.850556+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 25.955 (Session info: chrome=157.0.8103.38)
-- `2026-11-26 20:35:46.371075+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 28.656 (Session info: chrome=157.0.8103.38)
-- `2026-11-26 20:30:52.575878+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 27.683 (Session info: chrome=157.0.8103.38)
-- `2026-11-26 20:26:15.844629+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 24.033 (Session info: chrome=157.0.8103.38)
-- `2026-11-26 20:21:11.652950+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 0.673 (Session info: chrome=157.0.8103.38)
-- `2026-11-26 20:15:40.729475+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 28.752 (Session info: chrome=157.0.8103.38)
-- `2026-11-26 20:11:02.663285+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 21.200 (Session info: chrome=157.0.8103.38)
-- `2026-11-26 20:05:43.299514+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 27.122 (Session info: chrome=157.0.8103.38)
-- `2026-11-26 20:00:40.037442+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 25.516 (Session info: chrome=157.0.8103.38)
-- `2026-11-26 19:55:42.623740+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 4.165 (Session info: chrome=157.0.8103.38)
-- `2026-11-26 19:50:53.151295+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 27.358 (Session info: chrome=157.0.8103.38)
-- `2026-11-26 19:46:08.195042+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 27.428 (Session info: chrome=157.0.8103.38)
-- `2026-11-26 19:40:39.103651+00:00` | Лендинг + мин ЛК (5 мин) | `health_ui` | health_ui | health_ui | landing | https://bid.gazprom-neft.ru/ | Message: timeout: Timed out receiving message from renderer: 24.309 (Session info: chrome=157.0.8103.38)
-- `2026-11-26 21:33:27.777642+00:00` | Боевой прогон ЛК (2 ч) | `test_company_in_service_provider` | tests/lk/test_lk_auth.py::test_company_in_service_provider | test_company_in_service_provider | lk | https://processor.gazprom-neft.ru/ | TimeoutException: Processor: не видно «компания» (.User-Info) после 2 попыток по 45s. URL=https://processor.gazprom-neft.ru/. Message: Processor: «компания» не найдено в шапке/iframe. URL=https://processor.gazprom-neft.ru/
-- `2026-11-26 21:33:27.777642+00:00` | Боевой прогон ЛК (2 ч) | `test_lk_accreditation_level_selection_visible` | tests/lk/test_lk_accreditation.py::test_lk_accreditation_level_selection_visible | test_lk_accreditation_level_selection_visible | Failed: Раздел «Аккредитация» не загрузился или нет текущего уровня
+- `2026-11-27 08:46:57.083731+00:00` | Лендинг + мин ЛК (5 мин) | `lk_auth_login` | ЛК: вход (логин + 2FA) | lk_auth_login | lk | https://lk.bid.gazprom-neft.ru/error/500 | HTTP 500 | ЛК вернул HTTP error page после входа, URL: https://lk.bid.gazprom-neft.ru/error/500
 
 ## health.log (FAIL/ERROR/WARN/ImportError)
 
 ```
-Alert suppressed: health fail streak 14/2
-Metrics sent to InfluxDB (run_status=fail)
-Health monitor finished in 39.6s — FAIL (run_status=fail)
-Alert suppressed: health fail streak 15/2
-Metrics sent to InfluxDB (run_status=fail)
-Health monitor finished in 38.6s — FAIL (run_status=fail)
-Alert suppressed: health fail streak 16/2
-Metrics sent to InfluxDB (run_status=fail)
-Health monitor finished in 60.4s — FAIL (run_status=fail)
-Alert suppressed: health fail streak 18/2
-Metrics sent to InfluxDB (run_status=fail)
-Health monitor finished in 60.1s — FAIL (run_status=fail)
-Alert suppressed: health fail streak 19/2
-Metrics sent to InfluxDB (run_status=fail)
-Health monitor finished in 59.6s — FAIL (run_status=fail)
-Alert suppressed: health fail streak 20/2
-Metrics sent to InfluxDB (run_status=fail)
-Health monitor finished in 53.8s — FAIL (run_status=fail)
-main_page FAIL (landing timeout: bid.gazprom-neft.ru), повтор через 10 с (ещё 1 раз)…
+(совпадений нет)
 ```
 
 ## lk-pytest.log (FAIL/ERROR/ImportError|failed=)
